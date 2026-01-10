@@ -3,7 +3,11 @@ import Foundation
 
 public extension Item {
     static func create(in context: NSManagedObjectContext, type: ItemType = .note) -> Item {
-        let item = Item(context: context)
+        // Use the context's model to avoid Item.entity() ambiguity when multiple models are loaded.
+        guard let entity = NSEntityDescription.entity(forEntityName: "Item", in: context) else {
+            fatalError("Missing Item entity in managed object model.")
+        }
+        let item = Item(entity: entity, insertInto: context)
         item.id = UUID()
         let now = Date()
         item.createdAt = now

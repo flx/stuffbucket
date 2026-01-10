@@ -181,6 +181,7 @@
   - Link metadata parsing and HTML entity decoding. completed [x]
   - macOS unit test target mirrors core parsing/encoding coverage. completed [x]
   - macOS unit tests use an app host path configuration for Xcodegen builds. completed [x]
+  - Test helpers create items using context-scoped entity lookup to avoid Core Data entity ambiguity warnings. completed [x]
   - FTS indexing and snippet generation
   - Safari bookmark parsing (sample plist and HTML export)
   - AI payload formatting and storage
