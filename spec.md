@@ -236,11 +236,13 @@ If a link is marked protected:
 - Selecting a tag or collection pre-fills search with `tag:` / `collection:` filters.
 - Recent items list is shown above tags and collections.
 - Link items display an archive status badge (Pending / Archived / Partial / Failed).
+- Empty states surface primary capture actions (iOS Add Link, Import Document).
 
 ### 9.2 Item detail
 - Tag editing is available on the item detail view (comma-separated input).
 - De-duplication based on URL + title + folder path; keep a sync link when possible.
 - Document items show the filename and a “Show in Finder” action on macOS.
+- macOS list rows expose “Show in Finder” for documents via context menu.
 
 ---
 

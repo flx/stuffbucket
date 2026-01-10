@@ -1,3 +1,4 @@
+import AppKit
 import CoreData
 import SwiftUI
 import StuffBucketCore
@@ -122,6 +123,9 @@ struct ContentView: View {
                                                     }
                                                 }
                                                 .buttonStyle(.plain)
+                                                .contextMenu {
+                                                    documentRevealMenu(for: item)
+                                                }
                                             }
                                         }
                                     }
@@ -198,6 +202,11 @@ struct ContentView: View {
                                 }
                                 .padding(.vertical, 4)
                             }
+                            .contextMenu {
+                                if let item = itemLookup[result.itemID] {
+                                    documentRevealMenu(for: item)
+                                }
+                            }
                         }
                         .listStyle(.inset)
                     }
@@ -266,6 +275,15 @@ struct ContentView: View {
             return "\(prefix):\"\(trimmed)\""
         }
         return "\(prefix):\(trimmed)"
+    }
+
+    @ViewBuilder
+    private func documentRevealMenu(for item: Item) -> some View {
+        if item.itemType == .document, let url = item.documentURL {
+            Button("Show in Finder") {
+                NSWorkspace.shared.activateFileViewerSelecting([url])
+            }
+        }
     }
 
     private func importDocuments(_ urls: [URL]) {
