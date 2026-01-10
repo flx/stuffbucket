@@ -121,6 +121,7 @@ PDF export is optional, not canonical.
 - `id: UUID`
 - `type: enum { note, snippet, link, document }`
 - `title: String?`
+- `tags: [String]`
 - `createdAt: Date`
 - `updatedAt: Date`
 - `isProtected: Bool`
@@ -198,6 +199,17 @@ If a link is marked protected:
   - User-granted access to Safari bookmarks file, or HTML export from Safari.
 - Imported bookmarks become **Link** items (optional background archive).
 - Folder structure maps to Collections; a default `Safari` tag is applied.
+
+---
+
+## 9. UI behavior (current)
+
+### 9.1 Browse
+- Default view surfaces **Tags** and **Collections** with counts.
+- Selecting a tag or collection pre-fills search with `tag:` / `collection:` filters.
+
+### 9.2 Item detail
+- Tag editing is available on the item detail view (comma-separated input).
 - De-duplication based on URL + title + folder path; keep a sync link when possible.
 
 ---

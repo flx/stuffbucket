@@ -14,13 +14,32 @@ fileGroups:
 settings:
   base:
     SWIFT_VERSION: 5.9
+    DEAD_CODE_STRIPPING: YES
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    STRING_CATALOG_GENERATE_SYMBOLS: YES
+
+schemes:
+  StuffBucket:
+    build:
+      targets:
+        StuffBucket: all
+    run:
+      config: Debug
+  StuffBucketMac:
+    build:
+      targets:
+        StuffBucketMac: all
+    run:
+      config: Debug
 
 targets:
   StuffBucket:
     type: application
-    platform: iOS
+    platform: auto
+    supportedDestinations: [iOS]
     sources:
       - path: Sources/StuffBucket
+      - path: Sources/StuffBucketSharedUI
     resources:
       - path: Sources/StuffBucket/Resources
     dependencies:
@@ -32,12 +51,20 @@ targets:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         CODE_SIGN_STYLE: Automatic
         DEVELOPMENT_TEAM: V37U525228
+        DEAD_CODE_STRIPPING: YES
+        SDKROOT: auto
+        SUPPORTED_PLATFORMS: "iphoneos iphonesimulator"
+        SUPPORTS_MACCATALYST: NO
+        SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: YES
+        SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD: YES
 
   StuffBucketMac:
     type: application
-    platform: macOS
+    platform: auto
+    supportedDestinations: [macOS]
     sources:
       - path: Sources/StuffBucketMac
+      - path: Sources/StuffBucketSharedUI
     resources:
       - path: Sources/StuffBucketMac/Resources
     dependencies:
@@ -49,6 +76,12 @@ targets:
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         CODE_SIGN_STYLE: Automatic
         DEVELOPMENT_TEAM: V37U525228
+        DEAD_CODE_STRIPPING: YES
+        SDKROOT: auto
+        SUPPORTED_PLATFORMS: macosx
+        SUPPORTS_MACCATALYST: NO
+        SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: NO
+        TARGETED_DEVICE_FAMILY: ""
 
   StuffBucketCore:
     type: framework
@@ -61,3 +94,6 @@ targets:
       base:
         INFOPLIST_FILE: Sources/StuffBucketCore/Info.plist
         PRODUCT_BUNDLE_IDENTIFIER: com.stuffbucket.StuffBucketCore
+        DEAD_CODE_STRIPPING: YES
+        ENABLE_MODULE_VERIFIER: YES
+        MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS: "gnu11 gnu++14"

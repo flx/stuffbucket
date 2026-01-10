@@ -45,3 +45,7 @@ public struct SearchResult: Hashable, Codable {
         self.snippet = snippet
     }
 }
+
+extension SearchResult: Identifiable {
+    public var id: UUID { itemID }
+}

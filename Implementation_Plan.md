@@ -1,57 +1,66 @@
 # Implementation Plan (v0.3)
 
 ## 0. Project structure (Xcode project, no Swift package)
-- Create `StuffBucket.xcodeproj` with app targets:
+- Create `StuffBucket.xcodeproj` with app targets: completed [x]
   - `StuffBucket` (iOS universal target covering iPadOS)
   - `StuffBucketMac` (macOS)
-- Add a shared framework target (e.g. `StuffBucketCore`) for models, persistence, search, import, and AI services.
-- Share the Core Data model (`.xcdatamodeld`) across targets via the framework target.
-- Keep platform-specific UI and permissions in each app target.
+- Add a shared framework target (e.g. `StuffBucketCore`) for models, persistence, search, import, and AI services. completed [x]
+- Share the Core Data model (`.xcdatamodeld`) across targets via the framework target. completed [x]
+- Keep platform-specific UI and permissions in each app target. completed [x]
+- Add a shared UI folder for views used across targets (item detail, search bar). completed [x]
 
 ## 1. Core Data and storage updates
-- Update the Core Data model with new fields:
+- Update the Core Data model with new fields: completed [x]
   - `source`, `sourceExternalID`, `sourceFolderPath`
   - `aiSummary`, `aiArtifactsJSON`, `aiModelID`, `aiUpdatedAt`
-- Add lightweight migration support for existing stores.
+- Add `tags` to the Core Data model. completed [x]
+- Add lightweight migration support for existing stores. completed [x]
 - Ensure CloudKit schema updates and resolve any merge policies for new fields.
-- Add a small metadata table for search index versioning and last indexed timestamps.
+- Add a small metadata table for search index versioning and last indexed timestamps. completed [x]
+- Load the Core Data model from the framework bundle to avoid runtime lookup failures. completed [x]
 
 ## 2. High-quality search engine
 
 ### 2.1 Index storage and schema
-- Implement a local SQLite index (in app container) using FTS5.
+- Implement a local SQLite index (in app container) using FTS5. completed [x]
 - Schema suggestion:
   - `items_fts(id, title, tags, collection, content, annotations, ai_summary)`
   - Use column weights for ranking (title > tags > content).
 - Track `lastIndexedAt` per item to support incremental updates.
 
 ### 2.2 Indexing pipeline
-- Build `SearchIndexer` service in `StuffBucketCore`:
+- Build `SearchIndexer` service in `StuffBucketCore`: completed [x]
   - Extract text from notes/snippets directly.
   - Extract text from HTML snapshots via `NSAttributedString` HTML import or WebKit text capture.
   - For documents, index filename plus extracted text where possible.
-- Respect protection rules:
+- Respect protection rules: completed [x]
   - If locked, only index title/tags/collection; exclude body content.
 - Run indexing in the background with throttling and batch updates.
 
 ### 2.3 Query parsing and ranking
-- Implement a query parser supporting:
+- Implement a query parser supporting: completed [x]
   - `type:`, `tag:`, `collection:`, `source:` filters
   - quoted phrases
   - prefix matching
 - Ranking:
-  - Use FTS5 `bm25` with column weights.
+  - Use FTS5 `bm25` with column weights. completed [x]
   - Boost recency and exact-title matches.
 - Typo tolerance:
   - Maintain a token dictionary from the index.
   - Implement a small SymSpell-style lookup or edit-distance expansion for low-result queries.
-- Provide highlighted snippets from FTS `snippet()`.
+- Provide highlighted snippets from FTS `snippet()`. completed [x]
 
 ### 2.4 UI integration
 - iOS/iPadOS:
-  - Update search UI with filters, sort by relevance/recency, and preview snippets.
+  - Add searchable UI and preview snippets. completed [x]
+  - Add filters and sort by relevance/recency.
+  - Replace placeholder landing UI with tag/collection lists. completed [x]
+  - Use a custom search bar for consistent alignment. completed [x]
 - macOS:
-  - Mirror the same search capabilities with a search sidebar and result preview.
+  - Add basic search UI and result preview. completed [x]
+  - Add search sidebar and filter controls.
+  - Replace placeholder landing UI with tag/collection lists. completed [x]
+  - Use a custom search bar for consistent alignment. completed [x]
 
 ## 3. Safari bookmarks import and sync (macOS only)
 
@@ -126,6 +135,8 @@
 
 ### iOS/iPadOS
 - Search updates (filters, sorting, snippet previews).
+- Tag editor on item detail view. completed [x]
+- Shared item detail view for item metadata (tags). completed [x]
 - Item detail actions for AI tasks (summarize, key points, tags).
 - AI settings screen (API key management + advanced model picker).
 - Show a pricing disclosure line with per-token rates sourced from the OpenAI pricing page.
@@ -134,6 +145,8 @@
 ### macOS
 - Safari import settings UI and status indicators.
 - Search improvements aligned with iOS behavior.
+- Tag editor on item detail view. completed [x]
+- Shared item detail view for item metadata (tags). completed [x]
 - AI actions integrated into item detail and toolbar.
 - AI settings screen (API key management + advanced model picker).
 - Show a pricing disclosure line with per-token rates sourced from the OpenAI pricing page.
