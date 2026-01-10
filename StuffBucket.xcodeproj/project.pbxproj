@@ -891,7 +891,7 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.digitalhandstand.stuffbucket.mactests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.digitalhandstand.stuffbucket.app.mactests;
 				SDKROOT = macosx;
 				SUPPORTED_PLATFORMS = macosx;
 				SUPPORTS_MACCATALYST = NO;
@@ -911,7 +911,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.digitalhandstand.stuffbucket.tests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.digitalhandstand.stuffbucket.app.tests;
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -963,7 +963,7 @@
 					"@executable_path/../Frameworks",
 					"@executable_path/../../../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.digitalhandstand.stuffbucket.mac.share;
+				PRODUCT_BUNDLE_IDENTIFIER = com.digitalhandstand.stuffbucket.app.mac.share;
 				SDKROOT = macosx;
 				SUPPORTED_PLATFORMS = macosx;
 				SUPPORTS_MACCATALYST = NO;
@@ -986,7 +986,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.digitalhandstand.stuffbucket.mac;
+				PRODUCT_BUNDLE_IDENTIFIER = com.digitalhandstand.stuffbucket.app.mac;
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = macosx;
 				SUPPORTS_MACCATALYST = NO;
@@ -1009,7 +1009,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.digitalhandstand.stuffbucket;
+				PRODUCT_BUNDLE_IDENTIFIER = com.digitalhandstand.stuffbucket.app;
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -1033,7 +1033,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.digitalhandstand.stuffbucket;
+				PRODUCT_BUNDLE_IDENTIFIER = com.digitalhandstand.stuffbucket.app;
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -1084,7 +1084,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.digitalhandstand.stuffbucket.mac;
+				PRODUCT_BUNDLE_IDENTIFIER = com.digitalhandstand.stuffbucket.app.mac;
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = macosx;
 				SUPPORTS_MACCATALYST = NO;
@@ -1104,7 +1104,7 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.digitalhandstand.stuffbucket.mactests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.digitalhandstand.stuffbucket.app.mactests;
 				SDKROOT = macosx;
 				SUPPORTED_PLATFORMS = macosx;
 				SUPPORTS_MACCATALYST = NO;
@@ -1128,7 +1128,7 @@
 					"@executable_path/../Frameworks",
 					"@executable_path/../../../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.digitalhandstand.stuffbucket.mac.share;
+				PRODUCT_BUNDLE_IDENTIFIER = com.digitalhandstand.stuffbucket.app.mac.share;
 				SDKROOT = macosx;
 				SUPPORTED_PLATFORMS = macosx;
 				SUPPORTS_MACCATALYST = NO;
@@ -1213,7 +1213,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.digitalhandstand.stuffbucket.tests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.digitalhandstand.stuffbucket.app.tests;
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -1264,7 +1264,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.digitalhandstand.stuffbucket.share;
+				PRODUCT_BUNDLE_IDENTIFIER = com.digitalhandstand.stuffbucket.app.share;
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -1287,7 +1287,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.digitalhandstand.stuffbucket.share;
+				PRODUCT_BUNDLE_IDENTIFIER = com.digitalhandstand.stuffbucket.app.share;
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;

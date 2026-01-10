@@ -1,7 +1,7 @@
 import Foundation
 
 enum SharedCaptureStore {
-    static let appGroupID = "group.com.digitalhandstand.stuffbucket"
+    static let appGroupID = "group.com.digitalhandstand.stuffbucket.app"
     private static let pendingURLsKey = "pendingSharedURLs"
 
     static func enqueue(url: URL) {

@@ -195,6 +195,7 @@ If a link is marked protected:
 - Share extension bundle identifiers are prefixed by the main app bundle identifier.
 - Share extension version numbers match the parent app.
 - Share extension Info.plists include required bundle metadata for installation.
+- App Group for share handoff storage: `group.com.digitalhandstand.stuffbucket.app`.
 - macOS share extension follows the standard NSExtensionRequestHandling flow.
 - On import, the app fetches metadata and persists an HTML snapshot when possible.
 
@@ -207,6 +208,7 @@ If a link is marked protected:
 - Share extension bundle identifiers are prefixed by the main app bundle identifier.
 - Share extension version numbers match the parent app.
 - Share extension Info.plists include required bundle metadata for installation.
+- App Group for share handoff storage: `group.com.digitalhandstand.stuffbucket.app`.
 - On import, the app fetches metadata and persists an HTML snapshot when possible.
 
 ### Safari Bookmarks bulk import (new, macOS only)

@@ -14,6 +14,7 @@
 - Align share extension version values with the parent app. completed [x]
 - Add CFBundleExecutable to share extension Info.plists for simulator install. completed [x]
 - Use NSViewController's beginRequest override for macOS share extension handling. completed [x]
+- Set bundle identifiers and App Group to `com.digitalhandstand.stuffbucket.app` / `group.com.digitalhandstand.stuffbucket.app`. completed [x]
 
 ## 1. Core Data and storage updates
 - Update the Core Data model with new fields: completed [x]
