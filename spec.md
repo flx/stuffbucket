@@ -10,6 +10,8 @@ Key guarantees:
 - First-class support for **iOS, iPadOS, and macOS**.
 - Optional **per-item protection** for sensitive content.
 - **High-quality search** with relevance ranking, typo tolerance, and filters.
+- Search input disables autocapitalization on iOS while keeping native macOS behavior.
+- Tag editing uses platform-appropriate text input behavior.
 - Optional **AI assistance** (summaries, key points, tags) powered by ChatGPT models, opt-in and user-controlled.
 
 Non-goals (initial versions): collaboration, web client.
@@ -71,6 +73,7 @@ When a link is saved, StuffBucket must:
    - Page title
    - Author (if available)
    - Publication date (best-effort)
+   - Decode common HTML entities in metadata values
 3. **Persist the article content** to avoid link rot.
 
 ### 4.2 HTML persistence strategy
@@ -187,11 +190,24 @@ If a link is marked protected:
   1. Immediate metadata save
   2. Background HTML fetch
   3. Archive status indicator
+- Share extension captures URLs from Safari and queues them for the main app to import on launch.
+- Share extension accepts URL attachments or plain-text URL payloads.
+- Share extension bundle identifiers are prefixed by the main app bundle identifier.
+- Share extension version numbers match the parent app.
+- Share extension Info.plists include required bundle metadata for installation.
+- macOS share extension follows the standard NSExtensionRequestHandling flow.
+- On import, the app fetches metadata and persists an HTML snapshot when possible.
 
 ### macOS
 - Paste URL
 - Drag URL from browser
 - Services / Share menu
+- Share extension captures URLs from Safari and queues them for the main app to import on launch.
+- Share extension accepts URL attachments or plain-text URL payloads.
+- Share extension bundle identifiers are prefixed by the main app bundle identifier.
+- Share extension version numbers match the parent app.
+- Share extension Info.plists include required bundle metadata for installation.
+- On import, the app fetches metadata and persists an HTML snapshot when possible.
 
 ### Safari Bookmarks bulk import (new, macOS only)
 - One-time import during onboarding or later via Settings (macOS).
@@ -207,6 +223,8 @@ If a link is marked protected:
 ### 9.1 Browse
 - Default view surfaces **Tags** and **Collections** with counts.
 - Selecting a tag or collection pre-fills search with `tag:` / `collection:` filters.
+- Recent items list is shown above tags and collections.
+- Link items display an archive status badge (Pending / Archived / Partial / Failed).
 
 ### 9.2 Item detail
 - Tag editing is available on the item detail view (comma-separated input).
@@ -333,6 +351,11 @@ If a link is marked protected:
 - v0.2: HTML-backed link persistence
 - v0.3: high-quality search, Safari bookmarks import & sync, ChatGPT integration
 - v0.4 (future): reader cleanup, PDF export, OCR
+
+---
+
+## 16. Quality checks (engineering)
+- Unit tests cover search query parsing/builder output, tag list encoding/decoding, and link metadata parsing with HTML entity decoding.
 
 ---
 

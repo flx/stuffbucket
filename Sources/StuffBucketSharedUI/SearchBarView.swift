@@ -7,9 +7,7 @@ struct SearchBarView: View {
         HStack(spacing: 8) {
             Image(systemName: "magnifyingglass")
                 .foregroundStyle(.secondary)
-            TextField("Search", text: $text)
-                .textInputAutocapitalization(.never)
-                .disableAutocorrection(true)
+            textField
             if !text.isEmpty {
                 Button {
                     text = ""
@@ -38,6 +36,17 @@ struct SearchBarView: View {
         return Color(.secondarySystemBackground)
 #else
         return Color(nsColor: .textBackgroundColor)
+#endif
+    }
+
+    @ViewBuilder
+    private var textField: some View {
+#if os(iOS)
+        TextField("Search", text: $text)
+            .textInputAutocapitalization(.never)
+            .disableAutocorrection(true)
+#else
+        TextField("Search", text: $text)
 #endif
     }
 }

@@ -8,6 +8,12 @@
 - Share the Core Data model (`.xcdatamodeld`) across targets via the framework target. completed [x]
 - Keep platform-specific UI and permissions in each app target. completed [x]
 - Add a shared UI folder for views used across targets (item detail, search bar). completed [x]
+- Add iOS and macOS share extension targets for Safari share sheet capture. completed [x]
+- Handle share extension URL extraction from URL or plain-text payloads. completed [x]
+- Ensure share extension Info.plists include bundle identifiers for embedding. completed [x]
+- Align share extension version values with the parent app. completed [x]
+- Add CFBundleExecutable to share extension Info.plists for simulator install. completed [x]
+- Use NSViewController's beginRequest override for macOS share extension handling. completed [x]
 
 ## 1. Core Data and storage updates
 - Update the Core Data model with new fields: completed [x]
@@ -18,6 +24,9 @@
 - Ensure CloudKit schema updates and resolve any merge policies for new fields.
 - Add a small metadata table for search index versioning and last indexed timestamps. completed [x]
 - Load the Core Data model from the framework bundle to avoid runtime lookup failures. completed [x]
+- Import shared links from the share extension into Core Data. completed [x]
+- Fetch link metadata and persist HTML snapshots after share import. completed [x]
+- Decode common HTML entities in link metadata parsing without AppKit dependencies. completed [x]
 
 ## 2. High-quality search engine
 
@@ -54,13 +63,18 @@
 - iOS/iPadOS:
   - Add searchable UI and preview snippets. completed [x]
   - Add filters and sort by relevance/recency.
-  - Replace placeholder landing UI with tag/collection lists. completed [x]
-  - Use a custom search bar for consistent alignment. completed [x]
+- Replace placeholder landing UI with tag/collection lists. completed [x]
+- Use a custom search bar for consistent alignment. completed [x]
+- Ensure search input modifiers are platform-appropriate (iOS-only autocap settings). completed [x]
+- Add a recent items list on the empty state. completed [x]
+  - Show link archive status badges in lists. completed [x]
 - macOS:
   - Add basic search UI and result preview. completed [x]
   - Add search sidebar and filter controls.
   - Replace placeholder landing UI with tag/collection lists. completed [x]
   - Use a custom search bar for consistent alignment. completed [x]
+  - Add a recent items list on the empty state. completed [x]
+  - Show link archive status badges in lists. completed [x]
 
 ## 3. Safari bookmarks import and sync (macOS only)
 
@@ -137,6 +151,7 @@
 - Search updates (filters, sorting, snippet previews).
 - Tag editor on item detail view. completed [x]
 - Shared item detail view for item metadata (tags). completed [x]
+- Ensure tag input modifiers are platform-appropriate. completed [x]
 - Item detail actions for AI tasks (summarize, key points, tags).
 - AI settings screen (API key management + advanced model picker).
 - Show a pricing disclosure line with per-token rates sourced from the OpenAI pricing page.
@@ -161,7 +176,9 @@
 
 ## 7. Testing and validation
 - Unit tests:
-  - Search query parsing and ranking
+  - Search query parsing and builder output. completed [x]
+  - Tag list encoding/decoding via in-memory Core Data. completed [x]
+  - Link metadata parsing and HTML entity decoding. completed [x]
   - FTS indexing and snippet generation
   - Safari bookmark parsing (sample plist and HTML export)
   - AI payload formatting and storage

@@ -20,6 +20,20 @@ struct ContentView: View {
         LibrarySummaryBuilder.collections(from: Array(items))
     }
 
+    private var recentItems: [Item] {
+        Array(items.prefix(10))
+    }
+
+    private var itemLookup: [UUID: Item] {
+        var lookup: [UUID: Item] = [:]
+        for item in items {
+            if let id = item.id {
+                lookup[id] = item
+            }
+        }
+        return lookup
+    }
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 12) {
@@ -28,6 +42,33 @@ struct ContentView: View {
                     .padding(.top, 8)
                 List {
                     if searchText.isEmpty {
+                        Section("Recent") {
+                            if recentItems.isEmpty {
+                                Text("No items yet")
+                                    .foregroundStyle(.secondary)
+                            } else {
+                                ForEach(recentItems, id: \.objectID) { item in
+                                    if let itemID = item.id {
+                                        NavigationLink {
+                                            ItemDetailView(itemID: itemID)
+                                        } label: {
+                                            VStack(alignment: .leading, spacing: 6) {
+                                                Text(item.title ?? item.linkTitle ?? "Untitled")
+                                                    .font(.headline)
+                                                HStack(spacing: 8) {
+                                                    Text(item.itemType?.rawValue.capitalized ?? "Item")
+                                                        .font(.subheadline)
+                                                        .foregroundStyle(.secondary)
+                                                    if item.isLinkItem {
+                                                        LinkStatusBadge(status: item.archiveStatusValue)
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                         Section("Tags") {
                             if tagSummaries.isEmpty {
                                 Text("No tags yet")
@@ -76,13 +117,16 @@ struct ContentView: View {
                             NavigationLink {
                                 ItemDetailView(itemID: result.itemID)
                             } label: {
-                                VStack(alignment: .leading, spacing: 4) {
+                                VStack(alignment: .leading, spacing: 6) {
                                     Text(result.title)
                                         .font(.headline)
                                     if let snippet = result.snippet, !snippet.isEmpty {
                                         Text(snippet)
                                             .font(.subheadline)
                                             .foregroundStyle(.secondary)
+                                    }
+                                    if let item = itemLookup[result.itemID], item.isLinkItem {
+                                        LinkStatusBadge(status: item.archiveStatusValue)
                                     }
                                 }
                             }

@@ -20,6 +20,20 @@ struct ContentView: View {
         LibrarySummaryBuilder.collections(from: Array(items))
     }
 
+    private var recentItems: [Item] {
+        Array(items.prefix(12))
+    }
+
+    private var itemLookup: [UUID: Item] {
+        var lookup: [UUID: Item] = [:]
+        for item in items {
+            if let id = item.id {
+                lookup[id] = item
+            }
+        }
+        return lookup
+    }
+
     var body: some View {
         NavigationSplitView {
             List {
@@ -75,6 +89,34 @@ struct ContentView: View {
                     if searchText.isEmpty {
                         ScrollView {
                             VStack(alignment: .leading, spacing: 24) {
+                                VStack(alignment: .leading, spacing: 12) {
+                                    Label("Recent", systemImage: "clock")
+                                        .font(.title3.bold())
+                                    if recentItems.isEmpty {
+                                        Text("No items yet")
+                                            .foregroundStyle(.secondary)
+                                    } else {
+                                        ForEach(recentItems, id: \.objectID) { item in
+                                            if let itemID = item.id {
+                                                NavigationLink {
+                                                    ItemDetailView(itemID: itemID)
+                                                } label: {
+                                                    HStack {
+                                                        Text(item.title ?? item.linkTitle ?? "Untitled")
+                                                        Spacer()
+                                                        Text(item.itemType?.rawValue.capitalized ?? "Item")
+                                                            .foregroundStyle(.secondary)
+                                                        if item.isLinkItem {
+                                                            LinkStatusBadge(status: item.archiveStatusValue)
+                                                        }
+                                                    }
+                                                }
+                                                .buttonStyle(.plain)
+                                            }
+                                        }
+                                    }
+                                }
+
                                 VStack(alignment: .leading, spacing: 12) {
                                     Label("Tags", systemImage: "tag")
                                         .font(.title3.bold())
@@ -132,13 +174,16 @@ struct ContentView: View {
                             NavigationLink {
                                 ItemDetailView(itemID: result.itemID)
                             } label: {
-                                VStack(alignment: .leading, spacing: 4) {
+                                VStack(alignment: .leading, spacing: 6) {
                                     Text(result.title)
                                         .font(.headline)
                                     if let snippet = result.snippet, !snippet.isEmpty {
                                         Text(snippet)
                                             .font(.subheadline)
                                             .foregroundStyle(.secondary)
+                                    }
+                                    if let item = itemLookup[result.itemID], item.isLinkItem {
+                                        LinkStatusBadge(status: item.archiveStatusValue)
                                     }
                                 }
                                 .padding(.vertical, 4)

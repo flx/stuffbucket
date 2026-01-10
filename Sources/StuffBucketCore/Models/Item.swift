@@ -21,6 +21,15 @@ public extension Item {
         return ItemSource(rawValue: source)
     }
 
+    var archiveStatusValue: ArchiveStatus? {
+        guard let archiveStatus else { return nil }
+        return ArchiveStatus(rawValue: archiveStatus)
+    }
+
+    var isLinkItem: Bool {
+        itemType == .link
+    }
+
     var tagList: [String] {
         TagCodec.decode(tags)
     }

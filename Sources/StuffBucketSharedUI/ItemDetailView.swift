@@ -19,42 +19,65 @@ struct ItemDetailView: View {
     }
 
     var body: some View {
-        if let item = items.first {
-            Form {
-                Section("Details") {
-                    Text(item.title ?? item.linkTitle ?? "Untitled")
-                        .font(.headline)
-                    if let type = item.itemType?.rawValue {
-                        Text(type.capitalized)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-
-                Section("Tags") {
-                    TextField("tag1, tag2", text: $tagsText)
-                        .textInputAutocapitalization(.never)
-                        .disableAutocorrection(true)
-                }
+        Group {
+            if let item = items.first {
+                detailView(for: item)
+            } else {
+                missingView
             }
-            .navigationTitle(item.title ?? item.linkTitle ?? "Item")
-            .onAppear {
-                syncFromItem(item)
-            }
-            .onChange(of: item.tags ?? "") { _, _ in
-                syncFromItem(item)
-            }
-            .onChange(of: tagsText) { _, newValue in
-                applyTags(newValue, to: item)
-            }
-        } else {
-            VStack(spacing: 8) {
-                Text("Item not found")
-                    .font(.title2.bold())
-                Text("The item may have been deleted or is not synced yet.")
-                    .foregroundStyle(.secondary)
-            }
-            .padding()
         }
+    }
+
+    private func detailView(for item: Item) -> some View {
+        Form {
+            Section("Details") {
+                Text(displayTitle(for: item))
+                    .font(.headline)
+                if let type = item.itemType?.rawValue {
+                    Text(type.capitalized)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            Section("Tags") {
+                tagsField
+            }
+        }
+        .navigationTitle(displayTitle(for: item))
+        .onAppear {
+            syncFromItem(item)
+        }
+        .onChange(of: item.tags ?? "") { _, _ in
+            syncFromItem(item)
+        }
+        .onChange(of: tagsText) { _, newValue in
+            applyTags(newValue, to: item)
+        }
+    }
+
+    private var missingView: some View {
+        VStack(spacing: 8) {
+            Text("Item not found")
+                .font(.title2.bold())
+            Text("The item may have been deleted or is not synced yet.")
+                .foregroundStyle(.secondary)
+        }
+        .padding()
+    }
+
+    private func displayTitle(for item: Item) -> String {
+        item.title ?? item.linkTitle ?? "Untitled"
+    }
+
+    @ViewBuilder
+    private var tagsField: some View {
+#if os(iOS)
+        TextField("tag1, tag2", text: $tagsText)
+            .textInputAutocapitalization(.never)
+            .disableAutocorrection(true)
+#else
+        TextField("tag1, tag2", text: $tagsText)
+#endif
     }
 
     private func syncFromItem(_ item: Item) {

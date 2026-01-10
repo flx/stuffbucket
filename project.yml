@@ -23,6 +23,9 @@ schemes:
     build:
       targets:
         StuffBucket: all
+    test:
+      targets:
+        - StuffBucketTests
     run:
       config: Debug
   StuffBucketMac:
@@ -39,11 +42,14 @@ targets:
     supportedDestinations: [iOS]
     sources:
       - path: Sources/StuffBucket
+      - path: Sources/StuffBucketShared
       - path: Sources/StuffBucketSharedUI
     resources:
       - path: Sources/StuffBucket/Resources
     dependencies:
       - target: StuffBucketCore_iOS
+      - target: StuffBucketShareExtension
+        embed: true
     settings:
       base:
         INFOPLIST_FILE: Sources/StuffBucket/Info.plist
@@ -57,6 +63,7 @@ targets:
         SUPPORTS_MACCATALYST: NO
         SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: YES
         SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD: YES
+        CODE_SIGN_ENTITLEMENTS: Sources/StuffBucket/StuffBucket.entitlements
 
   StuffBucketMac:
     type: application
@@ -64,11 +71,14 @@ targets:
     supportedDestinations: [macOS]
     sources:
       - path: Sources/StuffBucketMac
+      - path: Sources/StuffBucketShared
       - path: Sources/StuffBucketSharedUI
     resources:
       - path: Sources/StuffBucketMac/Resources
     dependencies:
       - target: StuffBucketCore_macOS
+      - target: StuffBucketMacShareExtension
+        embed: true
     settings:
       base:
         INFOPLIST_FILE: Sources/StuffBucketMac/Info.plist
@@ -82,6 +92,7 @@ targets:
         SUPPORTS_MACCATALYST: NO
         SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: NO
         TARGETED_DEVICE_FAMILY: ""
+        CODE_SIGN_ENTITLEMENTS: Sources/StuffBucketMac/StuffBucketMac.entitlements
 
   StuffBucketCore:
     type: framework
@@ -97,3 +108,50 @@ targets:
         DEAD_CODE_STRIPPING: YES
         ENABLE_MODULE_VERIFIER: YES
         MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS: "gnu11 gnu++14"
+
+  StuffBucketShareExtension:
+    type: app-extension
+    platform: iOS
+    supportedDestinations: [iOS]
+    sources:
+      - path: Sources/StuffBucketShareExtension
+      - path: Sources/StuffBucketShared
+    settings:
+      base:
+        INFOPLIST_FILE: Sources/StuffBucketShareExtension/Info.plist
+        PRODUCT_BUNDLE_IDENTIFIER: com.digitalhandstand.stuffbucket.share
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: V37U525228
+        CODE_SIGN_ENTITLEMENTS: Sources/StuffBucketShareExtension/StuffBucketShareExtension.entitlements
+        APPLICATION_EXTENSION_API_ONLY: YES
+    dependencies:
+      - sdk: Social.framework
+
+  StuffBucketTests:
+    type: bundle.unit-test
+    platform: iOS
+    supportedDestinations: [iOS]
+    sources:
+      - path: Tests/StuffBucketTests
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: com.digitalhandstand.stuffbucket.tests
+    dependencies:
+      - target: StuffBucket
+
+  StuffBucketMacShareExtension:
+    type: app-extension
+    platform: macOS
+    supportedDestinations: [macOS]
+    sources:
+      - path: Sources/StuffBucketMacShareExtension
+      - path: Sources/StuffBucketShared
+    settings:
+      base:
+        INFOPLIST_FILE: Sources/StuffBucketMacShareExtension/Info.plist
+        PRODUCT_BUNDLE_IDENTIFIER: com.digitalhandstand.stuffbucket.mac.share
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: V37U525228
+        CODE_SIGN_ENTITLEMENTS: Sources/StuffBucketMacShareExtension/StuffBucketMacShareExtension.entitlements
+        APPLICATION_EXTENSION_API_ONLY: YES
