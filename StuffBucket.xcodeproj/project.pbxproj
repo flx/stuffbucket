@@ -1,0 +1,823 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 63;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0B636D62485E37CA9AB95AEC /* StuffBucketModel.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = A0E7D6443688015B5AD0915C /* StuffBucketModel.xcdatamodeld */; };
+		1629127A33E68B72BE6B0797 /* ItemType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492673B57623F50F88A8ADA2 /* ItemType.swift */; };
+		1684E9613F720EDFB183041E /* AIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1981F222EFC6022AFB2BDFC /* AIService.swift */; };
+		184AA3E4FDEA06A44BDBFCC8 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8F52BD4FC676A4538452BFDB /* Assets.xcassets */; };
+		23AAA931C77F030BB05A7A1C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F116073320FB06FC953E4566 /* Assets.xcassets */; };
+		34961F9179850DA307BE167C /* StuffBucketCore.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 5AE0A3DE6401EC33AC94C171 /* StuffBucketCore.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		3DB1EAC92B925A9163115A56 /* SearchTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2362C758E3E3EC455DA86B6 /* SearchTypes.swift */; };
+		44B63DF7EA7517242F967299 /* SafariBookmarksImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E70E88CA2D3A12D3916610DF /* SafariBookmarksImporter.swift */; };
+		4A2310E940D292587003DBAA /* OpenAIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3967E8E4395E7A531ABB2E62 /* OpenAIClient.swift */; };
+		4A8A152DBF678089079E23FA /* SearchTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2362C758E3E3EC455DA86B6 /* SearchTypes.swift */; };
+		5F55015554ECD27FF920B8CD /* StuffBucketCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B361E6BED62FB2575D9451B2 /* StuffBucketCore.framework */; };
+		636A5458895A0EFAB3548B53 /* StuffBucketModel.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = A0E7D6443688015B5AD0915C /* StuffBucketModel.xcdatamodeld */; };
+		6684A51D3E6853AA9C05B79A /* StuffBucketApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B67CD12B29FD60DF409D87B /* StuffBucketApp.swift */; };
+		7A9131A8C23EBCFFCC7353CB /* StuffBucketCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5AE0A3DE6401EC33AC94C171 /* StuffBucketCore.framework */; };
+		91F3C3288D3140283B8352B4 /* ItemType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492673B57623F50F88A8ADA2 /* ItemType.swift */; };
+		A41D6A37792859DA717F2B9C /* StuffBucketCore.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = B361E6BED62FB2575D9451B2 /* StuffBucketCore.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		A4B7752A6E94C6C1939AB68E /* OpenAIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3967E8E4395E7A531ABB2E62 /* OpenAIClient.swift */; };
+		BF0A039D793E0C0E4F733F1E /* SafariBookmarksImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E70E88CA2D3A12D3916610DF /* SafariBookmarksImporter.swift */; };
+		C5523BBEEFEA8580CF55986C /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AB2C2597AE76B5FA3455BC7 /* ContentView.swift */; };
+		CCEFAF9BDCB0665F0DE35AD5 /* ModelDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7D12DAD6A6B4D0D441AF4CC /* ModelDefaults.swift */; };
+		D2AA894706968FC3D078E99D /* ModelDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7D12DAD6A6B4D0D441AF4CC /* ModelDefaults.swift */; };
+		D46EBD7F3E366F2E7B3C8FE9 /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3519E626243FD84BBF5EDA7F /* PersistenceController.swift */; };
+		D6C860C37CC33E7DE7EAADCF /* StuffBucketMacApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 026D6ACFAAE7EF7A081F6194 /* StuffBucketMacApp.swift */; };
+		DC8A8AA04064C930F4AB54EE /* AIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1981F222EFC6022AFB2BDFC /* AIService.swift */; };
+		E12947893CCC16D9108DDBF3 /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3519E626243FD84BBF5EDA7F /* PersistenceController.swift */; };
+		E1D7292B327AE124B4D139DE /* SearchIndexer.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA005B6C0E3259CDAE104D1C /* SearchIndexer.swift */; };
+		E5A30EB1358147F2E89BA621 /* SearchIndexer.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA005B6C0E3259CDAE104D1C /* SearchIndexer.swift */; };
+		FABB5C46F68A88842020892B /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3229BC032C43225982B053D2 /* ContentView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		307EA3B8FD8A69FBFEF3A4DF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = EC99472ADB6FCA1746DD99A8 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D00D7A27BDD3B5A7B4B852AB;
+			remoteInfo = StuffBucketCore_iOS;
+		};
+		5B47C2D25DCB1CA4C0CE1129 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = EC99472ADB6FCA1746DD99A8 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E4B7303BB800070BB5447DCF;
+			remoteInfo = StuffBucketCore_macOS;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		9311A70D1B0D4134E31CCB5A /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				A41D6A37792859DA717F2B9C /* StuffBucketCore.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D63069500CB5D2BC44F93B6D /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				34961F9179850DA307BE167C /* StuffBucketCore.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		026D6ACFAAE7EF7A081F6194 /* StuffBucketMacApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StuffBucketMacApp.swift; sourceTree = "<group>"; };
+		0AB2C2597AE76B5FA3455BC7 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		2F4C286550AA4838919B3DF4 /* project.yml */ = {isa = PBXFileReference; lastKnownFileType = text.yaml; path = project.yml; sourceTree = "<group>"; };
+		3229BC032C43225982B053D2 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		3519E626243FD84BBF5EDA7F /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceController.swift; sourceTree = "<group>"; };
+		3967E8E4395E7A531ABB2E62 /* OpenAIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAIClient.swift; sourceTree = "<group>"; };
+		492673B57623F50F88A8ADA2 /* ItemType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemType.swift; sourceTree = "<group>"; };
+		4C0B04C9F62DBD0825C38DC6 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		5AE0A3DE6401EC33AC94C171 /* StuffBucketCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = StuffBucketCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		5FE07D9B43A9ED142BC4791E /* Implementation_Plan.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = Implementation_Plan.md; sourceTree = "<group>"; };
+		79BD0E7E15F68204548BA1B4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		866E858862E2D5D0B3FF2A10 /* AI_Copy.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = AI_Copy.md; sourceTree = "<group>"; };
+		87ECF4AE6D652BBD6E10682D /* StuffBucket.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = StuffBucket.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		8B67CD12B29FD60DF409D87B /* StuffBucketApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StuffBucketApp.swift; sourceTree = "<group>"; };
+		8F52BD4FC676A4538452BFDB /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		98FEBE9AF2D9ED305F35501F /* StuffBucketModel.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = StuffBucketModel.xcdatamodel; sourceTree = "<group>"; };
+		B361E6BED62FB2575D9451B2 /* StuffBucketCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = StuffBucketCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		CD33A00B462976D52F37AEF0 /* StuffBucketMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = StuffBucketMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D153F84880F3059E01BA9478 /* spec.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = spec.md; sourceTree = "<group>"; };
+		DA005B6C0E3259CDAE104D1C /* SearchIndexer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchIndexer.swift; sourceTree = "<group>"; };
+		DB8474DDD0F98C2D189F8BD5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		E2362C758E3E3EC455DA86B6 /* SearchTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchTypes.swift; sourceTree = "<group>"; };
+		E70E88CA2D3A12D3916610DF /* SafariBookmarksImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafariBookmarksImporter.swift; sourceTree = "<group>"; };
+		E7D12DAD6A6B4D0D441AF4CC /* ModelDefaults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelDefaults.swift; sourceTree = "<group>"; };
+		F116073320FB06FC953E4566 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		F1981F222EFC6022AFB2BDFC /* AIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIService.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		1B78DCC838CCAEC500461BE9 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7A9131A8C23EBCFFCC7353CB /* StuffBucketCore.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E101F68876DFAAF106E90646 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5F55015554ECD27FF920B8CD /* StuffBucketCore.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		0014BAE11E2E5827DF5BC980 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				C972833534812387DABC039E /* AI */,
+				D2DD0AEF9214BCD114310B66 /* Search */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		04FC5FCFC956B7C8B93D7674 /* Persistence */ = {
+			isa = PBXGroup;
+			children = (
+				3519E626243FD84BBF5EDA7F /* PersistenceController.swift */,
+			);
+			path = Persistence;
+			sourceTree = "<group>";
+		};
+		58F97F256178DB287C08565D /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				F116073320FB06FC953E4566 /* Assets.xcassets */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		6EFAA7297755F810D76A9C6E /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				492673B57623F50F88A8ADA2 /* ItemType.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		A71F0BF113ED00C173454F8D /* StuffBucketCore */ = {
+			isa = PBXGroup;
+			children = (
+				DB8474DDD0F98C2D189F8BD5 /* Info.plist */,
+				A0E7D6443688015B5AD0915C /* StuffBucketModel.xcdatamodeld */,
+				C6F72F09A2A2F5A96594719E /* Import */,
+				6EFAA7297755F810D76A9C6E /* Models */,
+				04FC5FCFC956B7C8B93D7674 /* Persistence */,
+				0014BAE11E2E5827DF5BC980 /* Services */,
+			);
+			path = StuffBucketCore;
+			sourceTree = "<group>";
+		};
+		BCD61390CB3A02A6CD4AE680 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				8F52BD4FC676A4538452BFDB /* Assets.xcassets */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		C6F72F09A2A2F5A96594719E /* Import */ = {
+			isa = PBXGroup;
+			children = (
+				E70E88CA2D3A12D3916610DF /* SafariBookmarksImporter.swift */,
+			);
+			path = Import;
+			sourceTree = "<group>";
+		};
+		C972833534812387DABC039E /* AI */ = {
+			isa = PBXGroup;
+			children = (
+				F1981F222EFC6022AFB2BDFC /* AIService.swift */,
+				E7D12DAD6A6B4D0D441AF4CC /* ModelDefaults.swift */,
+				3967E8E4395E7A531ABB2E62 /* OpenAIClient.swift */,
+			);
+			path = AI;
+			sourceTree = "<group>";
+		};
+		D2DD0AEF9214BCD114310B66 /* Search */ = {
+			isa = PBXGroup;
+			children = (
+				DA005B6C0E3259CDAE104D1C /* SearchIndexer.swift */,
+				E2362C758E3E3EC455DA86B6 /* SearchTypes.swift */,
+			);
+			path = Search;
+			sourceTree = "<group>";
+		};
+		D5D6E7B2CEBD25C2D1E75A5C /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				DC545F5B013B0E1691C06139 /* StuffBucket */,
+				A71F0BF113ED00C173454F8D /* StuffBucketCore */,
+				ED1FA42EFA8DBEC741532098 /* StuffBucketMac */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		DC545F5B013B0E1691C06139 /* StuffBucket */ = {
+			isa = PBXGroup;
+			children = (
+				0AB2C2597AE76B5FA3455BC7 /* ContentView.swift */,
+				4C0B04C9F62DBD0825C38DC6 /* Info.plist */,
+				8B67CD12B29FD60DF409D87B /* StuffBucketApp.swift */,
+				58F97F256178DB287C08565D /* Resources */,
+			);
+			path = StuffBucket;
+			sourceTree = "<group>";
+		};
+		E4DE441F8F6C82B7E781114E = {
+			isa = PBXGroup;
+			children = (
+				866E858862E2D5D0B3FF2A10 /* AI_Copy.md */,
+				5FE07D9B43A9ED142BC4791E /* Implementation_Plan.md */,
+				2F4C286550AA4838919B3DF4 /* project.yml */,
+				D153F84880F3059E01BA9478 /* spec.md */,
+				D5D6E7B2CEBD25C2D1E75A5C /* Sources */,
+				F939EF66EB4CDCCE68AD04D7 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		ED1FA42EFA8DBEC741532098 /* StuffBucketMac */ = {
+			isa = PBXGroup;
+			children = (
+				3229BC032C43225982B053D2 /* ContentView.swift */,
+				79BD0E7E15F68204548BA1B4 /* Info.plist */,
+				026D6ACFAAE7EF7A081F6194 /* StuffBucketMacApp.swift */,
+				BCD61390CB3A02A6CD4AE680 /* Resources */,
+			);
+			path = StuffBucketMac;
+			sourceTree = "<group>";
+		};
+		F939EF66EB4CDCCE68AD04D7 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				87ECF4AE6D652BBD6E10682D /* StuffBucket.app */,
+				B361E6BED62FB2575D9451B2 /* StuffBucketCore.framework */,
+				5AE0A3DE6401EC33AC94C171 /* StuffBucketCore.framework */,
+				CD33A00B462976D52F37AEF0 /* StuffBucketMac.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		8F8E123B35D0528F425DEEFD /* StuffBucketMac */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E8FCC0B022C436F31CFC276C /* Build configuration list for PBXNativeTarget "StuffBucketMac" */;
+			buildPhases = (
+				B0182AF0AED682027AED6199 /* Sources */,
+				05FA275D0D46C61A739371C3 /* Resources */,
+				1B78DCC838CCAEC500461BE9 /* Frameworks */,
+				D63069500CB5D2BC44F93B6D /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				CC7B77333ACFE568209C3E3C /* PBXTargetDependency */,
+			);
+			name = StuffBucketMac;
+			packageProductDependencies = (
+			);
+			productName = StuffBucketMac;
+			productReference = CD33A00B462976D52F37AEF0 /* StuffBucketMac.app */;
+			productType = "com.apple.product-type.application";
+		};
+		BC358A3656762DACE7E742E7 /* StuffBucket */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6881CF2C154FDDC892D03CF9 /* Build configuration list for PBXNativeTarget "StuffBucket" */;
+			buildPhases = (
+				0254619D04FD9DCD25075D8B /* Sources */,
+				3C625B2B7CB7C6079D4C1E49 /* Resources */,
+				E101F68876DFAAF106E90646 /* Frameworks */,
+				9311A70D1B0D4134E31CCB5A /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				E3A241BF543E3E19ADBC5B09 /* PBXTargetDependency */,
+			);
+			name = StuffBucket;
+			packageProductDependencies = (
+			);
+			productName = StuffBucket;
+			productReference = 87ECF4AE6D652BBD6E10682D /* StuffBucket.app */;
+			productType = "com.apple.product-type.application";
+		};
+		D00D7A27BDD3B5A7B4B852AB /* StuffBucketCore_iOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FC88E000ECF0E591F439F864 /* Build configuration list for PBXNativeTarget "StuffBucketCore_iOS" */;
+			buildPhases = (
+				E066A7AB035FD230C5396EC0 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = StuffBucketCore_iOS;
+			packageProductDependencies = (
+			);
+			productName = StuffBucketCore_iOS;
+			productReference = B361E6BED62FB2575D9451B2 /* StuffBucketCore.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+		E4B7303BB800070BB5447DCF /* StuffBucketCore_macOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6B12E557C8DEF28BA698CAA3 /* Build configuration list for PBXNativeTarget "StuffBucketCore_macOS" */;
+			buildPhases = (
+				234EF1B28EC4C84A2F756F7F /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = StuffBucketCore_macOS;
+			packageProductDependencies = (
+			);
+			productName = StuffBucketCore_macOS;
+			productReference = 5AE0A3DE6401EC33AC94C171 /* StuffBucketCore.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		EC99472ADB6FCA1746DD99A8 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 2620;
+			};
+			buildConfigurationList = A1F78AC379F48B064C7655BB /* Build configuration list for PBXProject "StuffBucket" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = E4DE441F8F6C82B7E781114E;
+			minimizedProjectReferenceProxies = 1;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				BC358A3656762DACE7E742E7 /* StuffBucket */,
+				D00D7A27BDD3B5A7B4B852AB /* StuffBucketCore_iOS */,
+				E4B7303BB800070BB5447DCF /* StuffBucketCore_macOS */,
+				8F8E123B35D0528F425DEEFD /* StuffBucketMac */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		05FA275D0D46C61A739371C3 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				184AA3E4FDEA06A44BDBFCC8 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3C625B2B7CB7C6079D4C1E49 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				23AAA931C77F030BB05A7A1C /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		0254619D04FD9DCD25075D8B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C5523BBEEFEA8580CF55986C /* ContentView.swift in Sources */,
+				6684A51D3E6853AA9C05B79A /* StuffBucketApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		234EF1B28EC4C84A2F756F7F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DC8A8AA04064C930F4AB54EE /* AIService.swift in Sources */,
+				1629127A33E68B72BE6B0797 /* ItemType.swift in Sources */,
+				D2AA894706968FC3D078E99D /* ModelDefaults.swift in Sources */,
+				A4B7752A6E94C6C1939AB68E /* OpenAIClient.swift in Sources */,
+				D46EBD7F3E366F2E7B3C8FE9 /* PersistenceController.swift in Sources */,
+				BF0A039D793E0C0E4F733F1E /* SafariBookmarksImporter.swift in Sources */,
+				E5A30EB1358147F2E89BA621 /* SearchIndexer.swift in Sources */,
+				4A8A152DBF678089079E23FA /* SearchTypes.swift in Sources */,
+				636A5458895A0EFAB3548B53 /* StuffBucketModel.xcdatamodeld in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B0182AF0AED682027AED6199 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FABB5C46F68A88842020892B /* ContentView.swift in Sources */,
+				D6C860C37CC33E7DE7EAADCF /* StuffBucketMacApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E066A7AB035FD230C5396EC0 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1684E9613F720EDFB183041E /* AIService.swift in Sources */,
+				91F3C3288D3140283B8352B4 /* ItemType.swift in Sources */,
+				CCEFAF9BDCB0665F0DE35AD5 /* ModelDefaults.swift in Sources */,
+				4A2310E940D292587003DBAA /* OpenAIClient.swift in Sources */,
+				E12947893CCC16D9108DDBF3 /* PersistenceController.swift in Sources */,
+				44B63DF7EA7517242F967299 /* SafariBookmarksImporter.swift in Sources */,
+				E1D7292B327AE124B4D139DE /* SearchIndexer.swift in Sources */,
+				3DB1EAC92B925A9163115A56 /* SearchTypes.swift in Sources */,
+				0B636D62485E37CA9AB95AEC /* StuffBucketModel.xcdatamodeld in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		CC7B77333ACFE568209C3E3C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E4B7303BB800070BB5447DCF /* StuffBucketCore_macOS */;
+			targetProxy = 5B47C2D25DCB1CA4C0CE1129 /* PBXContainerItemProxy */;
+		};
+		E3A241BF543E3E19ADBC5B09 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D00D7A27BDD3B5A7B4B852AB /* StuffBucketCore_iOS */;
+			targetProxy = 307EA3B8FD8A69FBFEF3A4DF /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		31E6CD10C630DC76F9328420 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "";
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
+				INFOPLIST_FILE = Sources/StuffBucketCore/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu11 gnu++14";
+				PRODUCT_BUNDLE_IDENTIFIER = com.stuffbucket.StuffBucketCore;
+				PRODUCT_NAME = StuffBucketCore;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSIONING_SYSTEM = "apple-generic";
+			};
+			name = Debug;
+		};
+		5995FB1BBBED7497D4A965A4 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = YES;
+				INFOPLIST_FILE = Sources/StuffBucketMac/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.stuffbucket.StuffBucketMac;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		6B1AE6EF339B1DEAD3B97FF7 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = Z8LG72F89B;
+				INFOPLIST_FILE = Sources/StuffBucket/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.digitalhandstand.StuffBucket;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		880879BC0BC4EA2A09CB2923 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = Z8LG72F89B;
+				INFOPLIST_FILE = Sources/StuffBucket/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.digitalhandstand.StuffBucket;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		8D850C99D1DDC0DCF4BEF1D5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "";
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
+				INFOPLIST_FILE = Sources/StuffBucketCore/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu11 gnu++14";
+				PRODUCT_BUNDLE_IDENTIFIER = com.stuffbucket.StuffBucketCore;
+				PRODUCT_NAME = StuffBucketCore;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				VERSIONING_SYSTEM = "apple-generic";
+			};
+			name = Release;
+		};
+		9308F1FDC890A7000460ACBD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = YES;
+				INFOPLIST_FILE = Sources/StuffBucketMac/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.stuffbucket.StuffBucketMac;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		B2E5D0307A371E83A9A502EE /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.9;
+			};
+			name = Debug;
+		};
+		CA6E0669BC91BAF7918FD7A8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "";
+				CURRENT_PROJECT_VERSION = 1;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
+				INFOPLIST_FILE = Sources/StuffBucketCore/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu11 gnu++14";
+				PRODUCT_BUNDLE_IDENTIFIER = com.stuffbucket.StuffBucketCore;
+				PRODUCT_NAME = StuffBucketCore;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VERSIONING_SYSTEM = "apple-generic";
+			};
+			name = Release;
+		};
+		D1BD4AE71F8F8EBAB469F7D6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.9;
+			};
+			name = Release;
+		};
+		DA2A8B2CDB43F166A609EE45 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_IDENTITY = "";
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				ENABLE_MODULE_VERIFIER = YES;
+				INFOPLIST_FILE = Sources/StuffBucketCore/Info.plist;
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MODULE_VERIFIER_SUPPORTED_LANGUAGE_STANDARDS = "gnu11 gnu++14";
+				PRODUCT_BUNDLE_IDENTIFIER = com.stuffbucket.StuffBucketCore;
+				PRODUCT_NAME = StuffBucketCore;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				VERSIONING_SYSTEM = "apple-generic";
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		6881CF2C154FDDC892D03CF9 /* Build configuration list for PBXNativeTarget "StuffBucket" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6B1AE6EF339B1DEAD3B97FF7 /* Debug */,
+				880879BC0BC4EA2A09CB2923 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		6B12E557C8DEF28BA698CAA3 /* Build configuration list for PBXNativeTarget "StuffBucketCore_macOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DA2A8B2CDB43F166A609EE45 /* Debug */,
+				8D850C99D1DDC0DCF4BEF1D5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		A1F78AC379F48B064C7655BB /* Build configuration list for PBXProject "StuffBucket" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B2E5D0307A371E83A9A502EE /* Debug */,
+				D1BD4AE71F8F8EBAB469F7D6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		E8FCC0B022C436F31CFC276C /* Build configuration list for PBXNativeTarget "StuffBucketMac" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9308F1FDC890A7000460ACBD /* Debug */,
+				5995FB1BBBED7497D4A965A4 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		FC88E000ECF0E591F439F864 /* Build configuration list for PBXNativeTarget "StuffBucketCore_iOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				31E6CD10C630DC76F9328420 /* Debug */,
+				CA6E0669BC91BAF7918FD7A8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCVersionGroup section */
+		A0E7D6443688015B5AD0915C /* StuffBucketModel.xcdatamodeld */ = {
+			isa = XCVersionGroup;
+			children = (
+				98FEBE9AF2D9ED305F35501F /* StuffBucketModel.xcdatamodel */,
+			);
+			currentVersion = 98FEBE9AF2D9ED305F35501F /* StuffBucketModel.xcdatamodel */;
+			path = StuffBucketModel.xcdatamodeld;
+			sourceTree = "<group>";
+			versionGroupType = wrapper.xcdatamodel;
+		};
+/* End XCVersionGroup section */
+	};
+	rootObject = EC99472ADB6FCA1746DD99A8 /* Project object */;
+}

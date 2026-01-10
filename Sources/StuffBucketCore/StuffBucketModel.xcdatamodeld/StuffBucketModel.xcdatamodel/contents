@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model name="StuffBucketModel" userDefinedModelVersionIdentifier="" type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="22709" systemVersion="23F79" minimumToolsVersion="Automatic" sourceLanguage="Swift" entityVersionHashesVersion="3">
+    <entity name="Item" representedClassName="Item" syncable="YES" codeGenerationType="class">
+        <attribute name="id" attributeType="UUID" optional="NO"/>
+        <attribute name="type" attributeType="String" optional="NO"/>
+        <attribute name="title" attributeType="String" optional="YES"/>
+        <attribute name="createdAt" attributeType="Date" optional="YES"/>
+        <attribute name="updatedAt" attributeType="Date" optional="YES"/>
+        <attribute name="isProtected" attributeType="Boolean" optional="NO" defaultValueString="NO"/>
+        <attribute name="collectionID" attributeType="UUID" optional="YES"/>
+        <attribute name="source" attributeType="String" optional="YES"/>
+        <attribute name="sourceExternalID" attributeType="String" optional="YES"/>
+        <attribute name="sourceFolderPath" attributeType="String" optional="YES"/>
+        <attribute name="linkURL" attributeType="String" optional="YES"/>
+        <attribute name="linkTitle" attributeType="String" optional="YES"/>
+        <attribute name="linkAuthor" attributeType="String" optional="YES"/>
+        <attribute name="linkPublishedDate" attributeType="Date" optional="YES"/>
+        <attribute name="htmlRelativePath" attributeType="String" optional="YES"/>
+        <attribute name="archiveStatus" attributeType="String" optional="YES"/>
+        <attribute name="aiSummary" attributeType="String" optional="YES"/>
+        <attribute name="aiArtifactsJSON" attributeType="String" optional="YES"/>
+        <attribute name="aiModelID" attributeType="String" optional="YES"/>
+        <attribute name="aiUpdatedAt" attributeType="Date" optional="YES"/>
+    </entity>
+</model>
