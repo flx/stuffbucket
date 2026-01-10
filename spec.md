@@ -190,6 +190,7 @@ If a link is marked protected:
 ### iOS / iPadOS Share Sheet
 - In-app quick add:
   - New Snippet creates a text capture item immediately.
+  - Add Link prompts for a URL and saves it as a Link item.
   - Import Document uses the Files picker and copies the file into StuffBucket/Documents.
 - Saving a URL triggers:
   1. Immediate metadata save
@@ -239,6 +240,7 @@ If a link is marked protected:
 ### 9.2 Item detail
 - Tag editing is available on the item detail view (comma-separated input).
 - De-duplication based on URL + title + folder path; keep a sync link when possible.
+- Document items show the filename and a “Show in Finder” action on macOS.
 
 ---
 

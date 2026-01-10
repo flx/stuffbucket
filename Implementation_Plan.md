@@ -159,6 +159,8 @@
 - Shared item detail view for item metadata (tags). completed [x]
 - Ensure tag input modifiers are platform-appropriate. completed [x]
 - Add quick-add menu for new snippets and document import. completed [x]
+- Add in-app prompt to save a link by pasting a URL. completed [x]
+- Show an empty-state Import Document button. completed [x]
 - Item detail actions for AI tasks (summarize, key points, tags).
 - AI settings screen (API key management + advanced model picker).
 - Show a pricing disclosure line with per-token rates sourced from the OpenAI pricing page.
@@ -171,6 +173,8 @@
 - Shared item detail view for item metadata (tags). completed [x]
 - Add quick-add menu for new snippets and document import. completed [x]
 - Support paste/drag URL capture in the main view. completed [x]
+- Add “Show in Finder” for document items. completed [x]
+- Show an empty-state Import Document button. completed [x]
 - AI actions integrated into item detail and toolbar.
 - AI settings screen (API key management + advanced model picker).
 - Show a pricing disclosure line with per-token rates sourced from the OpenAI pricing page.

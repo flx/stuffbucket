@@ -1,6 +1,9 @@
 import CoreData
 import SwiftUI
 import StuffBucketCore
+#if os(macOS)
+import AppKit
+#endif
 
 struct ItemDetailView: View {
     let itemID: UUID
@@ -53,8 +56,17 @@ struct ItemDetailView: View {
 
             if item.itemType == .document {
                 Section("Document") {
-                    Text(item.documentFileName ?? "Document")
-                        .foregroundStyle(.secondary)
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(item.documentFileName ?? "Document")
+                            .foregroundStyle(.secondary)
+#if os(macOS)
+                        if let documentURL = item.documentURL {
+                            Button("Show in Finder") {
+                                NSWorkspace.shared.activateFileViewerSelecting([documentURL])
+                            }
+                        }
+#endif
+                    }
                 }
             }
 

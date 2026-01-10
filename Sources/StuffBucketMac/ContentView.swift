@@ -98,8 +98,13 @@ struct ContentView: View {
                                     Label("Recent", systemImage: "clock")
                                         .font(.title3.bold())
                                     if recentItems.isEmpty {
-                                        Text("No items yet")
-                                            .foregroundStyle(.secondary)
+                                        VStack(alignment: .leading, spacing: 12) {
+                                            Text("No items yet")
+                                                .foregroundStyle(.secondary)
+                                            Button("Import Document...") {
+                                                isImportingDocument = true
+                                            }
+                                        }
                                     } else {
                                         ForEach(recentItems, id: \.objectID) { item in
                                             if let itemID = item.id {

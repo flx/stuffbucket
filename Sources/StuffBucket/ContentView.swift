@@ -10,6 +10,8 @@ struct ContentView: View {
     @State private var searchTask: Task<Void, Never>?
     @State private var isShowingSnippetSheet = false
     @State private var isImportingDocument = false
+    @State private var isShowingAddLinkAlert = false
+    @State private var addLinkText = ""
     private let searchService = SearchService()
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \Item.updatedAt, ascending: false)]
@@ -48,8 +50,13 @@ struct ContentView: View {
                     if searchText.isEmpty {
                         Section("Recent") {
                             if recentItems.isEmpty {
-                                Text("No items yet")
-                                    .foregroundStyle(.secondary)
+                                VStack(alignment: .leading, spacing: 12) {
+                                    Text("No items yet")
+                                        .foregroundStyle(.secondary)
+                                    Button("Import Document...") {
+                                        isImportingDocument = true
+                                    }
+                                }
                             } else {
                                 ForEach(recentItems, id: \.objectID) { item in
                                     if let itemID = item.id {
@@ -147,6 +154,12 @@ struct ContentView: View {
                         Button("New Snippet") {
                             isShowingSnippetSheet = true
                         }
+#if os(iOS)
+                        Button("Add Link...") {
+                            addLinkText = ""
+                            isShowingAddLinkAlert = true
+                        }
+#endif
                         Button("Import Document...") {
                             isImportingDocument = true
                         }
@@ -171,6 +184,18 @@ struct ContentView: View {
                     break
                 }
             }
+#if os(iOS)
+            .alert("Add Link", isPresented: $isShowingAddLinkAlert) {
+                TextField("https://example.com", text: $addLinkText)
+                Button("Cancel", role: .cancel) {}
+                Button("Add") {
+                    addLink()
+                }
+                .disabled(addLinkText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            } message: {
+                Text("Paste a URL to save it in StuffBucket.")
+            }
+#endif
         }
         .onChange(of: searchText) { _, newValue in
             searchTask?.cancel()
@@ -196,6 +221,30 @@ struct ContentView: View {
         }
         return "\(prefix):\(trimmed)"
     }
+
+#if os(iOS)
+    private func addLink() {
+        guard let url = normalizedURL(from: addLinkText) else { return }
+        guard let itemID = ItemImportService.createLinkItem(url: url, source: .manual, in: context) else { return }
+        do {
+            try context.save()
+        } catch {
+            context.rollback()
+            return
+        }
+        let backgroundContext = PersistenceController.shared.container.newBackgroundContext()
+        LinkArchiver.shared.archive(itemID: itemID, context: backgroundContext)
+    }
+
+    private func normalizedURL(from string: String) -> URL? {
+        let trimmed = string.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        if let url = URL(string: trimmed), url.scheme != nil {
+            return url
+        }
+        return URL(string: "https://\(trimmed)")
+    }
+#endif
 
     private func importDocuments(_ urls: [URL]) {
         for url in urls {
