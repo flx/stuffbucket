@@ -33,12 +33,7 @@ struct StuffBucketApp: App {
         var newItemIDs: [UUID] = []
         context.performAndWait {
             for url in urls {
-                let item = Item.create(in: context, type: .link)
-                item.linkURL = url.absoluteString
-                item.linkTitle = url.host ?? url.absoluteString
-                item.title = item.linkTitle
-                item.source = ItemSource.shareSheet.rawValue
-                if let id = item.id {
+                if let id = ItemImportService.createLinkItem(url: url, source: .shareSheet, in: context) {
                     newItemIDs.append(id)
                 }
             }

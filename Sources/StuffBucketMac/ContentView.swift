@@ -1,11 +1,16 @@
 import CoreData
 import SwiftUI
 import StuffBucketCore
+import UniformTypeIdentifiers
 
 struct ContentView: View {
+    @Environment(\.managedObjectContext) private var context
     @State private var searchText = ""
     @State private var results: [SearchResult] = []
     @State private var searchTask: Task<Void, Never>?
+    @State private var isShowingSnippetSheet = false
+    @State private var isImportingDocument = false
+    @State private var isDropTargeted = false
     private let searchService = SearchService()
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \Item.updatedAt, ascending: false)]
@@ -102,7 +107,7 @@ struct ContentView: View {
                                                     ItemDetailView(itemID: itemID)
                                                 } label: {
                                                     HStack {
-                                                        Text(item.title ?? item.linkTitle ?? "Untitled")
+                                                        Text(item.displayTitle)
                                                         Spacer()
                                                         Text(item.itemType?.rawValue.capitalized ?? "Item")
                                                             .foregroundStyle(.secondary)
@@ -195,6 +200,44 @@ struct ContentView: View {
             }
         }
         .frame(minWidth: 900, minHeight: 600)
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Menu {
+                    Button("New Snippet") {
+                        isShowingSnippetSheet = true
+                    }
+                    Button("Import Document...") {
+                        isImportingDocument = true
+                    }
+                } label: {
+                    Label("Add", systemImage: "plus")
+                }
+            }
+        }
+        .sheet(isPresented: $isShowingSnippetSheet) {
+            QuickAddSnippetView(onSave: nil)
+                .environment(\.managedObjectContext, context)
+        }
+        .fileImporter(
+            isPresented: $isImportingDocument,
+            allowedContentTypes: [.item],
+            allowsMultipleSelection: true
+        ) { result in
+            switch result {
+            case .success(let urls):
+                importDocuments(urls)
+            case .failure:
+                break
+            }
+        }
+        .onDrop(of: [UTType.url.identifier, UTType.plainText.identifier], isTargeted: $isDropTargeted) { providers in
+            guard canHandleProviders(providers) else { return false }
+            handleItemProviders(providers)
+            return true
+        }
+        .onPasteCommand(of: [UTType.url, UTType.plainText]) { providers in
+            handleItemProviders(providers)
+        }
         .onChange(of: searchText) { _, newValue in
             searchTask?.cancel()
             if newValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
@@ -218,6 +261,89 @@ struct ContentView: View {
             return "\(prefix):\"\(trimmed)\""
         }
         return "\(prefix):\(trimmed)"
+    }
+
+    private func importDocuments(_ urls: [URL]) {
+        context.perform {
+            for url in urls {
+                let accessGranted = url.startAccessingSecurityScopedResource()
+                defer {
+                    if accessGranted {
+                        url.stopAccessingSecurityScopedResource()
+                    }
+                }
+                do {
+                    _ = try ItemImportService.importDocument(fileURL: url, in: context)
+                } catch {
+                    continue
+                }
+            }
+            if context.hasChanges {
+                do {
+                    try context.save()
+                } catch {
+                    context.rollback()
+                }
+            }
+        }
+    }
+
+    private func canHandleProviders(_ providers: [NSItemProvider]) -> Bool {
+        providers.contains { provider in
+            provider.hasItemConformingToTypeIdentifier(UTType.url.identifier)
+                || provider.hasItemConformingToTypeIdentifier(UTType.plainText.identifier)
+        }
+    }
+
+    private func handleItemProviders(_ providers: [NSItemProvider]) {
+        for provider in providers {
+            if provider.hasItemConformingToTypeIdentifier(UTType.url.identifier) {
+                loadURL(from: provider, typeIdentifier: UTType.url.identifier)
+            } else if provider.hasItemConformingToTypeIdentifier(UTType.plainText.identifier) {
+                loadURL(from: provider, typeIdentifier: UTType.plainText.identifier)
+            }
+        }
+    }
+
+    private func loadURL(from provider: NSItemProvider, typeIdentifier: String) {
+        provider.loadItem(forTypeIdentifier: typeIdentifier, options: nil) { item, _ in
+            guard let url = Self.coerceURL(from: item) else { return }
+            context.perform {
+                guard let itemID = ItemImportService.createLinkItem(url: url, source: .manual, in: context) else {
+                    return
+                }
+                do {
+                    try context.save()
+                } catch {
+                    context.rollback()
+                    return
+                }
+                let backgroundContext = PersistenceController.shared.container.newBackgroundContext()
+                LinkArchiver.shared.archive(itemID: itemID, context: backgroundContext)
+            }
+        }
+    }
+
+    private static func coerceURL(from item: NSSecureCoding?) -> URL? {
+        if let url = item as? URL {
+            return url
+        }
+        if let data = item as? Data {
+            return URL(dataRepresentation: data, relativeTo: nil)
+        }
+        if let string = item as? String {
+            return normalizedURL(from: string)
+        }
+        return nil
+    }
+
+    private static func normalizedURL(from string: String) -> URL? {
+        let trimmed = string.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        if let url = URL(string: trimmed), url.scheme != nil {
+            return url
+        }
+        return URL(string: "https://\(trimmed)")
     }
 }
 

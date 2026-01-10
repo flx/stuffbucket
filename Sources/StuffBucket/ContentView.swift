@@ -1,11 +1,15 @@
 import CoreData
 import SwiftUI
 import StuffBucketCore
+import UniformTypeIdentifiers
 
 struct ContentView: View {
+    @Environment(\.managedObjectContext) private var context
     @State private var searchText = ""
     @State private var results: [SearchResult] = []
     @State private var searchTask: Task<Void, Never>?
+    @State private var isShowingSnippetSheet = false
+    @State private var isImportingDocument = false
     private let searchService = SearchService()
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \Item.updatedAt, ascending: false)]
@@ -53,7 +57,7 @@ struct ContentView: View {
                                             ItemDetailView(itemID: itemID)
                                         } label: {
                                             VStack(alignment: .leading, spacing: 6) {
-                                                Text(item.title ?? item.linkTitle ?? "Untitled")
+                                                Text(item.displayTitle)
                                                     .font(.headline)
                                                 HStack(spacing: 8) {
                                                     Text(item.itemType?.rawValue.capitalized ?? "Item")
@@ -137,6 +141,36 @@ struct ContentView: View {
                 .listStyle(.insetGrouped)
             }
             .navigationTitle("Bucket")
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Menu {
+                        Button("New Snippet") {
+                            isShowingSnippetSheet = true
+                        }
+                        Button("Import Document...") {
+                            isImportingDocument = true
+                        }
+                    } label: {
+                        Image(systemName: "plus")
+                    }
+                }
+            }
+            .sheet(isPresented: $isShowingSnippetSheet) {
+                QuickAddSnippetView(onSave: nil)
+                    .environment(\.managedObjectContext, context)
+            }
+            .fileImporter(
+                isPresented: $isImportingDocument,
+                allowedContentTypes: [.item],
+                allowsMultipleSelection: true
+            ) { result in
+                switch result {
+                case .success(let urls):
+                    importDocuments(urls)
+                case .failure:
+                    break
+                }
+            }
         }
         .onChange(of: searchText) { _, newValue in
             searchTask?.cancel()
@@ -161,6 +195,29 @@ struct ContentView: View {
             return "\(prefix):\"\(trimmed)\""
         }
         return "\(prefix):\(trimmed)"
+    }
+
+    private func importDocuments(_ urls: [URL]) {
+        for url in urls {
+            let accessGranted = url.startAccessingSecurityScopedResource()
+            defer {
+                if accessGranted {
+                    url.stopAccessingSecurityScopedResource()
+                }
+            }
+            do {
+                _ = try ItemImportService.importDocument(fileURL: url, in: context)
+            } catch {
+                continue
+            }
+        }
+        if context.hasChanges {
+            do {
+                try context.save()
+            } catch {
+                context.rollback()
+            }
+        }
     }
 }
 

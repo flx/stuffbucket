@@ -124,6 +124,7 @@ PDF export is optional, not canonical.
 - `id: UUID`
 - `type: enum { note, snippet, link, document }`
 - `title: String?`
+- `textContent: String?`        // note/snippet body
 - `tags: [String]`
 - `createdAt: Date`
 - `updatedAt: Date`
@@ -132,6 +133,7 @@ PDF export is optional, not canonical.
 - `source: enum { manual, share_sheet, safari_bookmarks, import }`
 - `sourceExternalID: String?`   // stable ID for external sync (e.g. Safari)
 - `sourceFolderPath: String?`   // external folder path (e.g. Safari bookmark folder)
+- `documentRelativePath: String?` // Documents/<uuid>/<filename>
 
 #### Link-specific
 - `linkURL: String`
@@ -186,6 +188,9 @@ If a link is marked protected:
 ## 8. Capture & import flows (amended)
 
 ### iOS / iPadOS Share Sheet
+- In-app quick add:
+  - New Snippet creates a text capture item immediately.
+  - Import Document uses the Files picker and copies the file into StuffBucket/Documents.
 - Saving a URL triggers:
   1. Immediate metadata save
   2. Background HTML fetch
@@ -200,6 +205,9 @@ If a link is marked protected:
 - On import, the app fetches metadata and persists an HTML snapshot when possible.
 
 ### macOS
+- In-app quick add:
+  - New Snippet creates a text capture item immediately.
+  - Import Document uses a file picker and copies the file into StuffBucket/Documents.
 - Paste URL
 - Drag URL from browser
 - Services / Share menu

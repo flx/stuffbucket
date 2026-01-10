@@ -1,3 +1,4 @@
+import CoreData
 import Foundation
 
 public enum SafariBookmarksImporterError: Error {
@@ -57,4 +58,55 @@ public final class SafariBookmarksImporter {
         throw SafariBookmarksImporterError.invalidFormat
     }
     #endif
+}
+
+public enum ItemImportService {
+    public static func createLinkItem(url: URL, source: ItemSource, in context: NSManagedObjectContext) -> UUID? {
+        let item = Item.create(in: context, type: .link)
+        item.linkURL = url.absoluteString
+        item.linkTitle = url.host ?? url.absoluteString
+        item.title = item.linkTitle
+        item.source = source.rawValue
+        return item.id
+    }
+
+    public static func createSnippetItem(
+        text: String,
+        source: ItemSource = .manual,
+        in context: NSManagedObjectContext
+    ) -> UUID? {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        let item = Item.create(in: context, type: .snippet)
+        item.textContent = trimmed
+        item.title = SnippetTitleBuilder.title(from: trimmed)
+        item.source = source.rawValue
+        return item.id
+    }
+
+    public static func importDocument(
+        fileURL: URL,
+        source: ItemSource = .import,
+        in context: NSManagedObjectContext
+    ) throws -> UUID? {
+        let fileName = fileURL.lastPathComponent
+        let item = Item.create(in: context, type: .document)
+        item.title = fileName.isEmpty ? "Document" : fileName
+        guard let itemID = item.id else { return nil }
+        let storedName = item.title ?? "Document"
+        item.documentRelativePath = try DocumentStorage.copyDocument(from: fileURL, itemID: itemID, fileName: storedName)
+        item.source = source.rawValue
+        return itemID
+    }
+}
+
+private enum SnippetTitleBuilder {
+    static func title(from text: String) -> String {
+        let firstLine = text.split(whereSeparator: { $0 == "\n" || $0 == "\r" }).first ?? Substring(text)
+        let maxLength = 80
+        if firstLine.count > maxLength {
+            return String(firstLine.prefix(maxLength)) + "..."
+        }
+        return String(firstLine)
+    }
 }

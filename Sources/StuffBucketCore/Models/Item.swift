@@ -30,6 +30,32 @@ public extension Item {
         return ArchiveStatus(rawValue: archiveStatus)
     }
 
+    var documentFileName: String? {
+        guard let documentRelativePath, !documentRelativePath.isEmpty else { return nil }
+        return URL(fileURLWithPath: documentRelativePath).lastPathComponent
+    }
+
+    var documentURL: URL? {
+        guard let documentRelativePath, !documentRelativePath.isEmpty else { return nil }
+        return DocumentStorage.url(forRelativePath: documentRelativePath)
+    }
+
+    var displayTitle: String {
+        if let title, !title.isEmpty {
+            return title
+        }
+        if let linkTitle, !linkTitle.isEmpty {
+            return linkTitle
+        }
+        if let fileName = documentFileName, !fileName.isEmpty {
+            return fileName
+        }
+        if let textContent, !textContent.isEmpty {
+            return TitleBuilder.title(from: textContent)
+        }
+        return "Untitled"
+    }
+
     var isLinkItem: Bool {
         itemType == .link
     }
@@ -73,5 +99,18 @@ private enum TagCodec {
             return encoded
         }
         return cleaned.joined(separator: ",")
+    }
+}
+
+private enum TitleBuilder {
+    static func title(from text: String) -> String {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return "Untitled" }
+        let firstLine = trimmed.split(whereSeparator: { $0 == "\n" || $0 == "\r" }).first ?? Substring(trimmed)
+        let maxLength = 80
+        if firstLine.count > maxLength {
+            return String(firstLine.prefix(maxLength)) + "..."
+        }
+        return String(firstLine)
     }
 }

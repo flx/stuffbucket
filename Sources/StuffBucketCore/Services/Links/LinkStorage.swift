@@ -34,3 +34,47 @@ enum LinkStorage {
         return support.appendingPathComponent(rootFolderName, isDirectory: true)
     }
 }
+
+enum DocumentStorage {
+    private static let rootFolderName = "StuffBucket"
+
+    static func copyDocument(from sourceURL: URL, itemID: UUID, fileName: String) throws -> String {
+        let name = fileName.isEmpty ? "Document" : fileName
+        let destinationURL = documentURL(for: itemID, fileName: name)
+        let directoryURL = destinationURL.deletingLastPathComponent()
+        try FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
+        if FileManager.default.fileExists(atPath: destinationURL.path) {
+            try FileManager.default.removeItem(at: destinationURL)
+        }
+        try FileManager.default.copyItem(at: sourceURL, to: destinationURL)
+        return relativePath(for: itemID, fileName: name)
+    }
+
+    static func url(forRelativePath relativePath: String) -> URL {
+        rootDirectory().appendingPathComponent(relativePath)
+    }
+
+    static func documentURL(for itemID: UUID, fileName: String) -> URL {
+        documentsDirectory()
+            .appendingPathComponent(itemID.uuidString, isDirectory: true)
+            .appendingPathComponent(fileName)
+    }
+
+    static func relativePath(for itemID: UUID, fileName: String) -> String {
+        "Documents/\(itemID.uuidString)/\(fileName)"
+    }
+
+    private static func documentsDirectory() -> URL {
+        rootDirectory().appendingPathComponent("Documents", isDirectory: true)
+    }
+
+    private static func rootDirectory() -> URL {
+        if let iCloudRoot = FileManager.default.url(forUbiquityContainerIdentifier: nil)?
+            .appendingPathComponent("Documents", isDirectory: true)
+            .appendingPathComponent(rootFolderName, isDirectory: true) {
+            return iCloudRoot
+        }
+        let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        return support.appendingPathComponent(rootFolderName, isDirectory: true)
+    }
+}

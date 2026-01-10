@@ -4,6 +4,7 @@
         <attribute name="id" attributeType="UUID" optional="NO"/>
         <attribute name="type" attributeType="String" optional="NO"/>
         <attribute name="title" attributeType="String" optional="YES"/>
+        <attribute name="textContent" attributeType="String" optional="YES"/>
         <attribute name="tags" attributeType="String" optional="YES"/>
         <attribute name="createdAt" attributeType="Date" optional="YES"/>
         <attribute name="updatedAt" attributeType="Date" optional="YES"/>
@@ -12,6 +13,7 @@
         <attribute name="source" attributeType="String" optional="YES"/>
         <attribute name="sourceExternalID" attributeType="String" optional="YES"/>
         <attribute name="sourceFolderPath" attributeType="String" optional="YES"/>
+        <attribute name="documentRelativePath" attributeType="String" optional="YES"/>
         <attribute name="linkURL" attributeType="String" optional="YES"/>
         <attribute name="linkTitle" attributeType="String" optional="YES"/>
         <attribute name="linkAuthor" attributeType="String" optional="YES"/>

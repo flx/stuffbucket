@@ -8,6 +8,7 @@ struct ItemDetailView: View {
     @Environment(\.managedObjectContext) private var context
     @FetchRequest private var items: FetchedResults<Item>
     @State private var tagsText = ""
+    @State private var contentText = ""
 
     init(itemID: UUID) {
         self.itemID = itemID
@@ -37,6 +38,24 @@ struct ItemDetailView: View {
                     Text(type.capitalized)
                         .foregroundStyle(.secondary)
                 }
+                if item.isLinkItem, let linkURL = item.linkURL {
+                    Text(linkURL)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            if showsContentEditor(for: item) {
+                Section("Content") {
+                    contentEditor
+                }
+            }
+
+            if item.itemType == .document {
+                Section("Document") {
+                    Text(item.documentFileName ?? "Document")
+                        .foregroundStyle(.secondary)
+                }
             }
 
             Section("Tags") {
@@ -50,8 +69,14 @@ struct ItemDetailView: View {
         .onChange(of: item.tags ?? "") { _, _ in
             syncFromItem(item)
         }
+        .onChange(of: item.textContent ?? "") { _, _ in
+            syncFromItem(item)
+        }
         .onChange(of: tagsText) { _, newValue in
             applyTags(newValue, to: item)
+        }
+        .onChange(of: contentText) { _, newValue in
+            applyContent(newValue, to: item)
         }
     }
 
@@ -66,7 +91,7 @@ struct ItemDetailView: View {
     }
 
     private func displayTitle(for item: Item) -> String {
-        item.title ?? item.linkTitle ?? "Untitled"
+        item.displayTitle
     }
 
     @ViewBuilder
@@ -80,10 +105,25 @@ struct ItemDetailView: View {
 #endif
     }
 
+    @ViewBuilder
+    private var contentEditor: some View {
+#if os(iOS)
+        TextEditor(text: $contentText)
+            .frame(minHeight: 140)
+#else
+        TextEditor(text: $contentText)
+            .frame(minHeight: 180)
+#endif
+    }
+
     private func syncFromItem(_ item: Item) {
         let current = item.tagList.joined(separator: ", ")
         if current != tagsText {
             tagsText = current
+        }
+        let currentContent = item.textContent ?? ""
+        if currentContent != contentText {
+            contentText = currentContent
         }
     }
 
@@ -99,6 +139,23 @@ struct ItemDetailView: View {
         }
     }
 
+    private func applyContent(_ text: String, to item: Item) {
+        guard showsContentEditor(for: item) else { return }
+        let current = item.textContent ?? ""
+        guard text != current else { return }
+        item.textContent = text
+        item.updatedAt = Date()
+        do {
+            try context.save()
+        } catch {
+            context.rollback()
+        }
+    }
+
+    private func showsContentEditor(for item: Item) -> Bool {
+        item.itemType == .note || item.itemType == .snippet
+    }
+
     private func parseTags(_ text: String) -> [String] {
         let parts = text.split(whereSeparator: { $0 == "," || $0 == "\n" })
         return parts
@@ -109,4 +166,49 @@ struct ItemDetailView: View {
 
 #Preview {
     ItemDetailView(itemID: UUID())
+}
+
+struct QuickAddSnippetView: View {
+    @Environment(\.managedObjectContext) private var context
+    @Environment(\.dismiss) private var dismiss
+    @State private var text = ""
+
+    let onSave: ((UUID) -> Void)?
+
+    var body: some View {
+        NavigationStack {
+            VStack {
+                TextEditor(text: $text)
+                    .frame(minHeight: 200)
+            }
+            .padding()
+            .navigationTitle("New Snippet")
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        saveSnippet()
+                    }
+                    .disabled(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+            }
+        }
+    }
+
+    private func saveSnippet() {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let itemID = ItemImportService.createSnippetItem(text: trimmed, in: context) else { return }
+        do {
+            try context.save()
+        } catch {
+            context.rollback()
+            return
+        }
+        onSave?(itemID)
+        dismiss()
+    }
 }

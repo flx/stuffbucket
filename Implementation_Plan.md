@@ -20,6 +20,9 @@
 - Update the Core Data model with new fields: completed [x]
   - `source`, `sourceExternalID`, `sourceFolderPath`
   - `aiSummary`, `aiArtifactsJSON`, `aiModelID`, `aiUpdatedAt`
+- Add item body and document path fields: completed [x]
+  - `textContent`
+  - `documentRelativePath`
 - Add `tags` to the Core Data model. completed [x]
 - Add lightweight migration support for existing stores. completed [x]
 - Ensure CloudKit schema updates and resolve any merge policies for new fields.
@@ -28,6 +31,8 @@
 - Import shared links from the share extension into Core Data. completed [x]
 - Fetch link metadata and persist HTML snapshots after share import. completed [x]
 - Decode common HTML entities in link metadata parsing without AppKit dependencies. completed [x]
+- Add document storage helper for iCloud Drive file copies. completed [x]
+- Add import helper for links, snippets, and documents. completed [x]
 
 ## 2. High-quality search engine
 
@@ -153,6 +158,7 @@
 - Tag editor on item detail view. completed [x]
 - Shared item detail view for item metadata (tags). completed [x]
 - Ensure tag input modifiers are platform-appropriate. completed [x]
+- Add quick-add menu for new snippets and document import. completed [x]
 - Item detail actions for AI tasks (summarize, key points, tags).
 - AI settings screen (API key management + advanced model picker).
 - Show a pricing disclosure line with per-token rates sourced from the OpenAI pricing page.
@@ -163,6 +169,8 @@
 - Search improvements aligned with iOS behavior.
 - Tag editor on item detail view. completed [x]
 - Shared item detail view for item metadata (tags). completed [x]
+- Add quick-add menu for new snippets and document import. completed [x]
+- Support paste/drag URL capture in the main view. completed [x]
 - AI actions integrated into item detail and toolbar.
 - AI settings screen (API key management + advanced model picker).
 - Show a pricing disclosure line with per-token rates sourced from the OpenAI pricing page.
@@ -183,6 +191,7 @@
   - macOS unit test target mirrors core parsing/encoding coverage. completed [x]
   - macOS unit tests use an app host path configuration for Xcodegen builds. completed [x]
   - Test helpers create items using context-scoped entity lookup to avoid Core Data entity ambiguity warnings. completed [x]
+  - Item import helper tests (snippet + document) on iOS and macOS. completed [x]
   - FTS indexing and snippet generation
   - Safari bookmark parsing (sample plist and HTML export)
   - AI payload formatting and storage

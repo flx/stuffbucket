@@ -75,8 +75,21 @@ public final class SearchIndexer {
 
     public func index(item: Item) {
         guard let id = item.id else { return }
-        let title = item.title ?? item.linkTitle ?? "Untitled"
-        let content = item.title ?? item.linkTitle ?? ""
+        let title = item.displayTitle
+        var contentParts: [String] = []
+        if let textContent = item.textContent, !textContent.isEmpty {
+            contentParts.append(textContent)
+        }
+        if let linkTitle = item.linkTitle, !linkTitle.isEmpty, linkTitle != title {
+            contentParts.append(linkTitle)
+        }
+        if let linkURL = item.linkURL, !linkURL.isEmpty {
+            contentParts.append(linkURL)
+        }
+        if let documentName = item.documentFileName, !documentName.isEmpty {
+            contentParts.append(documentName)
+        }
+        let content = contentParts.joined(separator: "\n")
         let document = SearchDocument(
             id: id,
             title: title,

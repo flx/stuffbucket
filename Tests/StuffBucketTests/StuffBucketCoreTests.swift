@@ -1,3 +1,4 @@
+import CoreData
 import XCTest
 @testable import StuffBucketCore
 
@@ -82,5 +83,56 @@ final class LinkMetadataParserTests: XCTestCase {
         let metadata = LinkMetadataParser.parse(html: html, fallbackURL: url)
 
         XCTAssertEqual(metadata.title, "example.com")
+    }
+}
+
+final class ItemImportServiceTests: XCTestCase {
+    func testCreatesSnippetItemWithTitleAndContent() {
+        let controller = PersistenceController(inMemory: true)
+        let context = controller.viewContext
+        let text = "Hello world\nSecond line"
+
+        let itemID = ItemImportService.createSnippetItem(text: text, in: context)
+        XCTAssertNotNil(itemID)
+        XCTAssertNoThrow(try context.save())
+
+        let request = NSFetchRequest<Item>(entityName: "Item")
+        request.fetchLimit = 1
+        request.predicate = NSPredicate(format: "id == %@", itemID! as CVarArg)
+        let item = try? context.fetch(request).first
+
+        XCTAssertEqual(item?.itemType, .snippet)
+        XCTAssertEqual(item?.title, "Hello world")
+        XCTAssertEqual(item?.textContent, "Hello world\nSecond line")
+        XCTAssertEqual(item?.sourceType, .manual)
+    }
+
+    func testImportsDocumentAndCopiesFile() throws {
+        let controller = PersistenceController(inMemory: true)
+        let context = controller.viewContext
+        let tempURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+            .appendingPathExtension("txt")
+        try "Sample".write(to: tempURL, atomically: true, encoding: .utf8)
+
+        let itemID = try ItemImportService.importDocument(fileURL: tempURL, in: context)
+        XCTAssertNotNil(itemID)
+        try context.save()
+
+        let request = NSFetchRequest<Item>(entityName: "Item")
+        request.fetchLimit = 1
+        request.predicate = NSPredicate(format: "id == %@", itemID! as CVarArg)
+        let item = try XCTUnwrap(context.fetch(request).first)
+
+        XCTAssertEqual(item.itemType, .document)
+        XCTAssertEqual(item.title, tempURL.lastPathComponent)
+        XCTAssertNotNil(item.documentRelativePath)
+        XCTAssertTrue(item.documentRelativePath?.contains("Documents/") ?? false)
+
+        if let documentURL = item.documentURL {
+            XCTAssertTrue(FileManager.default.fileExists(atPath: documentURL.path))
+            try? FileManager.default.removeItem(at: documentURL.deletingLastPathComponent())
+        }
+        try? FileManager.default.removeItem(at: tempURL)
     }
 }
