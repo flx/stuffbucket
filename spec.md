@@ -208,9 +208,11 @@ If a link is marked protected:
 ### macOS
 - In-app quick add:
   - New Snippet creates a text capture item immediately.
+  - Add Link prompts for a URL and saves it as a Link item.
   - Import Document uses a file picker and copies the file into StuffBucket/Documents.
 - Paste URL
 - Drag URL from browser
+- Drag files from Finder to import documents.
 - Services / Share menu
 - Share extension captures URLs from Safari and queues them for the main app to import on launch.
 - Share extension accepts URL attachments or plain-text URL payloads.
@@ -236,7 +238,7 @@ If a link is marked protected:
 - Selecting a tag or collection pre-fills search with `tag:` / `collection:` filters.
 - Recent items list is shown above tags and collections.
 - Link items display an archive status badge (Pending / Archived / Partial / Failed).
-- Empty states surface primary capture actions (iOS Add Link, Import Document).
+- Empty states surface primary capture actions (Add Link, Import Document).
 
 ### 9.2 Item detail
 - Tag editing is available on the item detail view (comma-separated input).

@@ -11,6 +11,8 @@ struct ContentView: View {
     @State private var searchTask: Task<Void, Never>?
     @State private var isShowingSnippetSheet = false
     @State private var isImportingDocument = false
+    @State private var isShowingAddLinkAlert = false
+    @State private var addLinkText = ""
     @State private var isDropTargeted = false
     private let searchService = SearchService()
     @FetchRequest(
@@ -102,6 +104,10 @@ struct ContentView: View {
                                         VStack(alignment: .leading, spacing: 12) {
                                             Text("No items yet")
                                                 .foregroundStyle(.secondary)
+                                            Button("Add Link...") {
+                                                addLinkText = ""
+                                                isShowingAddLinkAlert = true
+                                            }
                                             Button("Import Document...") {
                                                 isImportingDocument = true
                                             }
@@ -220,6 +226,10 @@ struct ContentView: View {
                     Button("New Snippet") {
                         isShowingSnippetSheet = true
                     }
+                    Button("Add Link...") {
+                        addLinkText = ""
+                        isShowingAddLinkAlert = true
+                    }
                     Button("Import Document...") {
                         isImportingDocument = true
                     }
@@ -244,12 +254,22 @@ struct ContentView: View {
                 break
             }
         }
-        .onDrop(of: [UTType.url.identifier, UTType.plainText.identifier], isTargeted: $isDropTargeted) { providers in
+        .alert("Add Link", isPresented: $isShowingAddLinkAlert) {
+            TextField("https://example.com", text: $addLinkText)
+            Button("Cancel", role: .cancel) {}
+            Button("Add") {
+                addLink()
+            }
+            .disabled(addLinkText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+        } message: {
+            Text("Paste a URL to save it in StuffBucket.")
+        }
+        .onDrop(of: [UTType.fileURL.identifier, UTType.url.identifier, UTType.plainText.identifier], isTargeted: $isDropTargeted) { providers in
             guard canHandleProviders(providers) else { return false }
             handleItemProviders(providers)
             return true
         }
-        .onPasteCommand(of: [UTType.url, UTType.plainText]) { providers in
+        .onPasteCommand(of: [UTType.fileURL, UTType.url, UTType.plainText]) { providers in
             handleItemProviders(providers)
         }
         .onChange(of: searchText) { _, newValue in
@@ -313,14 +333,17 @@ struct ContentView: View {
 
     private func canHandleProviders(_ providers: [NSItemProvider]) -> Bool {
         providers.contains { provider in
-            provider.hasItemConformingToTypeIdentifier(UTType.url.identifier)
+            provider.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier)
+                || provider.hasItemConformingToTypeIdentifier(UTType.url.identifier)
                 || provider.hasItemConformingToTypeIdentifier(UTType.plainText.identifier)
         }
     }
 
     private func handleItemProviders(_ providers: [NSItemProvider]) {
         for provider in providers {
-            if provider.hasItemConformingToTypeIdentifier(UTType.url.identifier) {
+            if provider.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier) {
+                loadURL(from: provider, typeIdentifier: UTType.fileURL.identifier)
+            } else if provider.hasItemConformingToTypeIdentifier(UTType.url.identifier) {
                 loadURL(from: provider, typeIdentifier: UTType.url.identifier)
             } else if provider.hasItemConformingToTypeIdentifier(UTType.plainText.identifier) {
                 loadURL(from: provider, typeIdentifier: UTType.plainText.identifier)
@@ -331,18 +354,10 @@ struct ContentView: View {
     private func loadURL(from provider: NSItemProvider, typeIdentifier: String) {
         provider.loadItem(forTypeIdentifier: typeIdentifier, options: nil) { item, _ in
             guard let url = Self.coerceURL(from: item) else { return }
-            context.perform {
-                guard let itemID = ItemImportService.createLinkItem(url: url, source: .manual, in: context) else {
-                    return
-                }
-                do {
-                    try context.save()
-                } catch {
-                    context.rollback()
-                    return
-                }
-                let backgroundContext = PersistenceController.shared.container.newBackgroundContext()
-                LinkArchiver.shared.archive(itemID: itemID, context: backgroundContext)
+            if url.isFileURL {
+                importDocuments([url])
+            } else {
+                storeLink(url)
             }
         }
     }
@@ -367,6 +382,27 @@ struct ContentView: View {
             return url
         }
         return URL(string: "https://\(trimmed)")
+    }
+
+    private func addLink() {
+        guard let url = Self.normalizedURL(from: addLinkText) else { return }
+        storeLink(url)
+    }
+
+    private func storeLink(_ url: URL) {
+        context.perform {
+            guard let itemID = ItemImportService.createLinkItem(url: url, source: .manual, in: context) else {
+                return
+            }
+            do {
+                try context.save()
+            } catch {
+                context.rollback()
+                return
+            }
+            let backgroundContext = PersistenceController.shared.container.newBackgroundContext()
+            LinkArchiver.shared.archive(itemID: itemID, context: backgroundContext)
+        }
     }
 }
 
