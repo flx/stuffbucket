@@ -179,6 +179,8 @@
   - Search query parsing and builder output. completed [x]
   - Tag list encoding/decoding via in-memory Core Data. completed [x]
   - Link metadata parsing and HTML entity decoding. completed [x]
+  - macOS unit test target mirrors core parsing/encoding coverage. completed [x]
+  - macOS unit tests use an app host path configuration for Xcodegen builds. completed [x]
   - FTS indexing and snippet generation
   - Safari bookmark parsing (sample plist and HTML export)
   - AI payload formatting and storage

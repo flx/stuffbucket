@@ -355,7 +355,8 @@ If a link is marked protected:
 ---
 
 ## 16. Quality checks (engineering)
-- Unit tests cover search query parsing/builder output, tag list encoding/decoding, and link metadata parsing with HTML entity decoding.
+- Unit tests cover search query parsing/builder output, tag list encoding/decoding, and link metadata parsing with HTML entity decoding on both iOS and macOS targets.
+- macOS unit tests run with an app host configuration so Xcodegen builds execute them reliably.
 
 ---
 

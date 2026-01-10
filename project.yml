@@ -32,6 +32,9 @@ schemes:
     build:
       targets:
         StuffBucketMac: all
+    test:
+      targets:
+        - StuffBucketMacTests
     run:
       config: Debug
 
@@ -155,3 +158,18 @@ targets:
         DEVELOPMENT_TEAM: V37U525228
         CODE_SIGN_ENTITLEMENTS: Sources/StuffBucketMacShareExtension/StuffBucketMacShareExtension.entitlements
         APPLICATION_EXTENSION_API_ONLY: YES
+
+  StuffBucketMacTests:
+    type: bundle.unit-test
+    platform: macOS
+    supportedDestinations: [macOS]
+    sources:
+      - path: Tests/StuffBucketMacTests
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: com.digitalhandstand.stuffbucket.mactests
+        TEST_HOST: $(BUILT_PRODUCTS_DIR)/StuffBucketMac.app/Contents/MacOS/StuffBucketMac
+        BUNDLE_LOADER: $(TEST_HOST)
+    dependencies:
+      - target: StuffBucketMac

@@ -27,6 +27,7 @@
 		3E13D18149A2F3D4D040D8D8 /* SearchBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CE026328EAC215EAEB06286 /* SearchBarView.swift */; };
 		43E74AD975C0A0ECD9F1F898 /* SearchDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 905F62C8A186C9FB500CDA04 /* SearchDatabase.swift */; };
 		44B63DF7EA7517242F967299 /* SafariBookmarksImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E70E88CA2D3A12D3916610DF /* SafariBookmarksImporter.swift */; };
+		45DF98E80EF17852BE3498AD /* StuffBucketCoreMacTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09FB00910A27DBAC7AF0C1D9 /* StuffBucketCoreMacTests.swift */; };
 		4A2310E940D292587003DBAA /* OpenAIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3967E8E4395E7A531ABB2E62 /* OpenAIClient.swift */; };
 		4A8A152DBF678089079E23FA /* SearchTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2362C758E3E3EC455DA86B6 /* SearchTypes.swift */; };
 		4D7F7071C5B3C4A38ED552CD /* LibrarySummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84AFF605547F5932FC2491C8 /* LibrarySummary.swift */; };
@@ -109,6 +110,13 @@
 			remoteGlobalIDString = F3A800812C683F10CCE9E9B3;
 			remoteInfo = StuffBucketMacShareExtension;
 		};
+		E741FA849ECFE7C7879C6FF8 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = EC99472ADB6FCA1746DD99A8 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 8F8E123B35D0528F425DEEFD;
+			remoteInfo = StuffBucketMac;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -160,6 +168,8 @@
 
 /* Begin PBXFileReference section */
 		026D6ACFAAE7EF7A081F6194 /* StuffBucketMacApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StuffBucketMacApp.swift; sourceTree = "<group>"; };
+		090F3B08EC5B484CB3FB4396 /* StuffBucketMacTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = StuffBucketMacTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		09FB00910A27DBAC7AF0C1D9 /* StuffBucketCoreMacTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StuffBucketCoreMacTests.swift; sourceTree = "<group>"; };
 		0AB2C2597AE76B5FA3455BC7 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		25A4DA1230BA55D528E93587 /* StuffBucketMac.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = StuffBucketMac.entitlements; sourceTree = "<group>"; };
 		2AF01B94C0FF40F312225194 /* LinkArchiver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkArchiver.swift; sourceTree = "<group>"; };
@@ -335,6 +345,7 @@
 		6F4EE2525767293A688A07E7 /* Tests */ = {
 			isa = PBXGroup;
 			children = (
+				D7F74A8065CC84FF58BFD099 /* StuffBucketMacTests */,
 				9FDF08EF5BB637446A3F9229 /* StuffBucketTests */,
 			);
 			path = Tests;
@@ -423,6 +434,14 @@
 			path = Sources;
 			sourceTree = "<group>";
 		};
+		D7F74A8065CC84FF58BFD099 /* StuffBucketMacTests */ = {
+			isa = PBXGroup;
+			children = (
+				09FB00910A27DBAC7AF0C1D9 /* StuffBucketCoreMacTests.swift */,
+			);
+			path = StuffBucketMacTests;
+			sourceTree = "<group>";
+		};
 		DC545F5B013B0E1691C06139 /* StuffBucket */ = {
 			isa = PBXGroup;
 			children = (
@@ -479,6 +498,7 @@
 				5AE0A3DE6401EC33AC94C171 /* StuffBucketCore.framework */,
 				CD33A00B462976D52F37AEF0 /* StuffBucketMac.app */,
 				93E12DDBAC061C565DA3D21B /* StuffBucketMacShareExtension.appex */,
+				090F3B08EC5B484CB3FB4396 /* StuffBucketMacTests.xctest */,
 				971ED3B90D0BC6EA793D9090 /* StuffBucketShareExtension.appex */,
 				B6D19BF8E42EED96A8C59100 /* StuffBucketTests.xctest */,
 			);
@@ -623,6 +643,24 @@
 			productReference = 93E12DDBAC061C565DA3D21B /* StuffBucketMacShareExtension.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
+		FE45539800E49F7A1160CD6D /* StuffBucketMacTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C8AC093FE25F212338036A9E /* Build configuration list for PBXNativeTarget "StuffBucketMacTests" */;
+			buildPhases = (
+				5CAA7C57598369E08D1171C6 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				203B02FCAB13BE9235B95F05 /* PBXTargetDependency */,
+			);
+			name = StuffBucketMacTests;
+			packageProductDependencies = (
+			);
+			productName = StuffBucketMacTests;
+			productReference = 090F3B08EC5B484CB3FB4396 /* StuffBucketMacTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -669,6 +707,7 @@
 				E4B7303BB800070BB5447DCF /* StuffBucketCore_macOS */,
 				8F8E123B35D0528F425DEEFD /* StuffBucketMac */,
 				F3A800812C683F10CCE9E9B3 /* StuffBucketMacShareExtension */,
+				FE45539800E49F7A1160CD6D /* StuffBucketMacTests */,
 				3F56C72B5B4A4B0D9E41F3F6 /* StuffBucketShareExtension */,
 				94DBB6849B8450A716FBEE4B /* StuffBucketTests */,
 			);
@@ -750,6 +789,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		5CAA7C57598369E08D1171C6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				45DF98E80EF17852BE3498AD /* StuffBucketCoreMacTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		9ECC1CF748A4330D467DABAB /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -800,6 +847,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		203B02FCAB13BE9235B95F05 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 8F8E123B35D0528F425DEEFD /* StuffBucketMac */;
+			targetProxy = E741FA849ECFE7C7879C6FF8 /* PBXContainerItemProxy */;
+		};
 		2CA6FE39F8280C120B69A746 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = F3A800812C683F10CCE9E9B3 /* StuffBucketMacShareExtension */;
@@ -828,6 +880,27 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		126E1DF9A6A82C322375556E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.digitalhandstand.stuffbucket.mactests;
+				SDKROOT = macosx;
+				SUPPORTED_PLATFORMS = macosx;
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				TARGETED_DEVICE_FAMILY = "";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/StuffBucketMac.app/Contents/MacOS/StuffBucketMac";
+			};
+			name = Release;
+		};
 		1F3BED45AFA69EE419259D1D /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1017,6 +1090,27 @@
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				TARGETED_DEVICE_FAMILY = "";
+			};
+			name = Debug;
+		};
+		A80D4AA2B8E873D842635075 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				COMBINE_HIDPI_IMAGES = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.digitalhandstand.stuffbucket.mactests;
+				SDKROOT = macosx;
+				SUPPORTED_PLATFORMS = macosx;
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				TARGETED_DEVICE_FAMILY = "";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/StuffBucketMac.app/Contents/MacOS/StuffBucketMac";
 			};
 			name = Debug;
 		};
@@ -1315,6 +1409,15 @@
 			buildConfigurations = (
 				B2E5D0307A371E83A9A502EE /* Debug */,
 				D1BD4AE71F8F8EBAB469F7D6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		C8AC093FE25F212338036A9E /* Build configuration list for PBXNativeTarget "StuffBucketMacTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A80D4AA2B8E873D842635075 /* Debug */,
+				126E1DF9A6A82C322375556E /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
