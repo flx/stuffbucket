@@ -89,6 +89,11 @@ For each Link item:
   - `page.html` (full page snapshot)
   - `reader.html` (reader-mode extraction)
 - Fallback to a raw `URLSession` HTML fetch if WebKit capture fails.
+- Provide an **Archive with Login** option that:
+  - Opens an in-app browser with a **persistent** WebView data store.
+  - Lets the user sign in (AutoFill supported) without exposing credentials to StuffBucket.
+  - Uses the in-app session cookies to download assets for the archive.
+  - Never reads Safari passwords/cookies or stores user credentials itself.
 - Save as:
   ```
   StuffBucket/Links/<uuid>/page.html

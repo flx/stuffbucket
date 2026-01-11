@@ -66,14 +66,40 @@ public final class LinkArchiver {
         defer { endArchive(itemID) }
         do {
             let capture = try await RenderedPageCapture().capture(url: url)
-            let outcome = try await buildArchive(from: capture, originalURL: url, itemID: itemID)
+            let outcome = try await buildArchive(from: capture, originalURL: url, itemID: itemID, session: session)
             await updateItem(itemID: itemID, outcome: outcome, context: context)
         } catch {
             await archiveFallback(url: url, itemID: itemID, context: context)
         }
     }
 
-    private func buildArchive(from capture: RenderedPageCaptureResult, originalURL: URL, itemID: UUID) async throws -> ArchiveOutcome {
+    public func archiveCapturedPayload(
+        _ payload: String,
+        originalURL: URL,
+        itemID: UUID,
+        context: NSManagedObjectContext,
+        cookies: [HTTPCookie] = []
+    ) async -> Bool {
+        guard beginArchive(itemID) else { return false }
+        defer { endArchive(itemID) }
+        do {
+            let capture = try RenderedPageCapture.decodePayload(payload, originalURL: originalURL)
+            let session = sessionForCookies(cookies, originalURL: originalURL) ?? self.session
+            let outcome = try await buildArchive(from: capture, originalURL: originalURL, itemID: itemID, session: session)
+            await updateItem(itemID: itemID, outcome: outcome, context: context)
+            return true
+        } catch {
+            await markFailed(itemID: itemID, context: context)
+            return false
+        }
+    }
+
+    private func buildArchive(
+        from capture: RenderedPageCaptureResult,
+        originalURL: URL,
+        itemID: UUID,
+        session: URLSession
+    ) async throws -> ArchiveOutcome {
         let baseURL = capture.baseURL
         var assetMap: [URL: AssetFile] = [:]
         var queue: [AssetDescriptor] = []
@@ -230,6 +256,25 @@ public final class LinkArchiver {
                 continuation.resume()
             }
         }
+    }
+
+    private func sessionForCookies(_ cookies: [HTTPCookie], originalURL: URL) -> URLSession? {
+        guard !cookies.isEmpty else { return nil }
+        let host = originalURL.host?.lowercased()
+        let filtered = cookies.filter { cookie in
+            guard let host else { return true }
+            let domain = cookie.domain.trimmingCharacters(in: CharacterSet(charactersIn: ".")).lowercased()
+            return host == domain || host.hasSuffix("." + domain)
+        }
+        let storage = HTTPCookieStorage()
+        for cookie in filtered {
+            storage.setCookie(cookie)
+        }
+        let configuration = URLSessionConfiguration.default
+        configuration.httpCookieStorage = storage
+        configuration.httpCookieAcceptPolicy = .always
+        configuration.httpShouldSetCookies = true
+        return URLSession(configuration: configuration)
     }
 
     private func beginArchive(_ itemID: UUID) -> Bool {

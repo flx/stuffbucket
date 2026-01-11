@@ -1,9 +1,7 @@
 import CoreData
 import SwiftUI
 import StuffBucketCore
-#if os(iOS)
 import WebKit
-#endif
 #if os(macOS)
 import AppKit
 #endif
@@ -18,6 +16,8 @@ struct ItemDetailView: View {
     @State private var isShowingArchive = false
     @State private var archiveURL: URL?
     @State private var archiveTitle = ""
+    @State private var isShowingLoginArchive = false
+    @State private var loginArchiveURL: URL?
 
     init(itemID: UUID) {
         self.itemID = itemID
@@ -113,8 +113,14 @@ struct ItemDetailView: View {
                         .padding()
                 }
             }
+            .sheet(isPresented: $isShowingLoginArchive) {
+                loginArchiveSheet
+            }
 #else
         return base
+            .sheet(isPresented: $isShowingLoginArchive) {
+                loginArchiveSheet
+            }
 #endif
     }
 
@@ -213,6 +219,13 @@ struct ItemDetailView: View {
         }
         .disabled(!readerAvailable)
 
+        Button("Archive with Login") {
+            guard let linkURL = item.linkURL, let url = URL(string: linkURL) else { return }
+            loginArchiveURL = url
+            isShowingLoginArchive = true
+        }
+        .disabled(item.linkURL == nil)
+
         if !pageAvailable {
             Text("Archive not ready yet.")
                 .font(.footnote)
@@ -243,6 +256,17 @@ struct ItemDetailView: View {
     private func prepareArchiveForReading(_ url: URL) {
         guard FileManager.default.isUbiquitousItem(at: url) else { return }
         try? FileManager.default.startDownloadingUbiquitousItem(at: url)
+    }
+
+    @ViewBuilder
+    private var loginArchiveSheet: some View {
+        if let url = loginArchiveURL {
+            ArchiveWithLoginView(itemID: itemID, url: url)
+                .environment(\.managedObjectContext, context)
+        } else {
+            Text("Link unavailable.")
+                .padding()
+        }
     }
 
     private func parseTags(_ text: String) -> [String] {
@@ -347,6 +371,212 @@ struct ArchivedLinkWebView: UIViewRepresentable {
 
     final class Coordinator {
         var loadedURL: URL?
+    }
+}
+#endif
+
+final class ArchiveLoginWebViewStore: ObservableObject {
+    @Published var isLoading = false
+    var webView: WKWebView?
+}
+
+struct ArchiveWithLoginView: View {
+    let itemID: UUID
+    let url: URL
+
+    @Environment(\.managedObjectContext) private var context
+    @Environment(\.dismiss) private var dismiss
+    @StateObject private var webViewStore = ArchiveLoginWebViewStore()
+    @State private var isArchiving = false
+    @State private var errorMessage: String?
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 0) {
+                Text("Sign in to the site, then tap Archive to capture the full page.")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal)
+                    .padding(.vertical, 8)
+                Divider()
+                ArchiveLoginWebView(url: url, store: webViewStore)
+                    .overlay {
+                        if webViewStore.isLoading {
+                            ProgressView()
+                                .padding(8)
+                                .background(.thinMaterial)
+                                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                        }
+                    }
+                if let errorMessage {
+                    Divider()
+                    Text(errorMessage)
+                        .font(.footnote)
+                        .foregroundStyle(.red)
+                        .padding(.horizontal)
+                        .padding(.vertical, 8)
+                }
+            }
+            .navigationTitle("Archive with Login")
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(isArchiving ? "Archiving..." : "Archive") {
+                        archiveCurrentPage()
+                    }
+                    .disabled(isArchiving || webViewStore.webView == nil)
+                }
+            }
+        }
+    }
+
+    private func archiveCurrentPage() {
+        guard let webView = webViewStore.webView else { return }
+        let currentURL = webView.url ?? url
+        isArchiving = true
+        errorMessage = nil
+        webView.evaluateJavaScript(LinkArchiveScript.capturePayload) { result, error in
+            if let error {
+                finishArchiveFailure("Unable to read page: \(error.localizedDescription)")
+                return
+            }
+            guard let payload = result as? String else {
+                finishArchiveFailure("Unable to read page content.")
+                return
+            }
+            let cookieStore = webView.configuration.websiteDataStore.httpCookieStore
+            cookieStore.getAllCookies { cookies in
+                Task {
+                    let success = await LinkArchiver.shared.archiveCapturedPayload(
+                        payload,
+                        originalURL: currentURL,
+                        itemID: itemID,
+                        context: context,
+                        cookies: cookies
+                    )
+                    await MainActor.run {
+                        isArchiving = false
+                        if success {
+                            dismiss()
+                        } else {
+                            errorMessage = "Archive failed. Try again."
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private func finishArchiveFailure(_ message: String) {
+        DispatchQueue.main.async {
+            isArchiving = false
+            errorMessage = message
+        }
+    }
+}
+
+#if os(iOS)
+struct ArchiveLoginWebView: UIViewRepresentable {
+    let url: URL
+    @ObservedObject var store: ArchiveLoginWebViewStore
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(store: store)
+    }
+
+    func makeUIView(context: Context) -> WKWebView {
+        let configuration = WKWebViewConfiguration()
+        configuration.websiteDataStore = .default()
+        configuration.preferences.javaScriptCanOpenWindowsAutomatically = false
+        let webView = WKWebView(frame: .zero, configuration: configuration)
+        webView.navigationDelegate = context.coordinator
+        store.webView = webView
+        webView.load(URLRequest(url: url))
+        return webView
+    }
+
+    func updateUIView(_ webView: WKWebView, context: Context) {
+        if webView.url != url {
+            webView.load(URLRequest(url: url))
+        }
+    }
+
+    final class Coordinator: NSObject, WKNavigationDelegate {
+        let store: ArchiveLoginWebViewStore
+
+        init(store: ArchiveLoginWebViewStore) {
+            self.store = store
+        }
+
+        func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
+            store.isLoading = true
+        }
+
+        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+            store.isLoading = false
+        }
+
+        func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+            store.isLoading = false
+        }
+
+        func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+            store.isLoading = false
+        }
+    }
+}
+#else
+struct ArchiveLoginWebView: NSViewRepresentable {
+    let url: URL
+    @ObservedObject var store: ArchiveLoginWebViewStore
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(store: store)
+    }
+
+    func makeNSView(context: Context) -> WKWebView {
+        let configuration = WKWebViewConfiguration()
+        configuration.websiteDataStore = .default()
+        configuration.preferences.javaScriptCanOpenWindowsAutomatically = false
+        let webView = WKWebView(frame: .zero, configuration: configuration)
+        webView.navigationDelegate = context.coordinator
+        store.webView = webView
+        webView.load(URLRequest(url: url))
+        return webView
+    }
+
+    func updateNSView(_ webView: WKWebView, context: Context) {
+        if webView.url != url {
+            webView.load(URLRequest(url: url))
+        }
+    }
+
+    final class Coordinator: NSObject, WKNavigationDelegate {
+        let store: ArchiveLoginWebViewStore
+
+        init(store: ArchiveLoginWebViewStore) {
+            self.store = store
+        }
+
+        func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
+            store.isLoading = true
+        }
+
+        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+            store.isLoading = false
+        }
+
+        func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+            store.isLoading = false
+        }
+
+        func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+            store.isLoading = false
+        }
     }
 }
 #endif
