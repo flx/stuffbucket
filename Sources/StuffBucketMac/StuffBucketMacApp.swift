@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 import StuffBucketCore
 
@@ -5,6 +6,9 @@ import StuffBucketCore
 struct StuffBucketMacApp: App {
     @StateObject private var persistenceController = PersistenceController.shared
     @Environment(\.scenePhase) private var scenePhase
+    private let captureObserver = SharedCaptureObserver {
+        importPendingSharedLinks(using: PersistenceController.shared)
+    }
     
     init() {
         SearchIndexer.shared.startObserving(context: PersistenceController.shared.viewContext)
@@ -15,46 +19,47 @@ struct StuffBucketMacApp: App {
             ContentView()
                 .environment(\.managedObjectContext, persistenceController.viewContext)
                 .onAppear {
-                    importPendingSharedLinks()
+                    importPendingSharedLinks(using: persistenceController)
                 }
                 .onChange(of: scenePhase) { _, newPhase in
                     if newPhase == .active {
-                        importPendingSharedLinks()
+                        importPendingSharedLinks(using: persistenceController)
                     }
                 }
                 .onOpenURL { _ in
-                    importPendingSharedLinks()
+                    NSApp.activate(ignoringOtherApps: true)
+                    importPendingSharedLinks(using: persistenceController)
                 }
         }
     }
+}
 
-    private func importPendingSharedLinks() {
-        let items = SharedCaptureStore.dequeueAll()
-        guard !items.isEmpty else { return }
-        let context = persistenceController.viewContext
-        let backgroundContext = persistenceController.container.newBackgroundContext()
-        var newItemIDs: [UUID] = []
-        context.performAndWait {
-            for item in items {
-                if let id = ItemImportService.createLinkItem(
-                    url: item.url,
-                    source: .shareSheet,
-                    tagsText: item.tagsText,
-                    in: context
-                ) {
-                    newItemIDs.append(id)
-                }
-            }
-            if context.hasChanges {
-                do {
-                    try context.save()
-                } catch {
-                    NSLog("Failed to import shared links: \(error)")
-                }
+private func importPendingSharedLinks(using persistenceController: PersistenceController) {
+    let items = SharedCaptureStore.dequeueAll()
+    guard !items.isEmpty else { return }
+    let context = persistenceController.viewContext
+    let backgroundContext = persistenceController.container.newBackgroundContext()
+    var newItemIDs: [UUID] = []
+    context.performAndWait {
+        for item in items {
+            if let id = ItemImportService.createLinkItem(
+                url: item.url,
+                source: .shareSheet,
+                tagsText: item.tagsText,
+                in: context
+            ) {
+                newItemIDs.append(id)
             }
         }
-        for itemID in newItemIDs {
-            LinkArchiver.shared.archive(itemID: itemID, context: backgroundContext)
+        if context.hasChanges {
+            do {
+                try context.save()
+            } catch {
+                NSLog("Failed to import shared links: \(error)")
+            }
         }
+    }
+    for itemID in newItemIDs {
+        LinkArchiver.shared.archive(itemID: itemID, context: backgroundContext)
     }
 }

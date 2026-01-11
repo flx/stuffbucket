@@ -10,7 +10,10 @@ final class ShareViewController: SLComposeServiceViewController {
         extractURL { url in
             if let url {
                 SharedCaptureStore.enqueue(url: url, tagsText: self.contentText)
-                self.openContainingApp()
+                self.openContainingApp {
+                    self.extensionContext?.completeRequest(returningItems: nil)
+                }
+                return
             }
             self.extensionContext?.completeRequest(returningItems: nil)
         }
@@ -56,8 +59,13 @@ final class ShareViewController: SLComposeServiceViewController {
         return nil
     }
 
-    private func openContainingApp() {
-        guard let url = URL(string: "stuffbucket://import") else { return }
-        extensionContext?.open(url, completionHandler: nil)
+    private func openContainingApp(completion: @escaping () -> Void) {
+        guard let url = URL(string: "stuffbucket://import") else {
+            completion()
+            return
+        }
+        extensionContext?.open(url) { _ in
+            completion()
+        }
     }
 }

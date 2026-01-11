@@ -27,7 +27,7 @@
       <string>com.digitalhandstand.stuffbucket.app.mac</string>
       <key>CFBundleURLSchemes</key>
       <array>
-        <string>stuffbucket</string>
+        <string>stuffbucket-mac</string>
       </array>
     </dict>
   </array>

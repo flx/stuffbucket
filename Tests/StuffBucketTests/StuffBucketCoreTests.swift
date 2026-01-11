@@ -135,4 +135,27 @@ final class ItemImportServiceTests: XCTestCase {
         }
         try? FileManager.default.removeItem(at: tempURL)
     }
+
+    func testCreatesLinkItemWithTagsFromText() throws {
+        let controller = PersistenceController(inMemory: true)
+        let context = controller.viewContext
+        let url = URL(string: "https://example.com")!
+
+        let itemID = ItemImportService.createLinkItem(
+            url: url,
+            source: .manual,
+            tagsText: "work, #swift ui",
+            in: context
+        )
+        XCTAssertNotNil(itemID)
+        try context.save()
+
+        let request = NSFetchRequest<Item>(entityName: "Item")
+        request.fetchLimit = 1
+        request.predicate = NSPredicate(format: "id == %@", itemID! as CVarArg)
+        let item = try XCTUnwrap(context.fetch(request).first)
+
+        XCTAssertEqual(item.itemType, .link)
+        XCTAssertEqual(item.tagList, ["work", "swift", "ui"])
+    }
 }
