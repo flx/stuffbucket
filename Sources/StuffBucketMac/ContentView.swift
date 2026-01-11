@@ -14,6 +14,7 @@ struct ContentView: View {
     @State private var isShowingAddLinkAlert = false
     @State private var addLinkText = ""
     @State private var isDropTargeted = false
+    @State private var isShowingDeleteAllAlert = false
     private let searchService = SearchService()
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \Item.updatedAt, ascending: false)]
@@ -221,6 +222,14 @@ struct ContentView: View {
         }
         .frame(minWidth: 900, minHeight: 600)
         .toolbar {
+            ToolbarItem(placement: .automatic) {
+                Button(role: .destructive) {
+                    isShowingDeleteAllAlert = true
+                } label: {
+                    Image(systemName: "trash")
+                }
+                .accessibilityLabel("Delete All Data")
+            }
             ToolbarItem(placement: .primaryAction) {
                 Menu {
                     Button("New Snippet") {
@@ -263,6 +272,14 @@ struct ContentView: View {
             .disabled(addLinkText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
         } message: {
             Text("Paste a URL to save it in StuffBucket.")
+        }
+        .alert("Delete All Data?", isPresented: $isShowingDeleteAllAlert) {
+            Button("Cancel", role: .cancel) {}
+            Button("Delete All", role: .destructive) {
+                deleteAllData()
+            }
+        } message: {
+            Text("This removes all StuffBucket items and stored files. This is temporary debug tooling.")
         }
         .onDrop(of: [UTType.fileURL.identifier, UTType.url.identifier, UTType.plainText.identifier], isTargeted: $isDropTargeted) { providers in
             guard canHandleProviders(providers) else { return false }
@@ -387,6 +404,12 @@ struct ContentView: View {
     private func addLink() {
         guard let url = Self.normalizedURL(from: addLinkText) else { return }
         storeLink(url)
+    }
+
+    private func deleteAllData() {
+        searchText = ""
+        results = []
+        DebugDataResetService.resetAllData(context: context)
     }
 
     private func storeLink(_ url: URL) {

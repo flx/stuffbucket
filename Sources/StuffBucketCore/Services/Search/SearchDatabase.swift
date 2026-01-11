@@ -72,6 +72,13 @@ final class SearchDatabase {
         }
     }
 
+    func reset() {
+        queue.async {
+            guard let db = self.db else { return }
+            sqlite3_exec(db, "DELETE FROM items_fts;", nil, nil, nil)
+        }
+    }
+
     func search(query: SearchQuery) -> [SearchResult] {
         let matchQuery = SearchQueryBuilder().build(query: query)
         guard !matchQuery.isEmpty else {

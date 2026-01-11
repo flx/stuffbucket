@@ -172,6 +172,7 @@
 - Map share sheet comment text to tags, notify running instances, and open the app after share import. completed [x]
 - Add link archive viewer actions (open page/reader HTML in-app). completed [x]
 - Add Archive with Login sheet using a persistent in-app WebView for paywalled captures. completed [x]
+- Add a temporary Delete All Data toolbar button for debugging (remove before release). completed [x]
 - Item detail actions for AI tasks (summarize, key points, tags).
 - AI settings screen (API key management + advanced model picker).
 - Show a pricing disclosure line with per-token rates sourced from the OpenAI pricing page.
@@ -193,6 +194,7 @@
 - Activate the macOS app when share capture is triggered to bring it to the foreground. completed [x]
 - Add link archive viewer actions (open archived HTML in default browser). completed [x]
 - Add Archive with Login sheet using a persistent in-app WebView for paywalled captures. completed [x]
+- Add a temporary Delete All Data toolbar button for debugging (remove before release). completed [x]
 - AI actions integrated into item detail and toolbar.
 - AI settings screen (API key management + advanced model picker).
 - Show a pricing disclosure line with per-token rates sourced from the OpenAI pricing page.

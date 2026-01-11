@@ -201,6 +201,12 @@ If a link is marked protected:
 
 ---
 
+## 8. Debug tooling (temporary)
+- Provide a temporary "Delete All Data" toolbar button to wipe Core Data items and stored files during development.
+- This control is debug-only and should be removed before release.
+
+---
+
 ## 8. Capture & import flows (amended)
 
 ### iOS / iPadOS Share Sheet

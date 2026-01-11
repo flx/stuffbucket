@@ -12,6 +12,7 @@ struct ContentView: View {
     @State private var isImportingDocument = false
     @State private var isShowingAddLinkAlert = false
     @State private var addLinkText = ""
+    @State private var isShowingDeleteAllAlert = false
     private let searchService = SearchService()
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \Item.updatedAt, ascending: false)]
@@ -154,6 +155,14 @@ struct ContentView: View {
             .navigationTitle("Bucket")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(role: .destructive) {
+                        isShowingDeleteAllAlert = true
+                    } label: {
+                        Image(systemName: "trash")
+                    }
+                    .accessibilityLabel("Delete All Data")
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
                     Menu {
                         Button("New Snippet") {
                             isShowingSnippetSheet = true
@@ -200,6 +209,14 @@ struct ContentView: View {
                 Text("Paste a URL to save it in StuffBucket.")
             }
 #endif
+            .alert("Delete All Data?", isPresented: $isShowingDeleteAllAlert) {
+                Button("Cancel", role: .cancel) {}
+                Button("Delete All", role: .destructive) {
+                    deleteAllData()
+                }
+            } message: {
+                Text("This removes all StuffBucket items and stored files. This is temporary debug tooling.")
+            }
         }
         .onChange(of: searchText) { _, newValue in
             searchTask?.cancel()
@@ -249,6 +266,12 @@ struct ContentView: View {
         return URL(string: "https://\(trimmed)")
     }
 #endif
+
+    private func deleteAllData() {
+        searchText = ""
+        results = []
+        DebugDataResetService.resetAllData(context: context)
+    }
 
     private func importDocuments(_ urls: [URL]) {
         for url in urls {
