@@ -19,17 +19,9 @@ public final class LinkArchiver {
                 self.endArchive(itemID)
                 return
             }
-            let request = self.buildRequest(url: url)
-            let task = self.session.dataTask(with: request) { data, _, error in
-                if let data {
-                    self.handleArchiveSuccess(data: data, url: url, itemID: itemID, context: context)
-                } else if let error {
-                    self.handleArchiveFailure(error: error, itemID: itemID, context: context)
-                } else {
-                    self.handleArchiveFailure(error: ArchiveError.emptyResponse, itemID: itemID, context: context)
-                }
+            Task {
+                await self.archiveRendered(url: url, itemID: itemID, context: context)
             }
-            task.resume()
         }
     }
 
@@ -70,32 +62,140 @@ public final class LinkArchiver {
         return request
     }
 
-    private func handleArchiveSuccess(data: Data, url: URL, itemID: UUID, context: NSManagedObjectContext) {
-        let htmlString = String(decoding: data, as: UTF8.self)
-        let metadata = LinkMetadataParser.parse(html: htmlString, fallbackURL: url)
-        let archiveStatus: ArchiveStatus
-        let relativePath: String?
+    private func archiveRendered(url: URL, itemID: UUID, context: NSManagedObjectContext) async {
+        defer { endArchive(itemID) }
         do {
-            relativePath = try LinkStorage.writeHTML(data: data, itemID: itemID)
-            archiveStatus = .full
+            let capture = try await RenderedPageCapture().capture(url: url)
+            let outcome = try await buildArchive(from: capture, originalURL: url, itemID: itemID)
+            await updateItem(itemID: itemID, outcome: outcome, context: context)
         } catch {
-            relativePath = nil
-            archiveStatus = .failed
+            await archiveFallback(url: url, itemID: itemID, context: context)
         }
-        context.perform {
-            defer { self.endArchive(itemID) }
+    }
+
+    private func buildArchive(from capture: RenderedPageCaptureResult, originalURL: URL, itemID: UUID) async throws -> ArchiveOutcome {
+        let baseURL = capture.baseURL
+        var assetMap: [URL: AssetFile] = [:]
+        var queue: [AssetDescriptor] = []
+        var queued: Set<URL> = []
+        var processed: Set<URL> = []
+        var assetFailures = 0
+
+        func enqueue(_ url: URL, kind: AssetKind) {
+            let normalized = AssetURLResolver.normalized(url)
+            if assetMap[normalized] == nil {
+                let fileName = AssetNamer.fileName(for: normalized, kind: kind)
+                assetMap[normalized] = AssetFile(fileName: fileName)
+            }
+            guard !queued.contains(normalized), !processed.contains(normalized) else { return }
+            queued.insert(normalized)
+            queue.append(AssetDescriptor(url: normalized, kind: kind))
+        }
+
+        for raw in capture.images {
+            if let url = AssetURLResolver.resolve(raw, baseURL: baseURL) {
+                enqueue(url, kind: .image)
+            }
+        }
+        for raw in capture.imageSrcsets {
+            if let url = AssetURLResolver.resolve(raw, baseURL: baseURL) {
+                enqueue(url, kind: .image)
+            }
+        }
+        for raw in capture.sources {
+            if let url = AssetURLResolver.resolve(raw, baseURL: baseURL) {
+                enqueue(url, kind: .image)
+            }
+        }
+        for raw in capture.stylesheets {
+            if let url = AssetURLResolver.resolve(raw, baseURL: baseURL) {
+                enqueue(url, kind: .stylesheet)
+            }
+        }
+        for raw in capture.icons {
+            if let url = AssetURLResolver.resolve(raw, baseURL: baseURL) {
+                enqueue(url, kind: .icon)
+            }
+        }
+
+        while !queue.isEmpty {
+            let descriptor = queue.removeFirst()
+            queued.remove(descriptor.url)
+            processed.insert(descriptor.url)
+            guard AssetURLResolver.shouldDownload(descriptor.url) else { continue }
+            do {
+                let (data, _) = try await session.data(from: descriptor.url)
+                guard !data.isEmpty else {
+                    assetFailures += 1
+                    continue
+                }
+                var dataToWrite = data
+                if descriptor.kind == .stylesheet {
+                    let cssString = String(decoding: data, as: UTF8.self)
+                    let importURLs = CSSAssetExtractor.importURLs(in: cssString, baseURL: descriptor.url)
+                    for url in importURLs {
+                        enqueue(url, kind: .stylesheet)
+                    }
+                    let assetURLs = CSSAssetExtractor.assetURLs(in: cssString, baseURL: descriptor.url)
+                    for url in assetURLs {
+                        enqueue(url, kind: .other)
+                    }
+                    let rewrittenCSS = CSSAssetRewriter.rewrite(cssString, baseURL: descriptor.url, assetMap: assetMap)
+                    dataToWrite = Data(rewrittenCSS.utf8)
+                }
+                let fileName = assetMap[descriptor.url]?.fileName
+                    ?? AssetNamer.fileName(for: descriptor.url, kind: descriptor.kind)
+                _ = try LinkStorage.writeAsset(data: dataToWrite, itemID: itemID, fileName: fileName)
+            } catch {
+                assetFailures += 1
+            }
+        }
+
+        let rewrittenHTML = HTMLAssetRewriter.rewrite(html: capture.html, baseURL: baseURL, assetMap: assetMap)
+        let htmlData = Data(rewrittenHTML.utf8)
+        let relativePath = try? LinkStorage.writeHTML(data: htmlData, itemID: itemID)
+        let metadata = LinkMetadataParser.parse(html: rewrittenHTML, fallbackURL: originalURL)
+        let archiveStatus: ArchiveStatus
+        if relativePath == nil {
+            archiveStatus = .failed
+        } else if assetFailures > 0 {
+            archiveStatus = .partial
+        } else {
+            archiveStatus = .full
+        }
+        return ArchiveOutcome(metadata: metadata, htmlRelativePath: relativePath, archiveStatus: archiveStatus)
+    }
+
+    private func archiveFallback(url: URL, itemID: UUID, context: NSManagedObjectContext) async {
+        do {
+            let request = buildRequest(url: url)
+            let (data, _) = try await session.data(for: request)
+            guard !data.isEmpty else { throw ArchiveError.emptyResponse }
+            let htmlString = String(decoding: data, as: UTF8.self)
+            let metadata = LinkMetadataParser.parse(html: htmlString, fallbackURL: url)
+            let relativePath = try? LinkStorage.writeHTML(data: data, itemID: itemID)
+            let archiveStatus: ArchiveStatus = relativePath == nil ? .failed : .partial
+            let outcome = ArchiveOutcome(metadata: metadata, htmlRelativePath: relativePath, archiveStatus: archiveStatus)
+            await updateItem(itemID: itemID, outcome: outcome, context: context)
+        } catch {
+            await markFailed(itemID: itemID, context: context)
+        }
+    }
+
+    private func updateItem(itemID: UUID, outcome: ArchiveOutcome, context: NSManagedObjectContext) async {
+        await performContextUpdate(in: context) {
             let request = NSFetchRequest<Item>(entityName: "Item")
             request.fetchLimit = 1
             request.predicate = NSPredicate(format: "id == %@", itemID as CVarArg)
             guard let item = try? context.fetch(request).first else { return }
-            if let title = metadata.title {
+            if let title = outcome.metadata.title {
                 item.linkTitle = title
                 item.title = title
             }
-            item.linkAuthor = metadata.author
-            item.linkPublishedDate = metadata.publishedDate
-            item.htmlRelativePath = relativePath
-            item.archiveStatus = archiveStatus.rawValue
+            item.linkAuthor = outcome.metadata.author
+            item.linkPublishedDate = outcome.metadata.publishedDate
+            item.htmlRelativePath = outcome.htmlRelativePath
+            item.archiveStatus = outcome.archiveStatus.rawValue
             item.updatedAt = Date()
             if context.hasChanges {
                 try? context.save()
@@ -103,9 +203,8 @@ public final class LinkArchiver {
         }
     }
 
-    private func handleArchiveFailure(error: Error, itemID: UUID, context: NSManagedObjectContext) {
-        context.perform {
-            defer { self.endArchive(itemID) }
+    private func markFailed(itemID: UUID, context: NSManagedObjectContext) async {
+        await performContextUpdate(in: context) {
             let request = NSFetchRequest<Item>(entityName: "Item")
             request.fetchLimit = 1
             request.predicate = NSPredicate(format: "id == %@", itemID as CVarArg)
@@ -114,6 +213,15 @@ public final class LinkArchiver {
             item.updatedAt = Date()
             if context.hasChanges {
                 try? context.save()
+            }
+        }
+    }
+
+    private func performContextUpdate(in context: NSManagedObjectContext, updates: @escaping () -> Void) async {
+        await withCheckedContinuation { continuation in
+            context.perform {
+                updates()
+                continuation.resume()
             }
         }
     }
@@ -133,6 +241,12 @@ public final class LinkArchiver {
             _ = inFlight.remove(itemID)
         }
     }
+}
+
+private struct ArchiveOutcome {
+    let metadata: LinkMetadata
+    let htmlRelativePath: String?
+    let archiveStatus: ArchiveStatus
 }
 
 private enum ArchiveError: Error {

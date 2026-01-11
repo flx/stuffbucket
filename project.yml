@@ -104,6 +104,7 @@ targets:
       - path: Sources/StuffBucketCore
     dependencies:
       - sdk: libsqlite3.tbd
+      - sdk: WebKit.framework
     settings:
       base:
         INFOPLIST_FILE: Sources/StuffBucketCore/Info.plist

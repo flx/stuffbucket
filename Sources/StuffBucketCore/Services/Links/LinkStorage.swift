@@ -11,17 +11,39 @@ enum LinkStorage {
         return relativeHTMLPath(for: itemID)
     }
 
+    static func writeAsset(data: Data, itemID: UUID, fileName: String) throws -> String {
+        let fileURL = assetURL(for: itemID, fileName: fileName)
+        let directoryURL = fileURL.deletingLastPathComponent()
+        try FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
+        try data.write(to: fileURL, options: .atomic)
+        return relativeAssetPath(for: fileName)
+    }
+
     static func htmlURL(for itemID: UUID) -> URL {
-        linksDirectory().appendingPathComponent(itemID.uuidString, isDirectory: true)
+        itemDirectory(for: itemID)
             .appendingPathComponent("page.html")
+    }
+
+    static func assetURL(for itemID: UUID, fileName: String) -> URL {
+        itemDirectory(for: itemID)
+            .appendingPathComponent("assets", isDirectory: true)
+            .appendingPathComponent(fileName)
     }
 
     static func relativeHTMLPath(for itemID: UUID) -> String {
         "Links/\(itemID.uuidString)/page.html"
     }
 
+    static func relativeAssetPath(for fileName: String) -> String {
+        "assets/\(fileName)"
+    }
+
     private static func linksDirectory() -> URL {
         rootDirectory().appendingPathComponent("Links", isDirectory: true)
+    }
+
+    private static func itemDirectory(for itemID: UUID) -> URL {
+        linksDirectory().appendingPathComponent(itemID.uuidString, isDirectory: true)
     }
 
     private static func rootDirectory() -> URL {

@@ -81,11 +81,10 @@ When a link is saved, StuffBucket must:
 ### 4.2 HTML persistence strategy
 
 For each Link item:
-- Fetch the HTML using `URLSession` with reader-friendly user agent.
-- Store a **self-contained HTML snapshot**:
-  - Inline critical CSS where feasible.
-  - Download referenced images into a local `assets/` folder.
-  - Rewrite relative URLs to local paths.
+- Capture the **rendered DOM** using `WKWebView` (non-persistent data store).
+- Extract asset URLs (images, srcset, source tags, stylesheets, icons).
+- Download assets into a local `assets/` folder and rewrite HTML/CSS references to local paths.
+- Fallback to a raw `URLSession` HTML fetch if WebKit capture fails.
 - Save as:
   ```
   StuffBucket/Links/<uuid>/page.html
@@ -99,10 +98,10 @@ Optional enhancements:
 
 ### 4.3 Fallback modes
 If full HTML capture fails:
-- Store:
-  - Plain-text extracted content
-  - Title + URL
+- Store a raw HTML snapshot (without asset rewriting) when available.
 - Mark link as **“partial archive”** in metadata.
+If both rendered and raw capture fail:
+- Mark link as **“failed archive.”**
 
 ### 4.4 Viewing links
 - Default: open the locally stored `page.html` inside StuffBucket.
