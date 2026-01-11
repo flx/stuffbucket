@@ -60,6 +60,7 @@ Principles:
 - **Files remain files** (no opaque blobs).
 - The user can browse and back up StuffBucket using Finder / Files.
 - Deleting the app does not delete user data.
+- iCloud container ID: `iCloud.com.digitalhandstand.stuffbucket`.
 
 ---
 
@@ -171,6 +172,8 @@ If a link is marked protected:
 
 ### 7.1 Metadata
 - Core Data + `NSPersistentCloudKitContainer`
+- CloudKit container: `iCloud.com.digitalhandstand.stuffbucket`
+- Core Data schema remains CloudKit-compatible (non-optional attributes have defaults or are optional).
 - Conflict resolution:
   - last-writer-wins for scalars
   - set merge for tags

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <model name="StuffBucketModel" userDefinedModelVersionIdentifier="" type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="22709" systemVersion="23F79" minimumToolsVersion="Automatic" sourceLanguage="Swift" entityVersionHashesVersion="3">
     <entity name="Item" representedClassName="Item" syncable="YES" codeGenerationType="class">
-        <attribute name="id" attributeType="UUID" optional="NO"/>
-        <attribute name="type" attributeType="String" optional="NO"/>
+        <attribute name="id" attributeType="UUID" optional="YES"/>
+        <attribute name="type" attributeType="String" optional="YES"/>
         <attribute name="title" attributeType="String" optional="YES"/>
         <attribute name="textContent" attributeType="String" optional="YES"/>
         <attribute name="tags" attributeType="String" optional="YES"/>
@@ -26,7 +26,7 @@
         <attribute name="aiUpdatedAt" attributeType="Date" optional="YES"/>
     </entity>
     <entity name="SearchIndexMetadata" representedClassName="SearchIndexMetadata" syncable="YES" codeGenerationType="class">
-        <attribute name="id" attributeType="UUID" optional="NO"/>
+        <attribute name="id" attributeType="UUID" optional="YES"/>
         <attribute name="version" attributeType="Integer 64" optional="NO" defaultValueString="1"/>
         <attribute name="lastIndexedAt" attributeType="Date" optional="YES"/>
     </entity>

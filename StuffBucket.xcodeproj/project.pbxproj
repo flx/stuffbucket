@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 63;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -210,7 +210,7 @@
 		B361E6BED62FB2575D9451B2 /* StuffBucketCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = StuffBucketCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		B6D19BF8E42EED96A8C59100 /* StuffBucketTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = StuffBucketTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		BB12F39F12A0E85EF8522A4F /* SharedCaptureStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedCaptureStore.swift; sourceTree = "<group>"; };
-		CD33A00B462976D52F37AEF0 /* StuffBucketMac.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = StuffBucketMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		CD33A00B462976D52F37AEF0 /* StuffBucketMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = StuffBucketMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D153F84880F3059E01BA9478 /* spec.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = spec.md; sourceTree = "<group>"; };
 		D4768A08056EEFBD1E643C51 /* SearchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchService.swift; sourceTree = "<group>"; };
 		DA005B6C0E3259CDAE104D1C /* SearchIndexer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchIndexer.swift; sourceTree = "<group>"; };
@@ -675,7 +675,6 @@
 						ProvisioningStyle = Automatic;
 					};
 					8F8E123B35D0528F425DEEFD = {
-						DevelopmentTeam = V37U525228;
 						ProvisioningStyle = Automatic;
 					};
 					BC358A3656762DACE7E742E7 = {
@@ -698,7 +697,6 @@
 			);
 			mainGroup = E4DE441F8F6C82B7E781114E;
 			minimizedProjectReferenceProxies = 1;
-			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (

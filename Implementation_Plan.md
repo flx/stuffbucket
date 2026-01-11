@@ -26,6 +26,10 @@
 - Add `tags` to the Core Data model. completed [x]
 - Add lightweight migration support for existing stores. completed [x]
 - Ensure CloudKit schema updates and resolve any merge policies for new fields.
+- Make Core Data attributes CloudKit-compatible (optional or default values for non-optional fields). completed [x]
+- Enable iCloud CloudKit + iCloud Drive capabilities for iOS/macOS targets with container `iCloud.com.digitalhandstand.stuffbucket`. completed [x]
+- Point `NSPersistentCloudKitContainer` at the same iCloud container ID. completed [x]
+- Use the same iCloud container ID for link/document storage paths. completed [x]
 - Add a small metadata table for search index versioning and last indexed timestamps. completed [x]
 - Load the Core Data model from the framework bundle to avoid runtime lookup failures. completed [x]
 - Import shared links from the share extension into Core Data. completed [x]

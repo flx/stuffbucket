@@ -25,7 +25,7 @@ enum LinkStorage {
     }
 
     private static func rootDirectory() -> URL {
-        if let iCloudRoot = FileManager.default.url(forUbiquityContainerIdentifier: nil)?
+        if let iCloudRoot = FileManager.default.url(forUbiquityContainerIdentifier: ICloudConfig.containerIdentifier)?
             .appendingPathComponent("Documents", isDirectory: true)
             .appendingPathComponent(rootFolderName, isDirectory: true) {
             return iCloudRoot
@@ -69,7 +69,7 @@ enum DocumentStorage {
     }
 
     private static func rootDirectory() -> URL {
-        if let iCloudRoot = FileManager.default.url(forUbiquityContainerIdentifier: nil)?
+        if let iCloudRoot = FileManager.default.url(forUbiquityContainerIdentifier: ICloudConfig.containerIdentifier)?
             .appendingPathComponent("Documents", isDirectory: true)
             .appendingPathComponent(rootFolderName, isDirectory: true) {
             return iCloudRoot

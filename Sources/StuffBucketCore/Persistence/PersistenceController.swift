@@ -1,6 +1,10 @@
 import CoreData
 import Foundation
 
+enum ICloudConfig {
+    static let containerIdentifier = "iCloud.com.digitalhandstand.stuffbucket"
+}
+
 public final class PersistenceController: ObservableObject {
     public static let shared = PersistenceController()
 
@@ -24,6 +28,9 @@ public final class PersistenceController: ObservableObject {
             for description in container.persistentStoreDescriptions {
                 description.shouldMigrateStoreAutomatically = true
                 description.shouldInferMappingModelAutomatically = true
+                description.cloudKitContainerOptions = NSPersistentCloudKitContainerOptions(
+                    containerIdentifier: ICloudConfig.containerIdentifier
+                )
             }
         }
 
