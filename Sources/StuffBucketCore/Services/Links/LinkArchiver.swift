@@ -4,16 +4,19 @@ import CoreData
 public final class LinkArchiver {
     public static let shared = LinkArchiver()
     private let session: URLSession
+    private var inFlight: Set<UUID> = []
+    private let inFlightQueue = DispatchQueue(label: "com.digitalhandstand.stuffbucket.linkarchiver.inflight")
 
     public init(session: URLSession = .shared) {
         self.session = session
     }
 
     public func archive(itemID: UUID, context: NSManagedObjectContext) {
-        context.perform { [weak self] in
-            guard let self else { return }
+        guard beginArchive(itemID) else { return }
+        context.perform {
             guard let urlString = self.fetchLinkURL(itemID: itemID, context: context),
                   let url = URL(string: urlString) else {
+                self.endArchive(itemID)
                 return
             }
             let request = self.buildRequest(url: url)
@@ -22,9 +25,28 @@ public final class LinkArchiver {
                     self.handleArchiveSuccess(data: data, url: url, itemID: itemID, context: context)
                 } else if let error {
                     self.handleArchiveFailure(error: error, itemID: itemID, context: context)
+                } else {
+                    self.handleArchiveFailure(error: ArchiveError.emptyResponse, itemID: itemID, context: context)
                 }
             }
             task.resume()
+        }
+    }
+
+    public func archivePendingLinks(context: NSManagedObjectContext, limit: Int = 25) {
+        context.perform {
+            let request = NSFetchRequest<Item>(entityName: "Item")
+            request.fetchLimit = limit
+            request.predicate = NSPredicate(
+                format: "type == %@ AND (htmlRelativePath == nil OR htmlRelativePath == '') AND (archiveStatus == nil OR archiveStatus == '')",
+                ItemType.link.rawValue
+            )
+            let items = (try? context.fetch(request)) ?? []
+            for item in items {
+                if let itemID = item.id {
+                    self.archive(itemID: itemID, context: context)
+                }
+            }
         }
     }
 
@@ -61,6 +83,7 @@ public final class LinkArchiver {
             archiveStatus = .failed
         }
         context.perform {
+            defer { self.endArchive(itemID) }
             let request = NSFetchRequest<Item>(entityName: "Item")
             request.fetchLimit = 1
             request.predicate = NSPredicate(format: "id == %@", itemID as CVarArg)
@@ -82,6 +105,7 @@ public final class LinkArchiver {
 
     private func handleArchiveFailure(error: Error, itemID: UUID, context: NSManagedObjectContext) {
         context.perform {
+            defer { self.endArchive(itemID) }
             let request = NSFetchRequest<Item>(entityName: "Item")
             request.fetchLimit = 1
             request.predicate = NSPredicate(format: "id == %@", itemID as CVarArg)
@@ -93,5 +117,24 @@ public final class LinkArchiver {
             }
         }
     }
+
+    private func beginArchive(_ itemID: UUID) -> Bool {
+        inFlightQueue.sync {
+            if inFlight.contains(itemID) {
+                return false
+            }
+            inFlight.insert(itemID)
+            return true
+        }
+    }
+
+    private func endArchive(_ itemID: UUID) {
+        inFlightQueue.sync {
+            _ = inFlight.remove(itemID)
+        }
+    }
 }
 
+private enum ArchiveError: Error {
+    case emptyResponse
+}

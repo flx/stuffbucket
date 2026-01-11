@@ -192,6 +192,7 @@
   - HTML archiving
   - Search indexing
   - Safari sync re-import (macOS)
+- Auto-archive pending link items on app launch/activation to ensure HTML snapshots are captured. completed [x]
 - Throttle indexing on large imports and show progress.
 - Ensure on-device search remains responsive under heavy load.
 

@@ -75,6 +75,7 @@ When a link is saved, StuffBucket must:
    - Publication date (best-effort)
    - Decode common HTML entities in metadata values
 3. **Persist the article content** to avoid link rot.
+4. Automatically archive pending link items on app launch/activation to ensure every link is archived.
 
 ### 4.2 HTML persistence strategy
 

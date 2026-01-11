@@ -6,7 +6,7 @@ struct StuffBucketApp: App {
     @StateObject private var persistenceController = PersistenceController.shared
     @Environment(\.scenePhase) private var scenePhase
     private let captureObserver = SharedCaptureObserver {
-        importPendingSharedLinks(using: PersistenceController.shared)
+        refreshPendingData(using: PersistenceController.shared)
     }
     
     init() {
@@ -18,18 +18,23 @@ struct StuffBucketApp: App {
             ContentView()
                 .environment(\.managedObjectContext, persistenceController.viewContext)
                 .onAppear {
-                    importPendingSharedLinks(using: persistenceController)
+                    refreshPendingData(using: persistenceController)
                 }
                 .onChange(of: scenePhase) { _, newPhase in
                     if newPhase == .active {
-                        importPendingSharedLinks(using: persistenceController)
+                        refreshPendingData(using: persistenceController)
                     }
                 }
                 .onOpenURL { _ in
-                    importPendingSharedLinks(using: persistenceController)
+                    refreshPendingData(using: persistenceController)
                 }
         }
     }
+}
+
+private func refreshPendingData(using persistenceController: PersistenceController) {
+    importPendingSharedLinks(using: persistenceController)
+    archivePendingLinks(using: persistenceController)
 }
 
 private func importPendingSharedLinks(using persistenceController: PersistenceController) {
@@ -60,4 +65,9 @@ private func importPendingSharedLinks(using persistenceController: PersistenceCo
     for itemID in newItemIDs {
         LinkArchiver.shared.archive(itemID: itemID, context: backgroundContext)
     }
+}
+
+private func archivePendingLinks(using persistenceController: PersistenceController) {
+    let backgroundContext = persistenceController.container.newBackgroundContext()
+    LinkArchiver.shared.archivePendingLinks(context: backgroundContext)
 }
