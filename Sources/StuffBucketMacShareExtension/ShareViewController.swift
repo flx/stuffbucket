@@ -10,6 +10,7 @@ final class ShareViewController: NSViewController {
         extractURL(from: context) { url in
             if let url {
                 SharedCaptureStore.enqueue(url: url)
+                Self.openContainingApp(from: context)
             }
             context.completeRequest(returningItems: nil)
         }
@@ -49,5 +50,10 @@ final class ShareViewController: NSViewController {
             return URL(string: string)
         }
         return nil
+    }
+
+    private static func openContainingApp(from context: NSExtensionContext) {
+        guard let url = URL(string: "stuffbucket://import") else { return }
+        context.open(url, completionHandler: nil)
     }
 }

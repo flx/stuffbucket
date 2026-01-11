@@ -162,6 +162,7 @@
 - Add in-app prompt to save a link by pasting a URL. completed [x]
 - Show an empty-state Import Document button. completed [x]
 - Show an empty-state Add Link button. completed [x]
+- Map share sheet comment text to tags and open the app after share import. completed [x]
 - Item detail actions for AI tasks (summarize, key points, tags).
 - AI settings screen (API key management + advanced model picker).
 - Show a pricing disclosure line with per-token rates sourced from the OpenAI pricing page.
@@ -179,6 +180,7 @@
 - Add “Show in Finder” for document items. completed [x]
 - Show an empty-state Import Document button. completed [x]
 - Add list row context menu to reveal document items. completed [x]
+- Open the app after share sheet capture to surface new items. completed [x]
 - AI actions integrated into item detail and toolbar.
 - AI settings screen (API key management + advanced model picker).
 - Show a pricing disclosure line with per-token rates sourced from the OpenAI pricing page.

@@ -22,18 +22,26 @@ struct StuffBucketMacApp: App {
                         importPendingSharedLinks()
                     }
                 }
+                .onOpenURL { _ in
+                    importPendingSharedLinks()
+                }
         }
     }
 
     private func importPendingSharedLinks() {
-        let urls = SharedCaptureStore.dequeueAll()
-        guard !urls.isEmpty else { return }
+        let items = SharedCaptureStore.dequeueAll()
+        guard !items.isEmpty else { return }
         let context = persistenceController.viewContext
         let backgroundContext = persistenceController.container.newBackgroundContext()
         var newItemIDs: [UUID] = []
         context.performAndWait {
-            for url in urls {
-                if let id = ItemImportService.createLinkItem(url: url, source: .shareSheet, in: context) {
+            for item in items {
+                if let id = ItemImportService.createLinkItem(
+                    url: item.url,
+                    source: .shareSheet,
+                    tagsText: item.tagsText,
+                    in: context
+                ) {
                     newItemIDs.append(id)
                 }
             }

@@ -198,6 +198,8 @@ If a link is marked protected:
   3. Archive status indicator
 - Share extension captures URLs from Safari and queues them for the main app to import on launch.
 - Share extension accepts URL attachments or plain-text URL payloads.
+- Share sheet comment text is parsed into tags (comma, space, or #tag).
+- Share extension opens StuffBucket after capture to surface new items immediately.
 - Share extension bundle identifiers are prefixed by the main app bundle identifier.
 - Share extension version numbers match the parent app.
 - Share extension Info.plists include required bundle metadata for installation.
@@ -216,6 +218,7 @@ If a link is marked protected:
 - Services / Share menu
 - Share extension captures URLs from Safari and queues them for the main app to import on launch.
 - Share extension accepts URL attachments or plain-text URL payloads.
+- Share extension opens StuffBucket after capture to surface new items immediately.
 - Share extension bundle identifiers are prefixed by the main app bundle identifier.
 - Share extension version numbers match the parent app.
 - Share extension Info.plists include required bundle metadata for installation.

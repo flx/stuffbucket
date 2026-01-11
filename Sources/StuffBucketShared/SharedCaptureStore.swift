@@ -1,20 +1,46 @@
 import Foundation
 
+struct SharedCaptureItem: Codable, Hashable {
+    let url: URL
+    let tagsText: String?
+}
+
 enum SharedCaptureStore {
     static let appGroupID = "group.com.digitalhandstand.stuffbucket.app"
+    private static let pendingItemsKey = "pendingSharedItems"
     private static let pendingURLsKey = "pendingSharedURLs"
 
-    static func enqueue(url: URL) {
+    static func enqueue(url: URL, tagsText: String? = nil) {
         guard let defaults = UserDefaults(suiteName: appGroupID) else { return }
-        var urls = defaults.stringArray(forKey: pendingURLsKey) ?? []
-        urls.append(url.absoluteString)
-        defaults.set(urls, forKey: pendingURLsKey)
+        var items = loadItems(from: defaults)
+        let trimmedTags = tagsText?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let storedTags = trimmedTags?.isEmpty == false ? trimmedTags : nil
+        items.append(SharedCaptureItem(url: url, tagsText: storedTags))
+        saveItems(items, to: defaults)
     }
 
-    static func dequeueAll() -> [URL] {
+    static func dequeueAll() -> [SharedCaptureItem] {
         guard let defaults = UserDefaults(suiteName: appGroupID) else { return [] }
-        let urls = defaults.stringArray(forKey: pendingURLsKey) ?? []
+        var items = loadItems(from: defaults)
+        let legacyURLs = defaults.stringArray(forKey: pendingURLsKey) ?? []
+        for urlString in legacyURLs {
+            if let url = URL(string: urlString) {
+                items.append(SharedCaptureItem(url: url, tagsText: nil))
+            }
+        }
         defaults.removeObject(forKey: pendingURLsKey)
-        return urls.compactMap(URL.init(string:))
+        defaults.removeObject(forKey: pendingItemsKey)
+        return items
+    }
+
+    private static func loadItems(from defaults: UserDefaults) -> [SharedCaptureItem] {
+        guard let data = defaults.data(forKey: pendingItemsKey) else { return [] }
+        return (try? JSONDecoder().decode([SharedCaptureItem].self, from: data)) ?? []
+    }
+
+    private static func saveItems(_ items: [SharedCaptureItem], to defaults: UserDefaults) {
+        guard let data = try? JSONEncoder().encode(items) else { return }
+        defaults.set(data, forKey: pendingItemsKey)
+        defaults.synchronize()
     }
 }

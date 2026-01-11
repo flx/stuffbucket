@@ -61,12 +61,21 @@ public final class SafariBookmarksImporter {
 }
 
 public enum ItemImportService {
-    public static func createLinkItem(url: URL, source: ItemSource, in context: NSManagedObjectContext) -> UUID? {
+    public static func createLinkItem(
+        url: URL,
+        source: ItemSource,
+        tagsText: String? = nil,
+        in context: NSManagedObjectContext
+    ) -> UUID? {
         let item = Item.create(in: context, type: .link)
         item.linkURL = url.absoluteString
         item.linkTitle = url.host ?? url.absoluteString
         item.title = item.linkTitle
         item.source = source.rawValue
+        let tags = TagParser.parse(tagsText)
+        if !tags.isEmpty {
+            item.setTagList(tags)
+        }
         return item.id
     }
 
@@ -108,5 +117,21 @@ private enum SnippetTitleBuilder {
             return String(firstLine.prefix(maxLength)) + "..."
         }
         return String(firstLine)
+    }
+}
+
+private enum TagParser {
+    static func parse(_ text: String?) -> [String] {
+        guard let text else { return [] }
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return [] }
+        let parts = trimmed.split { $0 == "," || $0.isWhitespace || $0.isNewline }
+        return parts.compactMap { substring in
+            var tag = substring.trimmingCharacters(in: .whitespacesAndNewlines)
+            if tag.hasPrefix("#") {
+                tag.removeFirst()
+            }
+            return tag.isEmpty ? nil : tag
+        }
     }
 }
