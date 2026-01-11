@@ -36,6 +36,7 @@
 - Refresh App Group defaults before dequeuing shared items to reduce share-import latency. completed [x]
 - Fetch link metadata and persist HTML snapshots after share import. completed [x]
 - Capture rendered HTML via WKWebView, download assets, and rewrite HTML/CSS for offline link archives (fallback to raw HTML). completed [x]
+- Generate a reader-mode HTML snapshot (reader.html) alongside the full archive (page.html). completed [x]
 - Decode common HTML entities in link metadata parsing without AppKit dependencies. completed [x]
 - Add document storage helper for iCloud Drive file copies. completed [x]
 - Add import helper for links, snippets, and documents. completed [x]

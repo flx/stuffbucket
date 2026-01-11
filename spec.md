@@ -48,6 +48,7 @@ iCloud Drive/
     ├── Links/
     │   └── <uuid>/
     │       ├── page.html
+    │       ├── reader.html
     │       ├── assets/        (images, css, js if needed)
     │       └── metadata.json  (optional, diagnostic)
     ├── Protected/
@@ -84,6 +85,9 @@ For each Link item:
 - Capture the **rendered DOM** using `WKWebView` (non-persistent data store).
 - Extract asset URLs (images, srcset, source tags, stylesheets, icons).
 - Download assets into a local `assets/` folder and rewrite HTML/CSS references to local paths.
+- Save both:
+  - `page.html` (full page snapshot)
+  - `reader.html` (reader-mode extraction)
 - Fallback to a raw `URLSession` HTML fetch if WebKit capture fails.
 - Save as:
   ```

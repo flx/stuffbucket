@@ -154,6 +154,12 @@ public final class LinkArchiver {
         let rewrittenHTML = HTMLAssetRewriter.rewrite(html: capture.html, baseURL: baseURL, assetMap: assetMap)
         let htmlData = Data(rewrittenHTML.utf8)
         let relativePath = try? LinkStorage.writeHTML(data: htmlData, itemID: itemID)
+        let readerHTML = capture.readerHTML.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !readerHTML.isEmpty {
+            let rewrittenReader = HTMLAssetRewriter.rewrite(html: readerHTML, baseURL: baseURL, assetMap: assetMap)
+            let readerData = Data(rewrittenReader.utf8)
+            _ = try? LinkStorage.writeReaderHTML(data: readerData, itemID: itemID)
+        }
         let metadata = LinkMetadataParser.parse(html: rewrittenHTML, fallbackURL: originalURL)
         let archiveStatus: ArchiveStatus
         if relativePath == nil {

@@ -3,6 +3,7 @@ import WebKit
 
 struct RenderedPageCaptureResult {
     let html: String
+    let readerHTML: String
     let baseURL: URL
     let images: [String]
     let imageSrcsets: [String]
@@ -72,8 +73,56 @@ extension RenderedPageCapture: WKNavigationDelegate {
                 .map(link => link.href).filter(Boolean);
             const iconUrls = Array.from(document.querySelectorAll('link[rel~="icon"], link[rel~="apple-touch-icon"]'))
                 .map(link => link.href).filter(Boolean);
+            const pickReadableNode = () => {
+                const candidates = Array.from(document.querySelectorAll('article, main, [role="main"], section, div'));
+                if (candidates.length === 0) { return document.body; }
+                let best = null;
+                let bestScore = 0;
+                for (const el of candidates) {
+                    const text = (el.innerText || '').trim();
+                    const textLength = text.length;
+                    if (textLength < 200) { continue; }
+                    const linkText = Array.from(el.querySelectorAll('a')).map(a => (a.innerText || '')).join('');
+                    const linkLength = linkText.length;
+                    const linkDensity = linkLength / Math.max(textLength, 1);
+                    const paragraphCount = el.querySelectorAll('p').length;
+                    const score = (textLength * (1 - Math.min(linkDensity, 0.9))) + (paragraphCount * 100);
+                    if (score > bestScore) {
+                        bestScore = score;
+                        best = el;
+                    }
+                }
+                return best || document.body;
+            };
+            const titleText = (document.querySelector('h1') && document.querySelector('h1').innerText) || document.title || '';
+            const readableNode = pickReadableNode();
+            const readerHTML = `<!doctype html>
+            <html>
+            <head>
+            <meta charset="utf-8">
+            <base href="${document.baseURI}">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>${titleText}</title>
+            <style>
+              :root { color-scheme: light; }
+              body { font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif; margin: 0; padding: 0; background: #f6f4f0; color: #1b1b1b; }
+              main { max-width: 720px; margin: 0 auto; padding: 32px 20px 64px; line-height: 1.65; font-size: 17px; }
+              h1 { font-size: 28px; margin: 0 0 16px; }
+              img { max-width: 100%; height: auto; }
+              pre, code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
+              blockquote { border-left: 3px solid #c7c2ba; margin: 16px 0; padding-left: 12px; color: #4a4a4a; }
+            </style>
+            </head>
+            <body>
+            <main>
+              ${titleText ? '<h1>' + titleText + '</h1>' : ''}
+              ${readableNode ? readableNode.innerHTML : ''}
+            </main>
+            </body>
+            </html>`;
             const payload = {
                 html: document.documentElement.outerHTML,
+                readerHTML: readerHTML,
                 baseURI: document.baseURI,
                 images: imageUrls,
                 imageSrcsets: imageSrcsetUrls,
@@ -102,6 +151,7 @@ extension RenderedPageCapture: WKNavigationDelegate {
             }
             let result = RenderedPageCaptureResult(
                 html: payload.html,
+                readerHTML: payload.readerHTML,
                 baseURL: resolvedBaseURL,
                 images: payload.images,
                 imageSrcsets: payload.imageSrcsets,
@@ -124,6 +174,7 @@ extension RenderedPageCapture: WKNavigationDelegate {
 
 private struct RenderedPageCapturePayload: Decodable {
     let html: String
+    let readerHTML: String
     let baseURI: String
     let images: [String]
     let imageSrcsets: [String]
