@@ -3,6 +3,10 @@ import Foundation
 enum LinkStorage {
     private static let rootFolderName = "StuffBucket"
 
+    static func url(forRelativePath relativePath: String) -> URL {
+        rootDirectory().appendingPathComponent(relativePath)
+    }
+
     static func writeHTML(data: Data, itemID: UUID) throws -> String {
         let fileURL = htmlURL(for: itemID)
         let directoryURL = fileURL.deletingLastPathComponent()

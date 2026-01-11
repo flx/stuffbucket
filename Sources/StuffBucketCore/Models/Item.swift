@@ -40,6 +40,16 @@ public extension Item {
         return DocumentStorage.url(forRelativePath: documentRelativePath)
     }
 
+    var archivedPageURL: URL? {
+        guard let htmlRelativePath, !htmlRelativePath.isEmpty else { return nil }
+        return LinkStorage.url(forRelativePath: htmlRelativePath)
+    }
+
+    var archivedReaderURL: URL? {
+        guard let id else { return nil }
+        return LinkStorage.readerURL(for: id)
+    }
+
     var displayTitle: String {
         if let title, !title.isEmpty {
             return title

@@ -108,9 +108,11 @@ If both rendered and raw capture fail:
 - Mark link as **“failed archive.”**
 
 ### 4.4 Viewing links
-- Default: open the locally stored `page.html` inside StuffBucket.
-- Secondary action: “Open Original URL” in browser.
-- Provide **Export as HTML / PDF**.
+- iOS/iPadOS: open the locally stored `page.html` (and `reader.html`) inside StuffBucket.
+- macOS: open the archived HTML in the default browser.
+- If archives are missing, show an unavailable state.
+- Secondary action: “Open Original URL” in browser (planned).
+- Provide **Export as HTML / PDF** (planned).
 
 ### 4.5 Why HTML, not PDF?
 - Searchable

@@ -1,6 +1,9 @@
 import CoreData
 import SwiftUI
 import StuffBucketCore
+#if os(iOS)
+import WebKit
+#endif
 #if os(macOS)
 import AppKit
 #endif
@@ -12,6 +15,9 @@ struct ItemDetailView: View {
     @FetchRequest private var items: FetchedResults<Item>
     @State private var tagsText = ""
     @State private var contentText = ""
+    @State private var isShowingArchive = false
+    @State private var archiveURL: URL?
+    @State private var archiveTitle = ""
 
     init(itemID: UUID) {
         self.itemID = itemID
@@ -33,7 +39,7 @@ struct ItemDetailView: View {
     }
 
     private func detailView(for item: Item) -> some View {
-        Form {
+        let base = Form {
             Section("Details") {
                 Text(displayTitle(for: item))
                     .font(.headline)
@@ -45,6 +51,12 @@ struct ItemDetailView: View {
                     Text(linkURL)
                         .font(.footnote)
                         .foregroundStyle(.secondary)
+                }
+            }
+
+            if item.isLinkItem {
+                Section("Archive") {
+                    archiveSection(for: item)
                 }
             }
 
@@ -90,6 +102,20 @@ struct ItemDetailView: View {
         .onChange(of: contentText) { _, newValue in
             applyContent(newValue, to: item)
         }
+
+#if os(iOS)
+        return base
+            .sheet(isPresented: $isShowingArchive) {
+                if let url = archiveURL {
+                    ArchivedLinkSheet(url: url, title: archiveTitle)
+                } else {
+                    Text("Archive not available.")
+                        .padding()
+                }
+            }
+#else
+        return base
+#endif
     }
 
     private var missingView: some View {
@@ -168,6 +194,57 @@ struct ItemDetailView: View {
         item.itemType == .note || item.itemType == .snippet
     }
 
+    @ViewBuilder
+    private func archiveSection(for item: Item) -> some View {
+        let pageURL = item.archivedPageURL
+        let readerURL = item.archivedReaderURL
+        let pageAvailable = archiveFileExists(pageURL)
+        let readerAvailable = archiveFileExists(readerURL)
+
+        Button("Open Page Archive") {
+            guard let url = pageURL else { return }
+            openArchive(url: url, title: "Page Archive")
+        }
+        .disabled(!pageAvailable)
+
+        Button("Open Reader Archive") {
+            guard let url = readerURL else { return }
+            openArchive(url: url, title: "Reader Archive")
+        }
+        .disabled(!readerAvailable)
+
+        if !pageAvailable {
+            Text("Archive not ready yet.")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+        } else if !readerAvailable {
+            Text("Reader archive not ready yet.")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private func archiveFileExists(_ url: URL?) -> Bool {
+        guard let url else { return false }
+        return FileManager.default.fileExists(atPath: url.path)
+    }
+
+    private func openArchive(url: URL, title: String) {
+        prepareArchiveForReading(url)
+#if os(iOS)
+        archiveURL = url
+        archiveTitle = title
+        isShowingArchive = true
+#elseif os(macOS)
+        NSWorkspace.shared.open(url)
+#endif
+    }
+
+    private func prepareArchiveForReading(_ url: URL) {
+        guard FileManager.default.isUbiquitousItem(at: url) else { return }
+        try? FileManager.default.startDownloadingUbiquitousItem(at: url)
+    }
+
     private func parseTags(_ text: String) -> [String] {
         let parts = text.split(whereSeparator: { $0 == "," || $0 == "\n" })
         return parts
@@ -224,3 +301,52 @@ struct QuickAddSnippetView: View {
         dismiss()
     }
 }
+
+#if os(iOS)
+struct ArchivedLinkSheet: View {
+    let url: URL
+    let title: String
+
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            ArchivedLinkWebView(url: url)
+                .navigationTitle(title)
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Done") {
+                            dismiss()
+                        }
+                    }
+                }
+        }
+    }
+}
+
+struct ArchivedLinkWebView: UIViewRepresentable {
+    let url: URL
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator()
+    }
+
+    func makeUIView(context: Context) -> WKWebView {
+        let webView = WKWebView()
+        webView.allowsBackForwardNavigationGestures = true
+        return webView
+    }
+
+    func updateUIView(_ webView: WKWebView, context: Context) {
+        guard context.coordinator.loadedURL != url else { return }
+        let accessURL = url.deletingLastPathComponent()
+        webView.loadFileURL(url, allowingReadAccessTo: accessURL)
+        context.coordinator.loadedURL = url
+    }
+
+    final class Coordinator {
+        var loadedURL: URL?
+    }
+}
+#endif
