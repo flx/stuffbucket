@@ -95,6 +95,15 @@ final class ShareViewController: NSViewController {
             completion()
             return
         }
+        let bundleIdentifier = "com.digitalhandstand.stuffbucket.app.mac"
+        if let appURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleIdentifier) {
+            let configuration = NSWorkspace.OpenConfiguration()
+            configuration.activates = true
+            NSWorkspace.shared.open([url], withApplicationAt: appURL, configuration: configuration) { _, _ in
+                completion()
+            }
+            return
+        }
         context.open(url) { _ in
             completion()
         }

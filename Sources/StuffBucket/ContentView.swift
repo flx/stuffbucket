@@ -75,7 +75,7 @@ struct ContentView: View {
                                                         .font(.subheadline)
                                                         .foregroundStyle(.secondary)
                                                     if item.isLinkItem {
-                                                        LinkStatusBadge(status: item.archiveStatusValue)
+                                                        ItemArchiveStatusBadge(item: item)
                                                     }
                                                 }
                                             }
@@ -141,7 +141,7 @@ struct ContentView: View {
                                             .foregroundStyle(.secondary)
                                     }
                                     if let item = itemLookup[result.itemID], item.isLinkItem {
-                                        LinkStatusBadge(status: item.archiveStatusValue)
+                                        ItemArchiveStatusBadge(item: item)
                                     }
                                 }
                             }

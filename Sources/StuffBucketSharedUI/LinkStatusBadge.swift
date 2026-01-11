@@ -60,6 +60,16 @@ struct LinkStatusBadge: View {
     }
 }
 
+struct ItemArchiveStatusBadge: View {
+    @ObservedObject var item: Item
+
+    var body: some View {
+        if item.isLinkItem {
+            LinkStatusBadge(status: item.archiveStatusValue)
+        }
+    }
+}
+
 #Preview {
     VStack(spacing: 12) {
         LinkStatusBadge(status: .full)

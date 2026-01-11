@@ -7,6 +7,7 @@ struct StuffBucketMacApp: App {
     @StateObject private var persistenceController = PersistenceController.shared
     @Environment(\.scenePhase) private var scenePhase
     private let captureObserver = SharedCaptureObserver {
+        NSApp.activate(ignoringOtherApps: true)
         refreshPendingData(using: PersistenceController.shared)
     }
     

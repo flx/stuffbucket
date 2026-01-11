@@ -80,14 +80,14 @@
 - Use a custom search bar for consistent alignment. completed [x]
 - Ensure search input modifiers are platform-appropriate (iOS-only autocap settings). completed [x]
 - Add a recent items list on the empty state. completed [x]
-  - Show link archive status badges in lists. completed [x]
+  - Show live-updating link archive status badges in lists. completed [x]
 - macOS:
   - Add basic search UI and result preview. completed [x]
   - Add search sidebar and filter controls.
   - Replace placeholder landing UI with tag/collection lists. completed [x]
   - Use a custom search bar for consistent alignment. completed [x]
   - Add a recent items list on the empty state. completed [x]
-  - Show link archive status badges in lists. completed [x]
+  - Show live-updating link archive status badges in lists. completed [x]
 
 ## 3. Safari bookmarks import and sync (macOS only)
 
@@ -190,7 +190,7 @@
 - Show an empty-state Import Document button. completed [x]
 - Add list row context menu to reveal document items. completed [x]
 - Open the app and notify running instances after share sheet capture to surface new items. completed [x]
-- Activate the macOS app when opened via the share URL to bring it to the foreground. completed [x]
+- Activate the macOS app when share capture is triggered to bring it to the foreground. completed [x]
 - Add link archive viewer actions (open archived HTML in default browser). completed [x]
 - Add Archive with Login sheet using a persistent in-app WebView for paywalled captures. completed [x]
 - AI actions integrated into item detail and toolbar.

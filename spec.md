@@ -118,6 +118,8 @@ If both rendered and raw capture fail:
 - If archives are missing, show an unavailable state.
 - Secondary action: “Open Original URL” in browser (planned).
 - Provide **Export as HTML / PDF** (planned).
+- When captured from the macOS share sheet, StuffBucket should foreground and surface the new item quickly.
+- Archive status badges should update live as the archive completes.
 
 ### 4.5 Why HTML, not PDF?
 - Searchable
