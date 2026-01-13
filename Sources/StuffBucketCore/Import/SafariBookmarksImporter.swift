@@ -107,6 +107,25 @@ public enum ItemImportService {
         item.source = source.rawValue
         return itemID
     }
+
+    public static func attachDocument(
+        fileURL: URL,
+        to item: Item,
+        in context: NSManagedObjectContext
+    ) throws {
+        let fileName = fileURL.lastPathComponent
+        let storedName = fileName.isEmpty ? "Document" : fileName
+        if let existing = item.documentRelativePath, !existing.isEmpty {
+            let existingURL = DocumentStorage.url(forRelativePath: existing)
+            try? FileManager.default.removeItem(at: existingURL.deletingLastPathComponent())
+        }
+        guard let itemID = item.id else { return }
+        item.documentRelativePath = try DocumentStorage.copyDocument(from: fileURL, itemID: itemID, fileName: storedName)
+        if item.title == nil || item.title?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == true {
+            item.title = storedName
+        }
+        item.updatedAt = Date()
+    }
 }
 
 private enum SnippetTitleBuilder {

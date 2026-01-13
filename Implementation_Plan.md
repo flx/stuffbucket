@@ -40,6 +40,9 @@
 - Decode common HTML entities in link metadata parsing without AppKit dependencies. completed [x]
 - Add document storage helper for iCloud Drive file copies. completed [x]
 - Add import helper for links, snippets, and documents. completed [x]
+- Unify item attachments so link/text/document can co-exist on any item. completed [x]
+  - Add attachment flags on Item (hasLink/hasText/hasDocument). completed [x]
+  - Archive pending links by `linkURL` presence instead of creation type. completed [x]
 
 ## 2. High-quality search engine
 
@@ -173,6 +176,8 @@
 - Add link archive viewer actions (open page/reader HTML in-app). completed [x]
 - Add Archive with Login sheet using a persistent in-app WebView for paywalled captures. completed [x]
 - Add a temporary Delete All Data toolbar button for debugging (remove before release). completed [x]
+- Allow link and text editing on all item types in detail view. completed [x]
+- Allow document attach/replace on all item types in detail view. completed [x]
 - Item detail actions for AI tasks (summarize, key points, tags).
 - AI settings screen (API key management + advanced model picker).
 - Show a pricing disclosure line with per-token rates sourced from the OpenAI pricing page.
@@ -195,6 +200,8 @@
 - Add link archive viewer actions (open archived HTML in default browser). completed [x]
 - Add Archive with Login sheet using a persistent in-app WebView for paywalled captures. completed [x]
 - Add a temporary Delete All Data toolbar button for debugging (remove before release). completed [x]
+- Allow link and text editing on all item types in detail view. completed [x]
+- Allow document attach/replace on all item types in detail view. completed [x]
 - AI actions integrated into item detail and toolbar.
 - AI settings screen (API key management + advanced model picker).
 - Show a pricing disclosure line with per-token rates sourced from the OpenAI pricing page.
@@ -217,6 +224,7 @@
   - macOS unit tests use an app host path configuration for Xcodegen builds. completed [x]
   - Test helpers create items using context-scoped entity lookup to avoid Core Data entity ambiguity warnings. completed [x]
   - Item import helper tests (snippet + document) on iOS and macOS. completed [x]
+  - Item attachment flags and creation-kind invariants (link/text/document) on iOS and macOS. completed [x]
   - FTS indexing and snippet generation
   - Safari bookmark parsing (sample plist and HTML export)
   - AI payload formatting and storage

@@ -30,8 +30,7 @@ public final class LinkArchiver {
             let request = NSFetchRequest<Item>(entityName: "Item")
             request.fetchLimit = limit
             request.predicate = NSPredicate(
-                format: "type == %@ AND (htmlRelativePath == nil OR htmlRelativePath == '') AND (archiveStatus == nil OR archiveStatus == '')",
-                ItemType.link.rawValue
+                format: "linkURL != nil AND linkURL != '' AND (htmlRelativePath == nil OR htmlRelativePath == '') AND (archiveStatus == nil OR archiveStatus == '')"
             )
             let items = (try? context.fetch(request)) ?? []
             for item in items {

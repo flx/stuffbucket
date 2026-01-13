@@ -158,4 +158,42 @@ final class ItemImportServiceMacTests: XCTestCase {
         XCTAssertEqual(item.itemType, .link)
         XCTAssertEqual(item.tagList, ["work", "swift", "ui"])
     }
+
+    func testItemAllowsAttachmentsAcrossTypes() {
+        let controller = PersistenceController(inMemory: true)
+        let context = controller.viewContext
+        let item = Item.create(in: context, type: .snippet)
+
+        item.textContent = "Keep this quote"
+        item.linkURL = "https://example.com"
+        item.documentRelativePath = "Documents/\(UUID().uuidString)/file.txt"
+
+        XCTAssertTrue(item.hasText)
+        XCTAssertTrue(item.hasLink)
+        XCTAssertTrue(item.hasDocument)
+        XCTAssertTrue(item.isLinkItem)
+        XCTAssertEqual(item.itemType, .snippet)
+    }
+
+    func testAttachingDocumentDoesNotChangeType() throws {
+        let controller = PersistenceController(inMemory: true)
+        let context = controller.viewContext
+        let item = Item.create(in: context, type: .snippet)
+
+        let tempURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString)
+            .appendingPathExtension("txt")
+        try "Attachment".write(to: tempURL, atomically: true, encoding: .utf8)
+
+        try ItemImportService.attachDocument(fileURL: tempURL, to: item, in: context)
+        try context.save()
+
+        XCTAssertEqual(item.itemType, .snippet)
+        XCTAssertNotNil(item.documentRelativePath)
+
+        if let documentURL = item.documentURL {
+            try? FileManager.default.removeItem(at: documentURL.deletingLastPathComponent())
+        }
+        try? FileManager.default.removeItem(at: tempURL)
+    }
 }

@@ -32,6 +32,9 @@ All item types support:
 - Tags
 - Collections
 - Optional protection (lock)
+- Optional attachments: **text**, **link**, and **document** can co-exist on any item.
+- Attachments can be added/edited after creation in the item detail view.
+- `type` is treated as the **creation kind** (how the item started), not a capability limiter.
 
 ---
 
@@ -138,7 +141,7 @@ PDF export is optional, not canonical.
 - `id: UUID`
 - `type: enum { note, snippet, link, document }`
 - `title: String?`
-- `textContent: String?`        // note/snippet body
+- `textContent: String?`        // optional note/snippet body for any item
 - `tags: [String]`
 - `createdAt: Date`
 - `updatedAt: Date`
@@ -147,10 +150,10 @@ PDF export is optional, not canonical.
 - `source: enum { manual, share_sheet, safari_bookmarks, import }`
 - `sourceExternalID: String?`   // stable ID for external sync (e.g. Safari)
 - `sourceFolderPath: String?`   // external folder path (e.g. Safari bookmark folder)
-- `documentRelativePath: String?` // Documents/<uuid>/<filename>
+- `documentRelativePath: String?` // Documents/<uuid>/<filename> (optional on any item)
 
 #### Link-specific
-- `linkURL: String`
+- `linkURL: String?`           // optional on any item
 - `linkTitle: String?`
 - `linkAuthor: String?`
 - `linkPublishedDate: Date?`

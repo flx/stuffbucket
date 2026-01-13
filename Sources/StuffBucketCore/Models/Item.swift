@@ -67,7 +67,28 @@ public extension Item {
     }
 
     var isLinkItem: Bool {
-        itemType == .link
+        hasLink
+    }
+
+    var hasLink: Bool {
+        guard let linkURL, !linkURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            return false
+        }
+        return true
+    }
+
+    var hasDocument: Bool {
+        guard let documentRelativePath, !documentRelativePath.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            return false
+        }
+        return true
+    }
+
+    var hasText: Bool {
+        guard let textContent, !textContent.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            return false
+        }
+        return true
     }
 
     var tagList: [String] {

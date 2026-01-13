@@ -1,6 +1,7 @@
 import CoreData
 import SwiftUI
 import StuffBucketCore
+import UniformTypeIdentifiers
 import WebKit
 #if os(macOS)
 import AppKit
@@ -13,11 +14,14 @@ struct ItemDetailView: View {
     @FetchRequest private var items: FetchedResults<Item>
     @State private var tagsText = ""
     @State private var contentText = ""
+    @State private var linkText = ""
+    @State private var linkUpdateTask: Task<Void, Never>?
     @State private var isShowingArchive = false
     @State private var archiveURL: URL?
     @State private var archiveTitle = ""
     @State private var isShowingLoginArchive = false
     @State private var loginArchiveURL: URL?
+    @State private var isImportingDocument = false
 
     init(itemID: UUID) {
         self.itemID = itemID
@@ -47,39 +51,33 @@ struct ItemDetailView: View {
                     Text(type.capitalized)
                         .foregroundStyle(.secondary)
                 }
-                if item.isLinkItem, let linkURL = item.linkURL {
-                    Text(linkURL)
+            }
+
+            Section("Link") {
+                linkField
+                if item.hasLink {
+                    Text(item.linkURL ?? "")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                } else {
+                    Text("No link attached yet.")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
             }
 
-            if item.isLinkItem {
+            if item.hasLink {
                 Section("Archive") {
                     archiveSection(for: item)
                 }
             }
 
-            if showsContentEditor(for: item) {
-                Section("Content") {
-                    contentEditor
-                }
+            Section("Content") {
+                contentEditor
             }
 
-            if item.itemType == .document {
-                Section("Document") {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(item.documentFileName ?? "Document")
-                            .foregroundStyle(.secondary)
-#if os(macOS)
-                        if let documentURL = item.documentURL {
-                            Button("Show in Finder") {
-                                NSWorkspace.shared.activateFileViewerSelecting([documentURL])
-                            }
-                        }
-#endif
-                    }
-                }
+            Section("Document") {
+                documentSection(for: item)
             }
 
             Section("Tags") {
@@ -96,11 +94,37 @@ struct ItemDetailView: View {
         .onChange(of: item.textContent ?? "") { _, _ in
             syncFromItem(item)
         }
+        .onChange(of: item.linkURL ?? "") { _, _ in
+            syncFromItem(item)
+        }
+        .onChange(of: linkText) { _, newValue in
+            linkUpdateTask?.cancel()
+            linkUpdateTask = Task {
+                try? await Task.sleep(nanoseconds: 500_000_000)
+                await MainActor.run {
+                    applyLink(newValue, to: item)
+                }
+            }
+        }
         .onChange(of: tagsText) { _, newValue in
             applyTags(newValue, to: item)
         }
         .onChange(of: contentText) { _, newValue in
             applyContent(newValue, to: item)
+        }
+        .fileImporter(
+            isPresented: $isImportingDocument,
+            allowedContentTypes: [.item],
+            allowsMultipleSelection: false
+        ) { result in
+            switch result {
+            case .success(let urls):
+                if let url = urls.first {
+                    attachDocument(url, to: item)
+                }
+            case .failure:
+                break
+            }
         }
 
 #if os(iOS)
@@ -160,6 +184,18 @@ struct ItemDetailView: View {
 #endif
     }
 
+    @ViewBuilder
+    private var linkField: some View {
+#if os(iOS)
+        TextField("https://example.com", text: $linkText)
+            .textInputAutocapitalization(.never)
+            .disableAutocorrection(true)
+            .keyboardType(.URL)
+#else
+        TextField("https://example.com", text: $linkText)
+#endif
+    }
+
     private func syncFromItem(_ item: Item) {
         let current = item.tagList.joined(separator: ", ")
         if current != tagsText {
@@ -168,6 +204,10 @@ struct ItemDetailView: View {
         let currentContent = item.textContent ?? ""
         if currentContent != contentText {
             contentText = currentContent
+        }
+        let currentLink = item.linkURL ?? ""
+        if currentLink != linkText {
+            linkText = currentLink
         }
     }
 
@@ -184,7 +224,6 @@ struct ItemDetailView: View {
     }
 
     private func applyContent(_ text: String, to item: Item) {
-        guard showsContentEditor(for: item) else { return }
         let current = item.textContent ?? ""
         guard text != current else { return }
         item.textContent = text
@@ -196,8 +235,102 @@ struct ItemDetailView: View {
         }
     }
 
-    private func showsContentEditor(for item: Item) -> Bool {
-        item.itemType == .note || item.itemType == .snippet
+    private func applyLink(_ text: String, to item: Item) {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.isEmpty {
+            guard item.linkURL != nil || item.linkTitle != nil || item.archiveStatus != nil else { return }
+            item.linkURL = nil
+            item.linkTitle = nil
+            item.linkAuthor = nil
+            item.linkPublishedDate = nil
+            item.htmlRelativePath = nil
+            item.archiveStatus = nil
+            item.updatedAt = Date()
+            do {
+                try context.save()
+            } catch {
+                context.rollback()
+            }
+            return
+        }
+
+        guard let url = normalizedURL(from: trimmed) else { return }
+        let newValue = url.absoluteString
+        let current = item.linkURL ?? ""
+        guard newValue != current else { return }
+
+        item.linkURL = newValue
+        let hostTitle = url.host ?? newValue
+        if item.title == nil || item.title?.isEmpty == true || item.title == item.linkTitle {
+            item.title = hostTitle
+        }
+        item.linkTitle = hostTitle
+        item.linkAuthor = nil
+        item.linkPublishedDate = nil
+        item.htmlRelativePath = nil
+        item.archiveStatus = nil
+        item.updatedAt = Date()
+        do {
+            try context.save()
+        } catch {
+            context.rollback()
+            return
+        }
+        triggerArchive(for: item)
+    }
+
+    private func normalizedURL(from string: String) -> URL? {
+        let trimmed = string.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        if let url = URL(string: trimmed), url.scheme != nil {
+            return url
+        }
+        return URL(string: "https://\(trimmed)")
+    }
+
+    private func triggerArchive(for item: Item) {
+        guard let itemID = item.id else { return }
+        let backgroundContext = PersistenceController.shared.container.newBackgroundContext()
+        LinkArchiver.shared.archive(itemID: itemID, context: backgroundContext)
+    }
+
+    @ViewBuilder
+    private func documentSection(for item: Item) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if item.hasDocument {
+                Text(item.documentFileName ?? "Document")
+                    .foregroundStyle(.secondary)
+            } else {
+                Text("No document attached yet.")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+            Button(item.hasDocument ? "Replace Document..." : "Attach Document...") {
+                isImportingDocument = true
+            }
+#if os(macOS)
+            if let documentURL = item.documentURL {
+                Button("Show in Finder") {
+                    NSWorkspace.shared.activateFileViewerSelecting([documentURL])
+                }
+            }
+#endif
+        }
+    }
+
+    private func attachDocument(_ url: URL, to item: Item) {
+        let accessGranted = url.startAccessingSecurityScopedResource()
+        defer {
+            if accessGranted {
+                url.stopAccessingSecurityScopedResource()
+            }
+        }
+        do {
+            try ItemImportService.attachDocument(fileURL: url, to: item, in: context)
+            try context.save()
+        } catch {
+            context.rollback()
+        }
     }
 
     @ViewBuilder
