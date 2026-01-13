@@ -171,30 +171,78 @@ public enum ShareCommentParser {
         var tagsBuffer = ""
         var snippets: [String] = []
         var currentSnippet = ""
-        var expectedClose: Character?
+        var activeQuote: QuoteKind?
+        let characters = Array(trimmed)
 
-        for character in trimmed {
-            if let expected = expectedClose {
-                if character == expected {
-                    appendSnippet(from: &currentSnippet, into: &snippets)
-                    expectedClose = nil
-                } else {
-                    currentSnippet.append(character)
+        for (index, character) in characters.enumerated() {
+            let prev = index > 0 ? characters[index - 1] : nil
+            let next = index + 1 < characters.count ? characters[index + 1] : nil
+
+            if let quote = activeQuote {
+                switch quote {
+                case .double:
+                    if isDoubleQuoteClose(character) {
+                        appendSnippet(from: &currentSnippet, into: &snippets)
+                        activeQuote = nil
+                        continue
+                    }
+                case .single:
+                    if isSingleQuoteClose(character, prev: prev, next: next) {
+                        appendSnippet(from: &currentSnippet, into: &snippets)
+                        activeQuote = nil
+                        continue
+                    }
                 }
-            } else if let close = quoteClose(for: character) {
-                expectedClose = close
-            } else {
-                tagsBuffer.append(character)
+                currentSnippet.append(character)
+                continue
             }
+
+            if isDoubleQuoteOpen(character) {
+                activeQuote = .double
+                continue
+            }
+            if isSingleQuoteOpen(character, prev: prev, next: next) {
+                activeQuote = .single
+                continue
+            }
+            tagsBuffer.append(character)
         }
 
-        if expectedClose != nil {
+        if activeQuote != nil {
             appendSnippet(from: &currentSnippet, into: &snippets)
         }
 
         let snippet = snippets.isEmpty ? nil : snippets.joined(separator: "\n")
         let tags = TagParser.parse(tagsBuffer)
         return ShareComment(tags: tags, snippet: snippet)
+    }
+
+    private enum QuoteKind {
+        case double
+        case single
+    }
+
+    private static func isDoubleQuoteOpen(_ character: Character) -> Bool {
+        character == "\"" || character == "“"
+    }
+
+    private static func isDoubleQuoteClose(_ character: Character) -> Bool {
+        character == "\"" || character == "”"
+    }
+
+    private static func isSingleQuoteOpen(_ character: Character, prev: Character?, next: Character?) -> Bool {
+        guard character == "'" || character == "‘" else { return false }
+        return !isWordCharacter(prev) && isWordCharacter(next)
+    }
+
+    private static func isSingleQuoteClose(_ character: Character, prev: Character?, next: Character?) -> Bool {
+        guard character == "'" || character == "’" else { return false }
+        return !isWordCharacter(next)
+    }
+
+    private static func isWordCharacter(_ character: Character?) -> Bool {
+        guard let character else { return false }
+        return character.isLetter || character.isNumber
     }
 
     private static func appendSnippet(from buffer: inout String, into snippets: inout [String]) {
@@ -205,18 +253,7 @@ public enum ShareCommentParser {
         buffer = ""
     }
 
-    private static func quoteClose(for character: Character) -> Character? {
-        quotePairs[character]
-    }
-
-    private static let quotePairs: [Character: Character] = [
-        "\"": "\"",
-        "'": "'",
-        "“": "”",
-        "”": "”",
-        "‘": "’",
-        "’": "’"
-    ]
+    
 }
 
 private enum TagParser {

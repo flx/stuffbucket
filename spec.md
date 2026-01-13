@@ -223,7 +223,7 @@ If a link is marked protected:
   3. Archive status indicator
 - Share extension captures URLs from Safari and queues them for the main app to import on launch.
 - Share extension accepts URL attachments or plain-text URL payloads.
-- Share sheet comment text supports quotes for snippets: quoted segments (straight, smart, or single quotes) become `textContent` joined by newlines; unquoted tokens become tags (#tag supported).
+- Share sheet comment text supports quotes for snippets: double quotes (straight/smart) and single quotes used as quote boundaries become `textContent` joined by newlines; apostrophes inside words and quotes inside quoted segments are ignored; unquoted tokens become tags (#tag supported).
 - Share extension opens StuffBucket after capture to surface new items immediately.
 - App listens for share-capture notifications to import while already running.
 - Share extension bundle identifiers are prefixed by the main app bundle identifier.
@@ -245,7 +245,7 @@ If a link is marked protected:
 - Share extension captures URLs from Safari and queues them for the main app to import on launch.
 - Share extension accepts URL attachments or plain-text URL payloads.
 - Share extension opens StuffBucket after capture to surface new items immediately.
-- Share sheet comment text supports quotes for snippets: quoted segments (straight, smart, or single quotes) become `textContent` joined by newlines; unquoted tokens become tags (#tag supported).
+- Share sheet comment text supports quotes for snippets: double quotes (straight/smart) and single quotes used as quote boundaries become `textContent` joined by newlines; apostrophes inside words and quotes inside quoted segments are ignored; unquoted tokens become tags (#tag supported).
 - The macOS app activates when opened via the share URL to bring new items into view.
 - App listens for share-capture notifications to import while already running.
 - Share extension bundle identifiers are prefixed by the main app bundle identifier.

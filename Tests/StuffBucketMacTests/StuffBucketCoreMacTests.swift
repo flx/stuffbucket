@@ -100,6 +100,20 @@ final class ShareCommentParserMacTests: XCTestCase {
         XCTAssertEqual(parsed.snippet, "smart quote\nsingle quote")
         XCTAssertEqual(parsed.tags, ["ai"])
     }
+
+    func testIgnoresApostrophesOutsideQuotes() {
+        let parsed = ShareCommentParser.parse("AI's research")
+
+        XCTAssertNil(parsed.snippet)
+        XCTAssertEqual(parsed.tags, ["AI's", "research"])
+    }
+
+    func testIgnoresSingleQuotesInsideDoubleQuotes() {
+        let parsed = ShareCommentParser.parse("\"outer 'inner'\" tag")
+
+        XCTAssertEqual(parsed.snippet, "outer 'inner'")
+        XCTAssertEqual(parsed.tags, ["tag"])
+    }
 }
 
 final class ItemImportServiceMacTests: XCTestCase {
