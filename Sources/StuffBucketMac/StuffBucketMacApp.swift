@@ -48,10 +48,12 @@ private func importPendingSharedLinks(using persistenceController: PersistenceCo
     var newItemIDs: [UUID] = []
     context.performAndWait {
         for item in items {
+            let parsed = ShareCommentParser.parse(item.tagsText)
             if let id = ItemImportService.createLinkItem(
                 url: item.url,
                 source: .shareSheet,
-                tagsText: item.tagsText,
+                tags: parsed.tags,
+                textContent: parsed.snippet,
                 in: context
             ) {
                 newItemIDs.append(id)

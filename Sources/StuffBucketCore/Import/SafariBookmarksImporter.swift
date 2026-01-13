@@ -65,6 +65,8 @@ public enum ItemImportService {
         url: URL,
         source: ItemSource,
         tagsText: String? = nil,
+        tags: [String]? = nil,
+        textContent: String? = nil,
         in context: NSManagedObjectContext
     ) -> UUID? {
         let item = Item.create(in: context, type: .link)
@@ -72,9 +74,20 @@ public enum ItemImportService {
         item.linkTitle = url.host ?? url.absoluteString
         item.title = item.linkTitle
         item.source = source.rawValue
-        let tags = TagParser.parse(tagsText)
-        if !tags.isEmpty {
-            item.setTagList(tags)
+        let resolvedTags: [String]
+        if let tags {
+            resolvedTags = tags
+        } else {
+            resolvedTags = TagParser.parse(tagsText)
+        }
+        if !resolvedTags.isEmpty {
+            item.setTagList(resolvedTags)
+        }
+        if let textContent {
+            let trimmed = textContent.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !trimmed.isEmpty {
+                item.textContent = trimmed
+            }
         }
         return item.id
     }
@@ -137,6 +150,73 @@ private enum SnippetTitleBuilder {
         }
         return String(firstLine)
     }
+}
+
+public struct ShareComment: Equatable {
+    public let tags: [String]
+    public let snippet: String?
+
+    public init(tags: [String], snippet: String?) {
+        self.tags = tags
+        self.snippet = snippet
+    }
+}
+
+public enum ShareCommentParser {
+    public static func parse(_ text: String?) -> ShareComment {
+        guard let text else { return ShareComment(tags: [], snippet: nil) }
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return ShareComment(tags: [], snippet: nil) }
+
+        var tagsBuffer = ""
+        var snippets: [String] = []
+        var currentSnippet = ""
+        var expectedClose: Character?
+
+        for character in trimmed {
+            if let expected = expectedClose {
+                if character == expected {
+                    appendSnippet(from: &currentSnippet, into: &snippets)
+                    expectedClose = nil
+                } else {
+                    currentSnippet.append(character)
+                }
+            } else if let close = quoteClose(for: character) {
+                expectedClose = close
+            } else {
+                tagsBuffer.append(character)
+            }
+        }
+
+        if expectedClose != nil {
+            appendSnippet(from: &currentSnippet, into: &snippets)
+        }
+
+        let snippet = snippets.isEmpty ? nil : snippets.joined(separator: "\n")
+        let tags = TagParser.parse(tagsBuffer)
+        return ShareComment(tags: tags, snippet: snippet)
+    }
+
+    private static func appendSnippet(from buffer: inout String, into snippets: inout [String]) {
+        let trimmed = buffer.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmed.isEmpty {
+            snippets.append(trimmed)
+        }
+        buffer = ""
+    }
+
+    private static func quoteClose(for character: Character) -> Character? {
+        quotePairs[character]
+    }
+
+    private static let quotePairs: [Character: Character] = [
+        "\"": "\"",
+        "'": "'",
+        "“": "”",
+        "”": "”",
+        "‘": "’",
+        "’": "’"
+    ]
 }
 
 private enum TagParser {

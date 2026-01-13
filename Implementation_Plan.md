@@ -172,7 +172,7 @@
 - Add in-app prompt to save a link by pasting a URL. completed [x]
 - Show an empty-state Import Document button. completed [x]
 - Show an empty-state Add Link button. completed [x]
-- Map share sheet comment text to tags, notify running instances, and open the app after share import. completed [x]
+- Parse share sheet comment text into snippet + tags (quoted segments -> text, unquoted tokens -> tags), notify running instances, and open the app after share import. completed [x]
 - Add link archive viewer actions (open page/reader HTML in-app). completed [x]
 - Add Archive with Login sheet using a persistent in-app WebView for paywalled captures. completed [x]
 - Add a temporary Delete All Data toolbar button for debugging (remove before release). completed [x]
@@ -197,6 +197,7 @@
 - Add list row context menu to reveal document items. completed [x]
 - Open the app and notify running instances after share sheet capture to surface new items. completed [x]
 - Activate the macOS app when share capture is triggered to bring it to the foreground. completed [x]
+- Parse share sheet comment text into snippet + tags (quoted segments -> text, unquoted tokens -> tags). completed [x]
 - Add link archive viewer actions (open archived HTML in default browser). completed [x]
 - Add Archive with Login sheet using a persistent in-app WebView for paywalled captures. completed [x]
 - Add a temporary Delete All Data toolbar button for debugging (remove before release). completed [x]
@@ -225,6 +226,7 @@
   - Test helpers create items using context-scoped entity lookup to avoid Core Data entity ambiguity warnings. completed [x]
   - Item import helper tests (snippet + document) on iOS and macOS. completed [x]
   - Item attachment flags and creation-kind invariants (link/text/document) on iOS and macOS. completed [x]
+  - Share sheet comment parsing (quotes -> snippet, unquoted tags) on iOS and macOS. completed [x]
   - FTS indexing and snippet generation
   - Safari bookmark parsing (sample plist and HTML export)
   - AI payload formatting and storage

@@ -86,6 +86,22 @@ final class LinkMetadataParserMacTests: XCTestCase {
     }
 }
 
+final class ShareCommentParserMacTests: XCTestCase {
+    func testParsesQuotedSnippetAndTags() {
+        let parsed = ShareCommentParser.parse("\"this is my quote\" AI programming ding dong")
+
+        XCTAssertEqual(parsed.snippet, "this is my quote")
+        XCTAssertEqual(parsed.tags, ["AI", "programming", "ding", "dong"])
+    }
+
+    func testParsesSmartAndSingleQuotes() {
+        let parsed = ShareCommentParser.parse("“smart quote” 'single quote' #ai")
+
+        XCTAssertEqual(parsed.snippet, "smart quote\nsingle quote")
+        XCTAssertEqual(parsed.tags, ["ai"])
+    }
+}
+
 final class ItemImportServiceMacTests: XCTestCase {
     func testCreatesSnippetItemWithTitleAndContent() {
         let controller = PersistenceController(inMemory: true)
