@@ -406,6 +406,7 @@ If a link is marked protected:
 - Unit tests cover search query parsing/builder output, tag list encoding/decoding, and link metadata parsing with HTML entity decoding on both iOS and macOS targets.
 - macOS unit tests run with an app host configuration so Xcodegen builds execute them reliably.
 - Core Data item creation in tests uses context-scoped entity lookup to avoid entity ambiguity warnings when multiple models load.
+- Xcodegen project generation mirrors Xcode-recommended settings for macOS targets (app sandbox/network/app groups), asset symbol generation, and the current Xcode version.
 
 ---
 
