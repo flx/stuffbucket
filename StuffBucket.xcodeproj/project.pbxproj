@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 63;
+	objectVersion = 77;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -17,14 +17,14 @@
 		1629127A33E68B72BE6B0797 /* ItemType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492673B57623F50F88A8ADA2 /* ItemType.swift */; };
 		1684E9613F720EDFB183041E /* AIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1981F222EFC6022AFB2BDFC /* AIService.swift */; };
 		184AA3E4FDEA06A44BDBFCC8 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8F52BD4FC676A4538452BFDB /* Assets.xcassets */; };
-		1C6F0E3A6C5D4C5DA82F9B7C /* LinkArchiveAssets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B5F63D1A1B24950B2D9C8E3 /* LinkArchiveAssets.swift */; };
+		1ED466E7F964E507F7587FCB /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 40515F24B8E9ACE644668DCF /* WebKit.framework */; };
 		23AAA931C77F030BB05A7A1C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F116073320FB06FC953E4566 /* Assets.xcassets */; };
 		23CB31D0AFC51333762153AF /* LinkArchiver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AF01B94C0FF40F312225194 /* LinkArchiver.swift */; };
 		253EC276859FA1F651EE58E0 /* StuffBucketMacShareExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 93E12DDBAC061C565DA3D21B /* StuffBucketMacShareExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		2EF760054F3B6D1BDC9442D5 /* ItemDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59DCBC7B3D1435C4D3287924 /* ItemDetailView.swift */; };
 		34961F9179850DA307BE167C /* StuffBucketCore.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 5AE0A3DE6401EC33AC94C171 /* StuffBucketCore.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		37B561B46F79E7E0FBE37F02 /* SearchBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CE026328EAC215EAEB06286 /* SearchBarView.swift */; };
-		3C1F2AB9F2B84AA9A2B9F0E1 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8C6D3A4F2E14C9DA8B6C1FE /* WebKit.framework */; };
+		38B9DEBA5B010F94ADFDC2DC /* RenderedPageCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E8092DFDAEA2EBCCCEC238 /* RenderedPageCapture.swift */; };
 		3DB1EAC92B925A9163115A56 /* SearchTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2362C758E3E3EC455DA86B6 /* SearchTypes.swift */; };
 		3E13D18149A2F3D4D040D8D8 /* SearchBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CE026328EAC215EAEB06286 /* SearchBarView.swift */; };
 		43E74AD975C0A0ECD9F1F898 /* SearchDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 905F62C8A186C9FB500CDA04 /* SearchDatabase.swift */; };
@@ -33,7 +33,6 @@
 		4A2310E940D292587003DBAA /* OpenAIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3967E8E4395E7A531ABB2E62 /* OpenAIClient.swift */; };
 		4A8A152DBF678089079E23FA /* SearchTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2362C758E3E3EC455DA86B6 /* SearchTypes.swift */; };
 		4D7F7071C5B3C4A38ED552CD /* LibrarySummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84AFF605547F5932FC2491C8 /* LibrarySummary.swift */; };
-		5DFA9B5E7C8B4EEB9E1C3D2F /* LinkArchiveAssets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B5F63D1A1B24950B2D9C8E3 /* LinkArchiveAssets.swift */; };
 		5F55015554ECD27FF920B8CD /* StuffBucketCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B361E6BED62FB2575D9451B2 /* StuffBucketCore.framework */; };
 		621E0E2B76F2A6F7C0EC12B2 /* LinkMetadataParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61B5AEE244404891A0F3F772 /* LinkMetadataParser.swift */; };
 		62A8E4C504E25F033A587A43 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 395F5C4997E19A6D5275D018 /* libsqlite3.tbd */; };
@@ -41,7 +40,6 @@
 		648AA9C43B4433FBC71003D3 /* SearchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4768A08056EEFBD1E643C51 /* SearchService.swift */; };
 		6684A51D3E6853AA9C05B79A /* StuffBucketApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B67CD12B29FD60DF409D87B /* StuffBucketApp.swift */; };
 		68D366FE1C7032E99FCC17EA /* LinkStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 427A151E99D8C9E78755C44F /* LinkStorage.swift */; };
-		6A1E7D2C4E3A4A6BB9D2C1E5 /* RenderedPageCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1A38E2F9D9E4F9C9ED1C2A4 /* RenderedPageCapture.swift */; };
 		6DD4DF259E5BFA400116A1EB /* ItemDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59DCBC7B3D1435C4D3287924 /* ItemDetailView.swift */; };
 		71EACB034052AEA96271B70A /* Item.swift in Sources */ = {isa = PBXBuildFile; fileRef = 759B8C6613B6A7906FABD215 /* Item.swift */; };
 		75D21B3A9853C120555F781D /* LinkStatusBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7D95BC8968F47F9EEE076BA /* LinkStatusBadge.swift */; };
@@ -58,7 +56,7 @@
 		A41D6A37792859DA717F2B9C /* StuffBucketCore.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = B361E6BED62FB2575D9451B2 /* StuffBucketCore.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		A4B7752A6E94C6C1939AB68E /* OpenAIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3967E8E4395E7A531ABB2E62 /* OpenAIClient.swift */; };
 		A58B7B11FF9D05D5D88ABC61 /* SharedCaptureStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB12F39F12A0E85EF8522A4F /* SharedCaptureStore.swift */; };
-		A9F3C8D1B4E74E56A3B7F5C2 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D8C6D3A4F2E14C9DA8B6C1FE /* WebKit.framework */; };
+		A6C15F3AB78AD3EEBEA10398 /* RenderedPageCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E8092DFDAEA2EBCCCEC238 /* RenderedPageCapture.swift */; };
 		AACA028DDA00DE54A4DA6C38 /* LinkArchiver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AF01B94C0FF40F312225194 /* LinkArchiver.swift */; };
 		BF0A039D793E0C0E4F733F1E /* SafariBookmarksImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E70E88CA2D3A12D3916610DF /* SafariBookmarksImporter.swift */; };
 		C5523BBEEFEA8580CF55986C /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AB2C2597AE76B5FA3455BC7 /* ContentView.swift */; };
@@ -74,10 +72,12 @@
 		E12947893CCC16D9108DDBF3 /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3519E626243FD84BBF5EDA7F /* PersistenceController.swift */; };
 		E1D7292B327AE124B4D139DE /* SearchIndexer.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA005B6C0E3259CDAE104D1C /* SearchIndexer.swift */; };
 		E5A30EB1358147F2E89BA621 /* SearchIndexer.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA005B6C0E3259CDAE104D1C /* SearchIndexer.swift */; };
+		EB096307CAE1A8CA130E0770 /* LinkArchiveAssets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48D00BC42AD400BFB7C6B154 /* LinkArchiveAssets.swift */; };
 		F2D713C24B245503BD6058C9 /* SearchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4768A08056EEFBD1E643C51 /* SearchService.swift */; };
 		F545F48693406383B085E724 /* StuffBucketCoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F43BBF55811196859694BD81 /* StuffBucketCoreTests.swift */; };
-		F8C2D4E6A7B14E4C9D1E2F3A /* RenderedPageCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1A38E2F9D9E4F9C9ED1C2A4 /* RenderedPageCapture.swift */; };
+		F84C3AF740D4926FC2E203CC /* LinkArchiveAssets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48D00BC42AD400BFB7C6B154 /* LinkArchiveAssets.swift */; };
 		FABB5C46F68A88842020892B /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3229BC032C43225982B053D2 /* ContentView.swift */; };
+		FDE7A2C81BBED5946ED27206 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 40515F24B8E9ACE644668DCF /* WebKit.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -185,8 +185,10 @@
 		362CA95B53A55DBC2BE406C0 /* StuffBucketMacShareExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = StuffBucketMacShareExtension.entitlements; sourceTree = "<group>"; };
 		395F5C4997E19A6D5275D018 /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
 		3967E8E4395E7A531ABB2E62 /* OpenAIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAIClient.swift; sourceTree = "<group>"; };
+		40515F24B8E9ACE644668DCF /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
 		427A151E99D8C9E78755C44F /* LinkStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkStorage.swift; sourceTree = "<group>"; };
 		4649777F76AD3EE1E9C4E3FE /* StuffBucketShareExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = StuffBucketShareExtension.entitlements; sourceTree = "<group>"; };
+		48D00BC42AD400BFB7C6B154 /* LinkArchiveAssets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkArchiveAssets.swift; sourceTree = "<group>"; };
 		492673B57623F50F88A8ADA2 /* ItemType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemType.swift; sourceTree = "<group>"; };
 		4930E261A822ECF2BA2B9C65 /* SearchQueryBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchQueryBuilder.swift; sourceTree = "<group>"; };
 		4C0B04C9F62DBD0825C38DC6 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -199,29 +201,27 @@
 		759B8C6613B6A7906FABD215 /* Item.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Item.swift; sourceTree = "<group>"; };
 		782EEF98196F744E7BA7C335 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		79BD0E7E15F68204548BA1B4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
-		7B5F63D1A1B24950B2D9C8E3 /* LinkArchiveAssets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkArchiveAssets.swift; sourceTree = "<group>"; };
 		7DF1288BED3A4351F145A788 /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
 		84AFF605547F5932FC2491C8 /* LibrarySummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibrarySummary.swift; sourceTree = "<group>"; };
 		866E858862E2D5D0B3FF2A10 /* AI_Copy.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = AI_Copy.md; sourceTree = "<group>"; };
-		87ECF4AE6D652BBD6E10682D /* StuffBucket.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = StuffBucket.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		87ECF4AE6D652BBD6E10682D /* StuffBucket.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = StuffBucket.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8B67CD12B29FD60DF409D87B /* StuffBucketApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StuffBucketApp.swift; sourceTree = "<group>"; };
 		8CE026328EAC215EAEB06286 /* SearchBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchBarView.swift; sourceTree = "<group>"; };
 		8D54DC33A26DE3AF8C8BA87D /* StuffBucket.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = StuffBucket.entitlements; sourceTree = "<group>"; };
 		8F52BD4FC676A4538452BFDB /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		905F62C8A186C9FB500CDA04 /* SearchDatabase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchDatabase.swift; sourceTree = "<group>"; };
 		93E12DDBAC061C565DA3D21B /* StuffBucketMacShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = StuffBucketMacShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
-		971ED3B90D0BC6EA793D9090 /* StuffBucketShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = StuffBucketShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		971ED3B90D0BC6EA793D9090 /* StuffBucketShareExtension.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = StuffBucketShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		98FEBE9AF2D9ED305F35501F /* StuffBucketModel.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = StuffBucketModel.xcdatamodel; sourceTree = "<group>"; };
 		9B0D9ADADAD06E535CBC42CB /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
 		A7D95BC8968F47F9EEE076BA /* LinkStatusBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkStatusBadge.swift; sourceTree = "<group>"; };
-		B1A38E2F9D9E4F9C9ED1C2A4 /* RenderedPageCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenderedPageCapture.swift; sourceTree = "<group>"; };
+		A9E8092DFDAEA2EBCCCEC238 /* RenderedPageCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenderedPageCapture.swift; sourceTree = "<group>"; };
 		B361E6BED62FB2575D9451B2 /* StuffBucketCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = StuffBucketCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		B6D19BF8E42EED96A8C59100 /* StuffBucketTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = StuffBucketTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		B6D19BF8E42EED96A8C59100 /* StuffBucketTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = StuffBucketTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		BB12F39F12A0E85EF8522A4F /* SharedCaptureStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedCaptureStore.swift; sourceTree = "<group>"; };
-		CD33A00B462976D52F37AEF0 /* StuffBucketMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = StuffBucketMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		CD33A00B462976D52F37AEF0 /* StuffBucketMac.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = StuffBucketMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D153F84880F3059E01BA9478 /* spec.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = spec.md; sourceTree = "<group>"; };
 		D4768A08056EEFBD1E643C51 /* SearchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchService.swift; sourceTree = "<group>"; };
-		D8C6D3A4F2E14C9DA8B6C1FE /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
 		DA005B6C0E3259CDAE104D1C /* SearchIndexer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchIndexer.swift; sourceTree = "<group>"; };
 		DB8474DDD0F98C2D189F8BD5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		E2362C758E3E3EC455DA86B6 /* SearchTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchTypes.swift; sourceTree = "<group>"; };
@@ -239,7 +239,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				62A8E4C504E25F033A587A43 /* libsqlite3.tbd in Frameworks */,
-				3C1F2AB9F2B84AA9A2B9F0E1 /* WebKit.framework in Frameworks */,
+				1ED466E7F964E507F7587FCB /* WebKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -264,7 +264,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				CE3E34A3552642C322D5AC15 /* libsqlite3.tbd in Frameworks */,
-				A9F3C8D1B4E74E56A3B7F5C2 /* WebKit.framework in Frameworks */,
+				FDE7A2C81BBED5946ED27206 /* WebKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -312,7 +312,7 @@
 			children = (
 				395F5C4997E19A6D5275D018 /* libsqlite3.tbd */,
 				EC1AEF8A7144284C59DC8A90 /* Social.framework */,
-				D8C6D3A4F2E14C9DA8B6C1FE /* WebKit.framework */,
+				40515F24B8E9ACE644668DCF /* WebKit.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -483,11 +483,11 @@
 		E646CF6141C67CFB0AC039D5 /* Links */ = {
 			isa = PBXGroup;
 			children = (
+				48D00BC42AD400BFB7C6B154 /* LinkArchiveAssets.swift */,
 				2AF01B94C0FF40F312225194 /* LinkArchiver.swift */,
-				7B5F63D1A1B24950B2D9C8E3 /* LinkArchiveAssets.swift */,
 				61B5AEE244404891A0F3F772 /* LinkMetadataParser.swift */,
-				B1A38E2F9D9E4F9C9ED1C2A4 /* RenderedPageCapture.swift */,
 				427A151E99D8C9E78755C44F /* LinkStorage.swift */,
+				A9E8092DFDAEA2EBCCCEC238 /* RenderedPageCapture.swift */,
 			);
 			path = Links;
 			sourceTree = "<group>";
@@ -689,6 +689,7 @@
 						ProvisioningStyle = Automatic;
 					};
 					8F8E123B35D0528F425DEEFD = {
+						DevelopmentTeam = V37U525228;
 						ProvisioningStyle = Automatic;
 					};
 					BC358A3656762DACE7E742E7 = {
@@ -711,6 +712,7 @@
 			);
 			mainGroup = E4DE441F8F6C82B7E781114E;
 			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -776,14 +778,14 @@
 				7D265F05B8433408B87BEA95 /* Item.swift in Sources */,
 				1629127A33E68B72BE6B0797 /* ItemType.swift in Sources */,
 				CDC82418C4C9FF5238579ED7 /* LibrarySummary.swift in Sources */,
+				EB096307CAE1A8CA130E0770 /* LinkArchiveAssets.swift in Sources */,
 				AACA028DDA00DE54A4DA6C38 /* LinkArchiver.swift in Sources */,
-				5DFA9B5E7C8B4EEB9E1C3D2F /* LinkArchiveAssets.swift in Sources */,
 				621E0E2B76F2A6F7C0EC12B2 /* LinkMetadataParser.swift in Sources */,
-				F8C2D4E6A7B14E4C9D1E2F3A /* RenderedPageCapture.swift in Sources */,
 				A3616876C4CA9FDE6E590941 /* LinkStorage.swift in Sources */,
 				D2AA894706968FC3D078E99D /* ModelDefaults.swift in Sources */,
 				A4B7752A6E94C6C1939AB68E /* OpenAIClient.swift in Sources */,
 				D46EBD7F3E366F2E7B3C8FE9 /* PersistenceController.swift in Sources */,
+				38B9DEBA5B010F94ADFDC2DC /* RenderedPageCapture.swift in Sources */,
 				BF0A039D793E0C0E4F733F1E /* SafariBookmarksImporter.swift in Sources */,
 				D7AB4EEB19D2B702E1B4D902 /* SearchDatabase.swift in Sources */,
 				06C3CC56E338C56F4990B8BD /* SearchIndexMetadata.swift in Sources */,
@@ -841,14 +843,14 @@
 				71EACB034052AEA96271B70A /* Item.swift in Sources */,
 				91F3C3288D3140283B8352B4 /* ItemType.swift in Sources */,
 				4D7F7071C5B3C4A38ED552CD /* LibrarySummary.swift in Sources */,
+				F84C3AF740D4926FC2E203CC /* LinkArchiveAssets.swift in Sources */,
 				23CB31D0AFC51333762153AF /* LinkArchiver.swift in Sources */,
-				1C6F0E3A6C5D4C5DA82F9B7C /* LinkArchiveAssets.swift in Sources */,
 				1057C6B010B8BF21AB3CE383 /* LinkMetadataParser.swift in Sources */,
-				6A1E7D2C4E3A4A6BB9D2C1E5 /* RenderedPageCapture.swift in Sources */,
 				68D366FE1C7032E99FCC17EA /* LinkStorage.swift in Sources */,
 				CCEFAF9BDCB0665F0DE35AD5 /* ModelDefaults.swift in Sources */,
 				4A2310E940D292587003DBAA /* OpenAIClient.swift in Sources */,
 				E12947893CCC16D9108DDBF3 /* PersistenceController.swift in Sources */,
+				A6C15F3AB78AD3EEBEA10398 /* RenderedPageCapture.swift in Sources */,
 				44B63DF7EA7517242F967299 /* SafariBookmarksImporter.swift in Sources */,
 				43E74AD975C0A0ECD9F1F898 /* SearchDatabase.swift in Sources */,
 				865A957FA76BE7E7AFBF645A /* SearchIndexMetadata.swift in Sources */,
