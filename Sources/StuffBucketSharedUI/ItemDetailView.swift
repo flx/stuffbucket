@@ -29,11 +29,10 @@ struct ItemDetailView: View {
 
     init(itemID: UUID) {
         self.itemID = itemID
-        _items = FetchRequest(
-            sortDescriptors: [],
-            predicate: NSPredicate(format: "id == %@", itemID as CVarArg),
-            animation: .default
-        )
+        let request = NSFetchRequest<Item>(entityName: "Item")
+        request.predicate = NSPredicate(format: "id == %@", itemID as CVarArg)
+        request.fetchLimit = 1
+        _items = FetchRequest(fetchRequest: request, animation: .default)
     }
 
     var body: some View {

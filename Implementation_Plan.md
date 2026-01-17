@@ -35,6 +35,7 @@
 - Use the same iCloud container ID for link/document storage paths. completed [x]
 - Add a small metadata table for search index versioning and last indexed timestamps. completed [x]
 - Load the Core Data model from the framework bundle to avoid runtime lookup failures. completed [x]
+- Use explicit entity-name fetch requests in item detail views to avoid Core Data entity ambiguity. completed [x]
 - Import shared links from the share extension into Core Data. completed [x]
 - Refresh App Group defaults before dequeuing shared items to reduce share-import latency. completed [x]
 - Fetch link metadata and persist HTML snapshots after share import. completed [x]
