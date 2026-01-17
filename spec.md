@@ -10,7 +10,7 @@ Key guarantees:
 - First-class support for **iOS, iPadOS, and macOS**.
 - Optional **per-item protection** for sensitive content.
 - **High-quality search** with relevance ranking, typo tolerance, and filters.
-- Search uses native platform controls (SwiftUI searchable on iOS, toolbar search field on macOS).
+- Search uses a custom centered search bar on iOS and a toolbar search field on macOS.
 - Tag editing uses platform-appropriate text input behavior.
 - Optional **AI assistance** (summaries, key points, tags) powered by ChatGPT models, opt-in and user-controlled.
 
@@ -225,7 +225,8 @@ If a link is marked protected:
   3. Archive status indicator
 - Share extension captures URLs from Safari and queues them for the main app to import on launch.
 - Share extension accepts URL attachments or plain-text URL payloads.
-- iOS share sheet uses a lightweight confirmation UI (no comment field); tags and snippets are added/edited after import.
+- iOS share sheet includes a comment field for optional snippets/tags.
+- Share sheet comment text supports quotes for snippets: double quotes (straight/smart) and single quotes used as quote boundaries become `textContent` joined by newlines; apostrophes inside words and quotes inside quoted segments are ignored; unquoted tokens become tags (#tag supported).
 - Share extension opens StuffBucket after capture to surface new items immediately.
 - App listens for share-capture notifications to import while already running.
 - Share extension bundle identifiers are prefixed by the main app bundle identifier.

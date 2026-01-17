@@ -1,48 +1,96 @@
 import UIKit
 import UniformTypeIdentifiers
 
-final class ShareViewController: UIViewController {
-
-    private let confirmationLabel: UILabel = {
+final class ShareViewController: UIViewController, UITextViewDelegate {
+    private let titleLabel: UILabel = {
         let label = UILabel()
-        label.text = "Saved to StuffBucket"
-        label.textColor = .white
-        label.font = .systemFont(ofSize: 17, weight: .semibold)
+        label.text = "StuffBucket"
+        label.font = .systemFont(ofSize: 20, weight: .semibold)
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
 
-    private let containerView: UIView = {
-        let view = UIView()
-        view.backgroundColor = UIColor.systemBlue
-        view.layer.cornerRadius = 12
+    private let subtitleLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Add notes or tags before saving"
+        label.font = .systemFont(ofSize: 14)
+        label.textColor = .secondaryLabel
+        label.textAlignment = .center
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+
+    private let textView: UITextView = {
+        let view = UITextView()
+        view.font = .systemFont(ofSize: 15)
+        view.backgroundColor = UIColor.secondarySystemBackground
+        view.layer.cornerRadius = 10
+        view.textContainerInset = UIEdgeInsets(top: 10, left: 8, bottom: 10, right: 8)
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
 
+    private let placeholderLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Example: \"Key quote\" ai research tags"
+        label.font = .systemFont(ofSize: 14)
+        label.textColor = .tertiaryLabel
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+
+    private let saveButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setTitle("Save", for: .normal)
+        button.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
+        button.backgroundColor = UIColor.systemBlue
+        button.setTitleColor(.white, for: .normal)
+        button.layer.cornerRadius = 8
+        button.translatesAutoresizingMaskIntoConstraints = false
+        return button
+    }()
+
+    private let cancelButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setTitle("Cancel", for: .normal)
+        button.titleLabel?.font = .systemFont(ofSize: 16)
+        button.backgroundColor = UIColor.secondarySystemBackground
+        button.setTitleColor(.label, for: .normal)
+        button.layer.cornerRadius = 8
+        button.translatesAutoresizingMaskIntoConstraints = false
+        return button
+    }()
+
+    private let buttonStack: UIStackView = {
+        let stack = UIStackView()
+        stack.axis = .horizontal
+        stack.spacing = 12
+        stack.distribution = .fillEqually
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        return stack
+    }()
+
+    private let containerStack: UIStackView = {
+        let stack = UIStackView()
+        stack.axis = .vertical
+        stack.spacing = 16
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        return stack
+    }()
+
+    private var sharedURL: URL?
+
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = UIColor.black.withAlphaComponent(0.3)
+        view.backgroundColor = UIColor.systemBackground
+        view.layoutMargins = UIEdgeInsets(top: 16, left: 16, bottom: 16, right: 16)
+        textView.delegate = self
+        saveButton.isEnabled = false
+        saveButton.alpha = 0.5
+        saveButton.addTarget(self, action: #selector(saveTapped), for: .touchUpInside)
+        cancelButton.addTarget(self, action: #selector(cancelTapped), for: .touchUpInside)
         setupUI()
-    }
-
-    private func setupUI() {
-        view.addSubview(containerView)
-        containerView.addSubview(confirmationLabel)
-
-        NSLayoutConstraint.activate([
-            containerView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            containerView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-            containerView.widthAnchor.constraint(equalToConstant: 220),
-            containerView.heightAnchor.constraint(equalToConstant: 60),
-
-            confirmationLabel.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
-            confirmationLabel.centerYAnchor.constraint(equalTo: containerView.centerYAnchor),
-        ])
-
-        containerView.alpha = 0
-        containerView.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -50,29 +98,67 @@ final class ShareViewController: UIViewController {
         processShare()
     }
 
+    private func setupUI() {
+        view.addSubview(containerStack)
+        containerStack.addArrangedSubview(titleLabel)
+        containerStack.addArrangedSubview(subtitleLabel)
+        containerStack.addArrangedSubview(textView)
+        containerStack.addArrangedSubview(buttonStack)
+
+        textView.addSubview(placeholderLabel)
+
+        buttonStack.addArrangedSubview(cancelButton)
+        buttonStack.addArrangedSubview(saveButton)
+
+        NSLayoutConstraint.activate([
+            containerStack.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 12),
+            containerStack.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
+            containerStack.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor),
+            containerStack.bottomAnchor.constraint(lessThanOrEqualTo: view.safeAreaLayoutGuide.bottomAnchor),
+
+            textView.heightAnchor.constraint(equalToConstant: 120),
+            saveButton.heightAnchor.constraint(equalToConstant: 44),
+            cancelButton.heightAnchor.constraint(equalToConstant: 44),
+
+            placeholderLabel.topAnchor.constraint(equalTo: textView.topAnchor, constant: 12),
+            placeholderLabel.leadingAnchor.constraint(equalTo: textView.leadingAnchor, constant: 12),
+            placeholderLabel.trailingAnchor.constraint(lessThanOrEqualTo: textView.trailingAnchor, constant: -12)
+        ])
+    }
+
     private func processShare() {
         extractURL { [weak self] url in
             guard let self else { return }
-
+            sharedURL = url
             if let url {
-                SharedCaptureStore.enqueue(url: url, tagsText: nil)
-                self.showConfirmationAndDismiss()
+                saveButton.isEnabled = true
+                saveButton.alpha = 1
+                subtitleLabel.text = url.host ?? "Add notes or tags before saving"
             } else {
-                self.extensionContext?.completeRequest(returningItems: nil)
+                subtitleLabel.text = "No URL found in this share."
+                saveButton.isEnabled = false
+                saveButton.alpha = 0.5
             }
         }
     }
 
-    private func showConfirmationAndDismiss() {
-        UIView.animate(withDuration: 0.25, delay: 0, usingSpringWithDamping: 0.7, initialSpringVelocity: 0.5) {
-            self.containerView.alpha = 1
-            self.containerView.transform = .identity
-        } completion: { _ in
-            // Brief delay to show the confirmation
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
-                self.openContainingAppAndDismiss()
-            }
+    @objc private func saveTapped() {
+        guard let url = sharedURL else {
+            extensionContext?.completeRequest(returningItems: nil)
+            return
         }
+        let trimmed = textView.text.trimmingCharacters(in: .whitespacesAndNewlines)
+        let tagsText = trimmed.isEmpty ? nil : trimmed
+        SharedCaptureStore.enqueue(url: url, tagsText: tagsText)
+        openContainingAppAndDismiss()
+    }
+
+    @objc private func cancelTapped() {
+        extensionContext?.completeRequest(returningItems: nil)
+    }
+
+    func textViewDidChange(_ textView: UITextView) {
+        placeholderLabel.isHidden = !textView.text.isEmpty
     }
 
     private func openContainingAppAndDismiss() {
@@ -81,7 +167,6 @@ final class ShareViewController: UIViewController {
             return
         }
 
-        // Use responder chain to open URL (workaround for share extension limitation)
         var responder: UIResponder? = self
         while responder != nil {
             if let application = responder as? UIApplication {
@@ -93,7 +178,6 @@ final class ShareViewController: UIViewController {
             responder = responder?.next
         }
 
-        // Fallback: try the selector-based approach
         let selector = sel_registerName("openURL:")
         responder = self
         while responder != nil {
@@ -104,7 +188,6 @@ final class ShareViewController: UIViewController {
             responder = responder?.next
         }
 
-        // Complete even if we couldn't open the app
         extensionContext?.completeRequest(returningItems: nil)
     }
 

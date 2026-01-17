@@ -82,7 +82,7 @@
   - Add searchable UI and preview snippets. completed [x]
   - Add filters and sort by relevance/recency.
 - Replace placeholder landing UI with tag/collection lists. completed [x]
-- Use SwiftUI `.searchable` for iOS search input. completed [x]
+- Use a custom SearchBarView on iOS for centered alignment. completed [x]
 - Ensure search input modifiers are platform-appropriate (iOS-only autocap settings). completed [x]
 - Add a recent items list on the empty state. completed [x]
   - Show live-updating link archive status badges in lists. completed [x]
@@ -174,7 +174,7 @@
 - Add in-app prompt to save a link by pasting a URL. completed [x]
 - Show an empty-state Import Document button. completed [x]
 - Show an empty-state Add Link button. completed [x]
-- Replace the iOS share sheet compose UI with a lightweight confirmation view; quick-save URL only and open the app after capture. completed [x]
+- Use a custom iOS share sheet UI with a comment field; parse quotes into snippet + tags and open the app after capture. completed [x]
 - Add link archive viewer actions (open page/reader HTML in-app). completed [x]
 - Show a loading state while archived HTML downloads from iCloud before rendering. completed [x]
 - Add Archive with Login sheet using a persistent in-app WebView for paywalled captures. completed [x]
