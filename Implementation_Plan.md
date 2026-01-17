@@ -16,6 +16,7 @@
 - Use NSViewController's beginRequest override for macOS share extension handling. completed [x]
 - Set bundle identifiers and App Group to `com.digitalhandstand.stuffbucket.app` / `group.com.digitalhandstand.stuffbucket.app`. completed [x]
 - Sync Xcode recommended project settings into Xcodegen (app sandbox/network/app groups, asset symbol generation, Xcode version). completed [x]
+- Ignore local artifacts in git (`Screenshots/`, `resume.txt`). completed [x]
 
 ## 1. Core Data and storage updates
 - Update the Core Data model with new fields: completed [x]
