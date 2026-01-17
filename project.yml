@@ -133,8 +133,6 @@ targets:
         DEVELOPMENT_TEAM: V37U525228
         CODE_SIGN_ENTITLEMENTS: Sources/StuffBucketShareExtension/StuffBucketShareExtension.entitlements
         APPLICATION_EXTENSION_API_ONLY: YES
-    dependencies:
-      - sdk: Social.framework
 
   StuffBucketTests:
     type: bundle.unit-test

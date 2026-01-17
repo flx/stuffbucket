@@ -43,41 +43,36 @@ struct ContentView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 12) {
-                SearchBarView(text: $searchText)
-                    .padding(.horizontal)
-                    .padding(.top, 8)
-                List {
-                    if searchText.isEmpty {
-                        Section("Recent") {
-                            if recentItems.isEmpty {
-                                VStack(alignment: .leading, spacing: 12) {
-                                    Text("No items yet")
-                                        .foregroundStyle(.secondary)
-                                    Button("Add Link...") {
-                                        addLinkText = ""
-                                        isShowingAddLinkAlert = true
-                                    }
-                                    Button("Import Document...") {
-                                        isImportingDocument = true
-                                    }
+            List {
+                if searchText.isEmpty {
+                    Section("Recent") {
+                        if recentItems.isEmpty {
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text("No items yet")
+                                    .foregroundStyle(.secondary)
+                                Button("Add Link...") {
+                                    addLinkText = ""
+                                    isShowingAddLinkAlert = true
                                 }
-                            } else {
-                                ForEach(recentItems, id: \.objectID) { item in
-                                    if let itemID = item.id {
-                                        NavigationLink {
-                                            ItemDetailView(itemID: itemID)
-                                        } label: {
-                                            VStack(alignment: .leading, spacing: 6) {
-                                                Text(item.displayTitle)
-                                                    .font(.headline)
-                                                HStack(spacing: 8) {
-                                                    Text(item.itemType?.rawValue.capitalized ?? "Item")
-                                                        .font(.subheadline)
-                                                        .foregroundStyle(.secondary)
-                                                    if item.isLinkItem {
-                                                        ItemArchiveStatusBadge(item: item)
-                                                    }
+                                Button("Import Document...") {
+                                    isImportingDocument = true
+                                }
+                            }
+                        } else {
+                            ForEach(recentItems, id: \.objectID) { item in
+                                if let itemID = item.id {
+                                    NavigationLink {
+                                        ItemDetailView(itemID: itemID)
+                                    } label: {
+                                        VStack(alignment: .leading, spacing: 6) {
+                                            Text(item.displayTitle)
+                                                .font(.headline)
+                                            HStack(spacing: 8) {
+                                                Text(item.itemType?.rawValue.capitalized ?? "Item")
+                                                    .font(.subheadline)
+                                                    .foregroundStyle(.secondary)
+                                                if item.isLinkItem {
+                                                    ItemArchiveStatusBadge(item: item)
                                                 }
                                             }
                                         }
@@ -85,74 +80,74 @@ struct ContentView: View {
                                 }
                             }
                         }
-                        Section("Tags") {
-                            if tagSummaries.isEmpty {
-                                Text("No tags yet")
-                                    .foregroundStyle(.secondary)
-                            } else {
-                                ForEach(tagSummaries) { summary in
-                                    Button {
-                                        searchText = filterToken(prefix: "tag", value: summary.name)
-                                    } label: {
-                                        HStack {
-                                            Label(summary.name, systemImage: "tag")
-                                            Spacer()
-                                            Text("\(summary.count)")
-                                                .foregroundStyle(.secondary)
-                                        }
-                                    }
-                                    .buttonStyle(.plain)
-                                }
-                            }
-                        }
-                        Section("Collections") {
-                            if collectionSummaries.isEmpty {
-                                Text("No collections yet")
-                                    .foregroundStyle(.secondary)
-                            } else {
-                                ForEach(collectionSummaries) { summary in
-                                    Button {
-                                        searchText = filterToken(prefix: "collection", value: summary.name)
-                                    } label: {
-                                        HStack {
-                                            Label(summary.name, systemImage: "folder")
-                                            Spacer()
-                                            Text("\(summary.count)")
-                                                .foregroundStyle(.secondary)
-                                        }
-                                    }
-                                    .buttonStyle(.plain)
-                                }
-                            }
-                        }
-                    } else if results.isEmpty {
-                        Text("No results")
-                            .foregroundStyle(.secondary)
-                    } else {
-                        ForEach(results) { result in
-                            NavigationLink {
-                                ItemDetailView(itemID: result.itemID)
-                            } label: {
-                                VStack(alignment: .leading, spacing: 6) {
-                                    Text(result.title)
-                                        .font(.headline)
-                                    if let snippet = result.snippet, !snippet.isEmpty {
-                                        Text(snippet)
-                                            .font(.subheadline)
+                    }
+                    Section("Tags") {
+                        if tagSummaries.isEmpty {
+                            Text("No tags yet")
+                                .foregroundStyle(.secondary)
+                        } else {
+                            ForEach(tagSummaries) { summary in
+                                Button {
+                                    searchText = filterToken(prefix: "tag", value: summary.name)
+                                } label: {
+                                    HStack {
+                                        Label(summary.name, systemImage: "tag")
+                                        Spacer()
+                                        Text("\(summary.count)")
                                             .foregroundStyle(.secondary)
                                     }
-                                    if let item = itemLookup[result.itemID], item.isLinkItem {
-                                        ItemArchiveStatusBadge(item: item)
-                                    }
                                 }
+                                .buttonStyle(.plain)
                             }
-                            .padding(.vertical, 4)
                         }
                     }
+                    Section("Collections") {
+                        if collectionSummaries.isEmpty {
+                            Text("No collections yet")
+                                .foregroundStyle(.secondary)
+                        } else {
+                            ForEach(collectionSummaries) { summary in
+                                Button {
+                                    searchText = filterToken(prefix: "collection", value: summary.name)
+                                } label: {
+                                    HStack {
+                                        Label(summary.name, systemImage: "folder")
+                                        Spacer()
+                                        Text("\(summary.count)")
+                                            .foregroundStyle(.secondary)
+                                    }
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                    }
+                } else if results.isEmpty {
+                    Text("No results")
+                        .foregroundStyle(.secondary)
+                } else {
+                    ForEach(results) { result in
+                        NavigationLink {
+                            ItemDetailView(itemID: result.itemID)
+                        } label: {
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text(result.title)
+                                    .font(.headline)
+                                if let snippet = result.snippet, !snippet.isEmpty {
+                                    Text(snippet)
+                                        .font(.subheadline)
+                                        .foregroundStyle(.secondary)
+                                }
+                                if let item = itemLookup[result.itemID], item.isLinkItem {
+                                    ItemArchiveStatusBadge(item: item)
+                                }
+                            }
+                        }
+                        .padding(.vertical, 4)
+                    }
                 }
-                .listStyle(.insetGrouped)
             }
-            .navigationTitle("Bucket")
+            .listStyle(.insetGrouped)
+            .searchable(text: $searchText, prompt: "Search")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(role: .destructive) {

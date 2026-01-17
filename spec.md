@@ -10,7 +10,7 @@ Key guarantees:
 - First-class support for **iOS, iPadOS, and macOS**.
 - Optional **per-item protection** for sensitive content.
 - **High-quality search** with relevance ranking, typo tolerance, and filters.
-- Search input disables autocapitalization on iOS while keeping native macOS behavior.
+- Search uses native platform controls (SwiftUI searchable on iOS, toolbar search field on macOS).
 - Tag editing uses platform-appropriate text input behavior.
 - Optional **AI assistance** (summaries, key points, tags) powered by ChatGPT models, opt-in and user-controlled.
 
@@ -64,7 +64,7 @@ Principles:
 - **Files remain files** (no opaque blobs).
 - The user can browse and back up StuffBucket using Finder / Files.
 - Deleting the app does not delete user data.
-- iCloud container ID: `iCloud.com.digitalhandstand.stuffbucket`.
+- iCloud container ID: `iCloud.com.digitalhandstand.stuffbucketapp`.
 
 ---
 
@@ -117,7 +117,9 @@ If both rendered and raw capture fail:
 
 ### 4.4 Viewing links
 - iOS/iPadOS: open the locally stored `page.html` (and `reader.html`) inside StuffBucket.
+- If the archive lives in iCloud and is not yet downloaded, trigger download and show a loading state before displaying it.
 - macOS: open the archived HTML in the default browser.
+- macOS triggers iCloud download before opening archived HTML when needed.
 - If archives are missing, show an unavailable state.
 - Secondary action: “Open Original URL” in browser (planned).
 - Provide **Export as HTML / PDF** (planned).
@@ -187,7 +189,7 @@ If a link is marked protected:
 
 ### 7.1 Metadata
 - Core Data + `NSPersistentCloudKitContainer`
-- CloudKit container: `iCloud.com.digitalhandstand.stuffbucket`
+- CloudKit container: `iCloud.com.digitalhandstand.stuffbucketapp`
 - Core Data schema remains CloudKit-compatible (non-optional attributes have defaults or are optional).
 - Conflict resolution:
   - last-writer-wins for scalars
@@ -223,7 +225,7 @@ If a link is marked protected:
   3. Archive status indicator
 - Share extension captures URLs from Safari and queues them for the main app to import on launch.
 - Share extension accepts URL attachments or plain-text URL payloads.
-- Share sheet comment text supports quotes for snippets: double quotes (straight/smart) and single quotes used as quote boundaries become `textContent` joined by newlines; apostrophes inside words and quotes inside quoted segments are ignored; unquoted tokens become tags (#tag supported).
+- iOS share sheet uses a lightweight confirmation UI (no comment field); tags and snippets are added/edited after import.
 - Share extension opens StuffBucket after capture to surface new items immediately.
 - App listens for share-capture notifications to import while already running.
 - Share extension bundle identifiers are prefixed by the main app bundle identifier.

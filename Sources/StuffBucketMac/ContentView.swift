@@ -87,14 +87,8 @@ struct ContentView: View {
                     }
                 }
             }
-            .navigationTitle("Bucket")
         } detail: {
-            VStack(spacing: 12) {
-                SearchBarView(text: $searchText)
-                    .padding(.horizontal)
-                    .padding(.top, 8)
-                Divider()
-                NavigationStack {
+            NavigationStack {
                     if searchText.isEmpty {
                         ScrollView {
                             VStack(alignment: .leading, spacing: 24) {
@@ -218,7 +212,6 @@ struct ContentView: View {
                         .listStyle(.inset)
                     }
                 }
-            }
         }
         .frame(minWidth: 900, minHeight: 600)
         .toolbar {
@@ -245,6 +238,11 @@ struct ContentView: View {
                 } label: {
                     Label("Add", systemImage: "plus")
                 }
+            }
+            ToolbarItem(placement: .principal) {
+                TextField("Search", text: $searchText)
+                    .textFieldStyle(.roundedBorder)
+                    .frame(minWidth: 200, maxWidth: 400)
             }
         }
         .sheet(isPresented: $isShowingSnippetSheet) {

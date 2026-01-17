@@ -7,6 +7,12 @@ import WebKit
 import AppKit
 #endif
 
+struct ArchivePresentation: Identifiable {
+    let id = UUID()
+    let url: URL
+    let title: String
+}
+
 struct ItemDetailView: View {
     let itemID: UUID
 
@@ -16,9 +22,7 @@ struct ItemDetailView: View {
     @State private var contentText = ""
     @State private var linkText = ""
     @State private var linkUpdateTask: Task<Void, Never>?
-    @State private var isShowingArchive = false
-    @State private var archiveURL: URL?
-    @State private var archiveTitle = ""
+    @State private var archivePresentation: ArchivePresentation?
     @State private var isShowingLoginArchive = false
     @State private var loginArchiveURL: URL?
     @State private var isImportingDocument = false
@@ -129,13 +133,8 @@ struct ItemDetailView: View {
 
 #if os(iOS)
         return base
-            .sheet(isPresented: $isShowingArchive) {
-                if let url = archiveURL {
-                    ArchivedLinkSheet(url: url, title: archiveTitle)
-                } else {
-                    Text("Archive not available.")
-                        .padding()
-                }
+            .sheet(item: $archivePresentation) { presentation in
+                ArchivedLinkSheet(url: presentation.url, title: presentation.title)
             }
             .sheet(isPresented: $isShowingLoginArchive) {
                 loginArchiveSheet
@@ -376,19 +375,15 @@ struct ItemDetailView: View {
     }
 
     private func openArchive(url: URL, title: String) {
-        prepareArchiveForReading(url)
 #if os(iOS)
-        archiveURL = url
-        archiveTitle = title
-        isShowingArchive = true
+        archivePresentation = ArchivePresentation(url: url, title: title)
 #elseif os(macOS)
+        // Start download if needed, then open
+        if FileManager.default.isUbiquitousItem(at: url) {
+            try? FileManager.default.startDownloadingUbiquitousItem(at: url)
+        }
         NSWorkspace.shared.open(url)
 #endif
-    }
-
-    private func prepareArchiveForReading(_ url: URL) {
-        guard FileManager.default.isUbiquitousItem(at: url) else { return }
-        try? FileManager.default.startDownloadingUbiquitousItem(at: url)
     }
 
     @ViewBuilder
@@ -465,20 +460,84 @@ struct ArchivedLinkSheet: View {
     let title: String
 
     @Environment(\.dismiss) private var dismiss
+    @State private var isFileReady = false
+    @State private var checkTask: Task<Void, Never>?
 
     var body: some View {
         NavigationStack {
-            ArchivedLinkWebView(url: url)
-                .navigationTitle(title)
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) {
-                        Button("Done") {
-                            dismiss()
-                        }
+            Group {
+                if isFileReady {
+                    ArchivedLinkWebView(url: url)
+                } else {
+                    VStack(spacing: 16) {
+                        ProgressView()
+                        Text("Loading archive...")
+                            .foregroundStyle(.secondary)
                     }
                 }
+            }
+            .navigationTitle(title)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Done") {
+                        checkTask?.cancel()
+                        dismiss()
+                    }
+                }
+            }
         }
+        .onAppear {
+            startFileCheck()
+        }
+        .onDisappear {
+            checkTask?.cancel()
+        }
+    }
+
+    private func startFileCheck() {
+        checkTask = Task {
+            // Start download if needed
+            if FileManager.default.isUbiquitousItem(at: url) {
+                try? FileManager.default.startDownloadingUbiquitousItem(at: url)
+            }
+
+            // Poll until file is available (max ~5 seconds)
+            for _ in 0..<50 {
+                if Task.isCancelled { return }
+
+                if isFileAvailableLocally(url) {
+                    await MainActor.run {
+                        isFileReady = true
+                    }
+                    return
+                }
+                try? await Task.sleep(nanoseconds: 100_000_000) // 100ms
+            }
+
+            // Timeout - show anyway and let WebView handle it
+            await MainActor.run {
+                isFileReady = true
+            }
+        }
+    }
+
+    private func isFileAvailableLocally(_ url: URL) -> Bool {
+        let fm = FileManager.default
+        guard fm.fileExists(atPath: url.path) else { return false }
+
+        // Check if it's still downloading from iCloud
+        if fm.isUbiquitousItem(at: url) {
+            do {
+                let downloadStatus: URLResourceValues = try url.resourceValues(forKeys: [.ubiquitousItemDownloadingStatusKey])
+                if let status = downloadStatus.ubiquitousItemDownloadingStatus {
+                    return status == .current
+                }
+            } catch {
+                // If we can't check status, assume it's ready if file exists
+            }
+        }
+        return true
     }
 }
 

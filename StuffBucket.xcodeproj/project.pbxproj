@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		04C1F20034405ECDAA03582D /* LinkStatusBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7D95BC8968F47F9EEE076BA /* LinkStatusBadge.swift */; };
-		0696D7CD1C87C5C263A60B39 /* Social.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EC1AEF8A7144284C59DC8A90 /* Social.framework */; };
 		06C3CC56E338C56F4990B8BD /* SearchIndexMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ECA20E7784097D2A130917E /* SearchIndexMetadata.swift */; };
 		0B636D62485E37CA9AB95AEC /* StuffBucketModel.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = A0E7D6443688015B5AD0915C /* StuffBucketModel.xcdatamodeld */; };
 		0DAD5813CCC54F7369D1D93E /* SharedCaptureStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB12F39F12A0E85EF8522A4F /* SharedCaptureStore.swift */; };
@@ -227,7 +226,6 @@
 		E2362C758E3E3EC455DA86B6 /* SearchTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchTypes.swift; sourceTree = "<group>"; };
 		E70E88CA2D3A12D3916610DF /* SafariBookmarksImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafariBookmarksImporter.swift; sourceTree = "<group>"; };
 		E7D12DAD6A6B4D0D441AF4CC /* ModelDefaults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelDefaults.swift; sourceTree = "<group>"; };
-		EC1AEF8A7144284C59DC8A90 /* Social.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Social.framework; path = System/Library/Frameworks/Social.framework; sourceTree = SDKROOT; };
 		F116073320FB06FC953E4566 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		F1981F222EFC6022AFB2BDFC /* AIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIService.swift; sourceTree = "<group>"; };
 		F43BBF55811196859694BD81 /* StuffBucketCoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StuffBucketCoreTests.swift; sourceTree = "<group>"; };
@@ -248,14 +246,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				7A9131A8C23EBCFFCC7353CB /* StuffBucketCore.framework in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		C8BDC7844CC7A9AEE4DA4F8D /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				0696D7CD1C87C5C263A60B39 /* Social.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -311,7 +301,6 @@
 			isa = PBXGroup;
 			children = (
 				395F5C4997E19A6D5275D018 /* libsqlite3.tbd */,
-				EC1AEF8A7144284C59DC8A90 /* Social.framework */,
 				40515F24B8E9ACE644668DCF /* WebKit.framework */,
 			);
 			name = Frameworks;
@@ -527,7 +516,6 @@
 			buildConfigurationList = DD0E28AA4E4244038FE7CC3B /* Build configuration list for PBXNativeTarget "StuffBucketShareExtension" */;
 			buildPhases = (
 				9ECC1CF748A4330D467DABAB /* Sources */,
-				C8BDC7844CC7A9AEE4DA4F8D /* Frameworks */,
 			);
 			buildRules = (
 			);

@@ -28,7 +28,8 @@
 - Add lightweight migration support for existing stores. completed [x]
 - Ensure CloudKit schema updates and resolve any merge policies for new fields.
 - Make Core Data attributes CloudKit-compatible (optional or default values for non-optional fields). completed [x]
-- Enable iCloud CloudKit + iCloud Drive capabilities for iOS/macOS targets with container `iCloud.com.digitalhandstand.stuffbucket`. completed [x]
+- Enable iCloud CloudKit + iCloud Drive capabilities for iOS/macOS targets with container `iCloud.com.digitalhandstand.stuffbucketapp`. completed [x]
+- Add `aps-environment` entitlements and iOS `remote-notification` background mode for CloudKit push support. completed [x]
 - Point `NSPersistentCloudKitContainer` at the same iCloud container ID. completed [x]
 - Use the same iCloud container ID for link/document storage paths. completed [x]
 - Add a small metadata table for search index versioning and last indexed timestamps. completed [x]
@@ -81,7 +82,7 @@
   - Add searchable UI and preview snippets. completed [x]
   - Add filters and sort by relevance/recency.
 - Replace placeholder landing UI with tag/collection lists. completed [x]
-- Use a custom search bar for consistent alignment. completed [x]
+- Use SwiftUI `.searchable` for iOS search input. completed [x]
 - Ensure search input modifiers are platform-appropriate (iOS-only autocap settings). completed [x]
 - Add a recent items list on the empty state. completed [x]
   - Show live-updating link archive status badges in lists. completed [x]
@@ -89,7 +90,7 @@
   - Add basic search UI and result preview. completed [x]
   - Add search sidebar and filter controls.
   - Replace placeholder landing UI with tag/collection lists. completed [x]
-  - Use a custom search bar for consistent alignment. completed [x]
+  - Add a toolbar search field with a rounded text box. completed [x]
   - Add a recent items list on the empty state. completed [x]
   - Show live-updating link archive status badges in lists. completed [x]
 
@@ -173,8 +174,9 @@
 - Add in-app prompt to save a link by pasting a URL. completed [x]
 - Show an empty-state Import Document button. completed [x]
 - Show an empty-state Add Link button. completed [x]
-- Parse share sheet comment text into snippet + tags with quote-boundary rules (ignore apostrophes, ignore nested quotes), notify running instances, and open the app after share import. completed [x]
+- Replace the iOS share sheet compose UI with a lightweight confirmation view; quick-save URL only and open the app after capture. completed [x]
 - Add link archive viewer actions (open page/reader HTML in-app). completed [x]
+- Show a loading state while archived HTML downloads from iCloud before rendering. completed [x]
 - Add Archive with Login sheet using a persistent in-app WebView for paywalled captures. completed [x]
 - Add a temporary Delete All Data toolbar button for debugging (remove before release). completed [x]
 - Allow link and text editing on all item types in detail view. completed [x]
@@ -200,6 +202,7 @@
 - Activate the macOS app when share capture is triggered to bring it to the foreground. completed [x]
 - Parse share sheet comment text into snippet + tags with quote-boundary rules (ignore apostrophes, ignore nested quotes). completed [x]
 - Add link archive viewer actions (open archived HTML in default browser). completed [x]
+- Trigger iCloud download before opening archived HTML. completed [x]
 - Add Archive with Login sheet using a persistent in-app WebView for paywalled captures. completed [x]
 - Add a temporary Delete All Data toolbar button for debugging (remove before release). completed [x]
 - Allow link and text editing on all item types in detail view. completed [x]
@@ -227,7 +230,7 @@
   - Test helpers create items using context-scoped entity lookup to avoid Core Data entity ambiguity warnings. completed [x]
   - Item import helper tests (snippet + document) on iOS and macOS. completed [x]
   - Item attachment flags and creation-kind invariants (link/text/document) on iOS and macOS. completed [x]
-  - Share sheet comment parsing with quote-boundary rules (ignore apostrophes, ignore nested quotes) on iOS and macOS. completed [x]
+  - Share sheet comment parsing with quote-boundary rules (mac share sheet; parser covered in iOS + mac tests). completed [x]
   - FTS indexing and snippet generation
   - Safari bookmark parsing (sample plist and HTML export)
   - AI payload formatting and storage

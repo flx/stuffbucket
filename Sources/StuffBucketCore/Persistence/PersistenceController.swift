@@ -2,7 +2,7 @@ import CoreData
 import Foundation
 
 enum ICloudConfig {
-    static let containerIdentifier = "iCloud.com.digitalhandstand.stuffbucket"
+    static let containerIdentifier = "iCloud.com.digitalhandstand.stuffbucketapp"
 }
 
 public final class PersistenceController: ObservableObject {
