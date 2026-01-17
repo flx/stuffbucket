@@ -64,6 +64,7 @@
   - Extract text from notes/snippets directly.
   - Extract text from HTML snapshots via `NSAttributedString` HTML import or WebKit text capture.
   - For documents, index filename plus extracted text where possible.
+- Seed/rebuild the index on app launch to remove stale search results. completed [x]
 - Respect protection rules: completed [x]
   - If locked, only index title/tags/collection; exclude body content.
 - Run indexing in the background with throttling and batch updates.

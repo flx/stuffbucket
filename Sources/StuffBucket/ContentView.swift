@@ -228,7 +228,8 @@ struct ContentView: View {
                 guard !Task.isCancelled else { return }
                 let results = await searchService.search(text: newValue)
                 await MainActor.run {
-                    self.results = results
+                    let lookup = self.itemLookup
+                    self.results = results.filter { lookup[$0.itemID] != nil }
                 }
             }
         }

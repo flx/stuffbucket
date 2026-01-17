@@ -39,6 +39,8 @@ public final class SearchIndexer {
     public static let shared = SearchIndexer()
 
     private var observer: NSObjectProtocol?
+    private let seedQueue = DispatchQueue(label: "com.digitalhandstand.stuffbucket.search.seed")
+    private var didSeedIndex = false
 
     private init() {}
 
@@ -57,6 +59,15 @@ public final class SearchIndexer {
             NotificationCenter.default.removeObserver(observer)
         }
         observer = nil
+    }
+
+    public func seedIndexIfNeeded(context: NSManagedObjectContext) {
+        seedQueue.async { [weak self] in
+            guard let self else { return }
+            guard !self.didSeedIndex else { return }
+            self.didSeedIndex = true
+            self.rebuildIndex(context: context)
+        }
     }
 
     public func index(_ document: SearchDocument) {
@@ -106,6 +117,17 @@ public final class SearchIndexer {
 
     public func search(_ query: SearchQuery) async -> [SearchResult] {
         return SearchDatabase.shared.search(query: query)
+    }
+
+    private func rebuildIndex(context: NSManagedObjectContext) {
+        context.perform {
+            let request = NSFetchRequest<Item>(entityName: "Item")
+            let items = (try? context.fetch(request)) ?? []
+            SearchDatabase.shared.reset()
+            for item in items {
+                self.index(item: item)
+            }
+        }
     }
 
     private func handleChange(_ notification: Notification) {

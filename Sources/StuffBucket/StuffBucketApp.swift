@@ -34,6 +34,7 @@ struct StuffBucketApp: App {
 
 private func refreshPendingData(using persistenceController: PersistenceController) {
     StorageMigration.migrateLocalStorageIfNeeded()
+    SearchIndexer.shared.seedIndexIfNeeded(context: persistenceController.viewContext)
     importPendingSharedLinks(using: persistenceController)
     archivePendingLinks(using: persistenceController)
 }

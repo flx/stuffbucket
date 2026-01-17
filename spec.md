@@ -312,6 +312,7 @@ If a link is marked protected:
 
 ### 9.4 Indexing
 - Incremental indexing as items change.
+- Seed/rebuild the index on app launch to reconcile deletes while the app was closed.
 - Background reindex if HTML snapshots or files update.
 - Index remains local and is rebuilt if corrupted.
 
