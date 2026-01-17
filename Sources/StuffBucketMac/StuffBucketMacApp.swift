@@ -36,6 +36,7 @@ struct StuffBucketMacApp: App {
 }
 
 private func refreshPendingData(using persistenceController: PersistenceController) {
+    StorageMigration.migrateLocalStorageIfNeeded()
     importPendingSharedLinks(using: persistenceController)
     archivePendingLinks(using: persistenceController)
 }

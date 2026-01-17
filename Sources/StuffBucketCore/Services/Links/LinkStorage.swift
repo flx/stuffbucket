@@ -1,8 +1,131 @@
 import Foundation
 
-enum LinkStorage {
-    private static let rootFolderName = "StuffBucket"
+enum StoragePaths {
+    static let rootFolderName = "StuffBucket"
 
+    static func iCloudRootURL(fileManager: FileManager = .default) -> URL? {
+        fileManager.url(forUbiquityContainerIdentifier: ICloudConfig.containerIdentifier)?
+            .appendingPathComponent("Documents", isDirectory: true)
+            .appendingPathComponent(rootFolderName, isDirectory: true)
+    }
+
+    static func localRootURL(fileManager: FileManager = .default) -> URL {
+        let support = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+        return support.appendingPathComponent(rootFolderName, isDirectory: true)
+    }
+}
+
+public enum StorageMigration {
+    private static let migrationQueue = DispatchQueue(label: "com.digitalhandstand.stuffbucket.storage.migration", qos: .utility)
+
+    public static func migrateLocalStorageIfNeeded() {
+        migrationQueue.async {
+            let fileManager = FileManager.default
+            guard let iCloudRoot = StoragePaths.iCloudRootURL(fileManager: fileManager) else { return }
+            let localRoot = StoragePaths.localRootURL(fileManager: fileManager)
+            guard fileManager.fileExists(atPath: localRoot.path) else { return }
+
+            do {
+                try fileManager.createDirectory(at: iCloudRoot, withIntermediateDirectories: true)
+            } catch {
+                NSLog("Storage migration: failed to create iCloud root: \(error)")
+                return
+            }
+
+            migrateContents(from: localRoot, to: iCloudRoot, fileManager: fileManager)
+            pruneEmptyDirectories(root: localRoot, fileManager: fileManager)
+        }
+    }
+
+    private static func migrateContents(from localRoot: URL, to iCloudRoot: URL, fileManager: FileManager) {
+        let localRootPath = localRoot.path
+        let prefix = localRootPath.hasSuffix("/") ? localRootPath : localRootPath + "/"
+        let keys: Set<URLResourceKey> = [.isDirectoryKey, .contentModificationDateKey]
+        let directoryKeys: Set<URLResourceKey> = [.isDirectoryKey]
+        guard let enumerator = fileManager.enumerator(
+            at: localRoot,
+            includingPropertiesForKeys: Array(keys),
+            options: [.skipsHiddenFiles]
+        ) else { return }
+
+        for case let localURL as URL in enumerator {
+            guard localURL.path.hasPrefix(prefix) else { continue }
+            let relativePath = String(localURL.path.dropFirst(prefix.count))
+            guard !relativePath.isEmpty else { continue }
+            let isDirectory = (try? localURL.resourceValues(forKeys: directoryKeys))?.isDirectory ?? false
+            let destinationURL = iCloudRoot.appendingPathComponent(relativePath, isDirectory: isDirectory)
+
+            if isDirectory {
+                try? fileManager.createDirectory(at: destinationURL, withIntermediateDirectories: true)
+                continue
+            }
+
+            let shouldReplace = shouldReplaceDestination(localURL: localURL, destinationURL: destinationURL, fileManager: fileManager)
+            if fileManager.fileExists(atPath: destinationURL.path) && !shouldReplace {
+                try? fileManager.removeItem(at: localURL)
+                continue
+            }
+            do {
+                try fileManager.createDirectory(at: destinationURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+                if fileManager.fileExists(atPath: destinationURL.path) {
+                    try fileManager.removeItem(at: destinationURL)
+                }
+                try fileManager.copyItem(at: localURL, to: destinationURL)
+                try? fileManager.removeItem(at: localURL)
+            } catch {
+                NSLog("Storage migration: failed to copy \(localURL.lastPathComponent): \(error)")
+            }
+        }
+    }
+
+    private static func shouldReplaceDestination(
+        localURL: URL,
+        destinationURL: URL,
+        fileManager: FileManager
+    ) -> Bool {
+        guard fileManager.fileExists(atPath: destinationURL.path) else { return true }
+        let localDate = (try? localURL.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate
+        let destinationDate = (try? destinationURL.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate
+        switch (localDate, destinationDate) {
+        case let (.some(local), .some(destination)):
+            return local > destination
+        case (.some, .none):
+            return true
+        default:
+            return false
+        }
+    }
+
+    private static func pruneEmptyDirectories(root: URL, fileManager: FileManager) {
+        let directoryKeys: Set<URLResourceKey> = [.isDirectoryKey]
+        guard let enumerator = fileManager.enumerator(
+            at: root,
+            includingPropertiesForKeys: Array(directoryKeys),
+            options: [.skipsHiddenFiles]
+        ) else { return }
+        var directories: [URL] = []
+
+        for case let url as URL in enumerator {
+            let isDirectory = (try? url.resourceValues(forKeys: directoryKeys))?.isDirectory ?? false
+            if isDirectory {
+                directories.append(url)
+            }
+        }
+
+        for directory in directories.sorted(by: { $0.path.count > $1.path.count }) {
+            guard let contents = try? fileManager.contentsOfDirectory(atPath: directory.path), contents.isEmpty else {
+                continue
+            }
+            try? fileManager.removeItem(at: directory)
+        }
+
+        if let contents = try? fileManager.contentsOfDirectory(atPath: root.path), contents.isEmpty {
+            try? fileManager.removeItem(at: root)
+        }
+    }
+}
+
+enum LinkStorage {
     static func url(forRelativePath relativePath: String) -> URL {
         rootDirectory().appendingPathComponent(relativePath)
     }
@@ -68,19 +191,14 @@ enum LinkStorage {
     }
 
     private static func rootDirectory() -> URL {
-        if let iCloudRoot = FileManager.default.url(forUbiquityContainerIdentifier: ICloudConfig.containerIdentifier)?
-            .appendingPathComponent("Documents", isDirectory: true)
-            .appendingPathComponent(rootFolderName, isDirectory: true) {
+        if let iCloudRoot = StoragePaths.iCloudRootURL() {
             return iCloudRoot
         }
-        let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-        return support.appendingPathComponent(rootFolderName, isDirectory: true)
+        return StoragePaths.localRootURL()
     }
 }
 
 enum DocumentStorage {
-    private static let rootFolderName = "StuffBucket"
-
     static func copyDocument(from sourceURL: URL, itemID: UUID, fileName: String) throws -> String {
         let name = fileName.isEmpty ? "Document" : fileName
         let destinationURL = documentURL(for: itemID, fileName: name)
@@ -112,12 +230,9 @@ enum DocumentStorage {
     }
 
     private static func rootDirectory() -> URL {
-        if let iCloudRoot = FileManager.default.url(forUbiquityContainerIdentifier: ICloudConfig.containerIdentifier)?
-            .appendingPathComponent("Documents", isDirectory: true)
-            .appendingPathComponent(rootFolderName, isDirectory: true) {
+        if let iCloudRoot = StoragePaths.iCloudRootURL() {
             return iCloudRoot
         }
-        let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-        return support.appendingPathComponent(rootFolderName, isDirectory: true)
+        return StoragePaths.localRootURL()
     }
 }

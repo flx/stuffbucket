@@ -109,13 +109,10 @@ public enum DebugDataResetService {
     }
 
     private static func storageRootURL(fileManager: FileManager) -> URL {
-        if let iCloudRoot = fileManager.url(forUbiquityContainerIdentifier: ICloudConfig.containerIdentifier)?
-            .appendingPathComponent("Documents", isDirectory: true)
-            .appendingPathComponent("StuffBucket", isDirectory: true) {
+        if let iCloudRoot = StoragePaths.iCloudRootURL(fileManager: fileManager) {
             return iCloudRoot
         }
-        let support = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-        return support.appendingPathComponent("StuffBucket", isDirectory: true)
+        return StoragePaths.localRootURL(fileManager: fileManager)
     }
 
     private static func removeItemIfExists(at url: URL, fileManager: FileManager) {
