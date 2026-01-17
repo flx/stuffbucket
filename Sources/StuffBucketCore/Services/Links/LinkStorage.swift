@@ -32,8 +32,15 @@ public enum StorageMigration {
                 return
             }
 
-            migrateContents(from: localRoot, to: iCloudRoot, fileManager: fileManager)
-            pruneEmptyDirectories(root: localRoot, fileManager: fileManager)
+            let folders = ["Links", "Documents", "Protected"]
+            for folder in folders {
+                let localFolder = localRoot.appendingPathComponent(folder, isDirectory: true)
+                guard fileManager.fileExists(atPath: localFolder.path) else { continue }
+                let iCloudFolder = iCloudRoot.appendingPathComponent(folder, isDirectory: true)
+                try? fileManager.createDirectory(at: iCloudFolder, withIntermediateDirectories: true)
+                migrateContents(from: localFolder, to: iCloudFolder, fileManager: fileManager)
+                pruneEmptyDirectories(root: localFolder, fileManager: fileManager)
+            }
         }
     }
 

@@ -202,7 +202,7 @@ If a link is marked protected:
 
 ### 7.2 Files
 - iCloud Drive handles sync.
-- If iCloud storage is unavailable at write time, save locally and migrate into iCloud when the container becomes available.
+- If iCloud storage is unavailable at write time, save locally and migrate into iCloud when the container becomes available (migration only touches `Links/`, `Documents/`, and `Protected/`, never the Core Data store).
 - App watches for:
   - missing HTML files
   - externally modified files

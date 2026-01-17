@@ -33,7 +33,7 @@
 - Add `aps-environment` entitlements and iOS `remote-notification` background mode for CloudKit push support. completed [x]
 - Point `NSPersistentCloudKitContainer` at the same iCloud container ID. completed [x]
 - Use the same iCloud container ID for link/document storage paths. completed [x]
-- Migrate local file storage into the iCloud container when it becomes available. completed [x]
+- Migrate local file storage into the iCloud container when it becomes available (attachments only: Links/Documents/Protected, never the Core Data store). completed [x]
 - Add a small metadata table for search index versioning and last indexed timestamps. completed [x]
 - Load the Core Data model from the framework bundle to avoid runtime lookup failures. completed [x]
 - Use explicit entity-name fetch requests in item detail views to avoid Core Data entity ambiguity. completed [x]
