@@ -13,6 +13,11 @@ struct ArchivePresentation: Identifiable {
     let title: String
 }
 
+struct ArchiveError: Identifiable {
+    let id = UUID()
+    let message: String
+}
+
 struct ItemDetailView: View {
     let itemID: UUID
 
@@ -26,6 +31,7 @@ struct ItemDetailView: View {
     @State private var isShowingLoginArchive = false
     @State private var loginArchiveURL: URL?
     @State private var isImportingDocument = false
+    @State private var archiveError: ArchiveError?
 
     init(itemID: UUID) {
         self.itemID = itemID
@@ -46,6 +52,23 @@ struct ItemDetailView: View {
             } else {
                 missingView
             }
+        }
+        .alert(
+            "Archive Unavailable",
+            isPresented: Binding(
+                get: { archiveError != nil },
+                set: { isPresented in
+                    if !isPresented {
+                        archiveError = nil
+                    }
+                }
+            )
+        ) {
+            Button("OK") {
+                archiveError = nil
+            }
+        } message: {
+            Text(archiveError?.message ?? "")
         }
     }
 
@@ -339,6 +362,7 @@ struct ItemDetailView: View {
     private func archiveSection(for item: Item) -> some View {
         let pageURL = item.archivedPageURL
         let readerURL = item.archivedReaderURL
+        let pageExpected = (item.htmlRelativePath?.isEmpty == false)
         let pageAvailable = archiveFileExists(pageURL)
         let readerAvailable = archiveFileExists(readerURL)
 
@@ -346,7 +370,7 @@ struct ItemDetailView: View {
             guard let url = pageURL else { return }
             openArchive(url: url, title: "Page Archive")
         }
-        .disabled(!pageAvailable)
+        .disabled(!pageExpected)
 
         Button("Open Reader Archive") {
             guard let url = readerURL else { return }
@@ -361,8 +385,8 @@ struct ItemDetailView: View {
         }
         .disabled(item.linkURL == nil)
 
-        if !pageAvailable {
-            Text("Archive not ready yet.")
+        if !pageAvailable, pageExpected {
+            Text("Page archive is syncing from iCloud.")
                 .font(.footnote)
                 .foregroundStyle(.secondary)
         } else if !readerAvailable {
@@ -381,9 +405,14 @@ struct ItemDetailView: View {
 #if os(iOS)
         archivePresentation = ArchivePresentation(url: url, title: title)
 #elseif os(macOS)
+        let fileManager = FileManager.default
+        guard fileManager.fileExists(atPath: url.path) else {
+            archiveError = ArchiveError(message: "Archive file not synced to this Mac yet. Try again in a moment.")
+            return
+        }
         // Start download if needed, then open
-        if FileManager.default.isUbiquitousItem(at: url) {
-            try? FileManager.default.startDownloadingUbiquitousItem(at: url)
+        if fileManager.isUbiquitousItem(at: url) {
+            try? fileManager.startDownloadingUbiquitousItem(at: url)
         }
         NSWorkspace.shared.open(url)
 #endif
