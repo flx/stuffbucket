@@ -31,6 +31,10 @@ struct ItemDetailView: View {
         self.itemID = itemID
         let request = NSFetchRequest<Item>(entityName: "Item")
         request.predicate = NSPredicate(format: "id == %@", itemID as CVarArg)
+        request.sortDescriptors = [
+            NSSortDescriptor(keyPath: \Item.updatedAt, ascending: false),
+            NSSortDescriptor(keyPath: \Item.createdAt, ascending: false)
+        ]
         request.fetchLimit = 1
         _items = FetchRequest(fetchRequest: request, animation: .default)
     }

@@ -21,6 +21,7 @@ Non-goals (initial versions): collaboration, web client.
 ## Appendix: Repo hygiene (dev)
 - Ignore local screenshots (`Screenshots/`) and personal notes (`resume.txt`) in git.
 - Use context-scoped Core Data fetches in UI to avoid multi-bundle entity ambiguity.
+- Item detail fetches include sort descriptors (required by NSFetchedResultsController).
 
 ## 2. Core concepts
 
