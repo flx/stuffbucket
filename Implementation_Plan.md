@@ -209,6 +209,7 @@
 - Add link archive viewer actions (open archived HTML in default browser). completed [x]
 - Enable page archive open while syncing from iCloud; show sync-pending status and alert when not yet local. completed [x]
 - Trigger iCloud download before opening archived HTML. completed [x]
+- Download archive assets from iCloud before opening on macOS; show a brief syncing state and an unavailable alert when assets are not yet local. completed [x]
 - Add Archive with Login sheet using a persistent in-app WebView for paywalled captures. completed [x]
 - Add a temporary Delete All Data toolbar button for debugging (remove before release). completed [x]
 - Allow link and text editing on all item types in detail view. completed [x]
