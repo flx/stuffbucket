@@ -13,7 +13,14 @@ struct ContentView: View {
     @State private var isShowingAddLinkAlert = false
     @State private var addLinkText = ""
     @State private var isShowingDeleteAllAlert = false
+    @State private var showAllItems = false
     private let searchService = SearchService()
+    private let dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .none
+        return formatter
+    }()
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \Item.updatedAt, ascending: false)]
     )
@@ -32,7 +39,11 @@ struct ContentView: View {
     }
 
     private var recentItems: [Item] {
-        Array(activeItems.prefix(10))
+        showAllItems ? Array(activeItems) : Array(activeItems.prefix(10))
+    }
+
+    private var hasMoreItems: Bool {
+        activeItems.count > 10
     }
 
     private var itemLookup: [UUID: Item] {
@@ -82,9 +93,29 @@ struct ContentView: View {
                                                     if item.isLinkItem {
                                                         ItemArchiveStatusBadge(item: item)
                                                     }
+                                                    Spacer()
+                                                    if let date = item.createdAt {
+                                                        Text(dateFormatter.string(from: date))
+                                                            .font(.caption)
+                                                            .foregroundStyle(.tertiary)
+                                                    }
                                                 }
                                             }
                                         }
+                                    }
+                                }
+                                if hasMoreItems {
+                                    Button {
+                                        withAnimation {
+                                            showAllItems.toggle()
+                                        }
+                                    } label: {
+                                        HStack {
+                                            Text(showAllItems ? "Show Less" : "Show All")
+                                            Spacer()
+                                            Image(systemName: showAllItems ? "chevron.up" : "chevron.down")
+                                        }
+                                        .foregroundStyle(.secondary)
                                     }
                                 }
                             }
