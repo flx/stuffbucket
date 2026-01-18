@@ -126,7 +126,7 @@ If both rendered and raw capture fail:
 - macOS: open the archived HTML in the default browser.
 - macOS triggers iCloud download before opening archived HTML when needed.
 - macOS allows opening page archives while syncing; if the file is not yet present locally, show a sync-pending message and an explicit unavailable alert.
-- macOS downloads archive assets (images/styles) before opening; show a brief “downloading assets” state and surface an unavailable message if assets are still syncing.
+- macOS attempts to download archive assets (images/styles) before opening and shows a brief "downloading assets" state; assets may still be missing when opened (known issue, see `syncingBug.md`).
 - If archives are missing, show an unavailable state.
 - Secondary action: “Open Original URL” in browser (planned).
 - Provide **Export as HTML / PDF** (planned).

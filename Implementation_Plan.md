@@ -43,6 +43,7 @@
 - Fetch link metadata and persist HTML snapshots after share import. completed [x]
 - Capture rendered HTML via WKWebView, download assets, and rewrite HTML/CSS for offline link archives (fallback to raw HTML). completed [x]
 - Generate a reader-mode HTML snapshot (reader.html) alongside the full archive (page.html). completed [x]
+- Persist a link archive asset manifest (list of asset filenames) for deterministic iCloud download on macOS (see `syncingBug.md`).
 - Decode common HTML entities in link metadata parsing without AppKit dependencies. completed [x]
 - Add document storage helper for iCloud Drive file copies. completed [x]
 - Add import helper for links, snippets, and documents. completed [x]
@@ -245,6 +246,7 @@
   - Import 500+ bookmarks and validate sync updates
   - Search performance on large datasets
 - Manual QA:
+  - iOS-created link archives render with assets on macOS after iCloud sync (see `syncingBug.md`).
   - Protected item search behavior
   - AI API key entry and consent prompts
 
