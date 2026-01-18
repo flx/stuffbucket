@@ -270,22 +270,23 @@ struct ItemDetailView: View {
 
     @ViewBuilder
     private func linkSection(for item: Item) -> some View {
-        if item.hasLink, let urlString = item.linkURL, let url = URL(string: urlString) {
+        linkField
+
+        // Show clickable link only when we have a valid-looking URL
+        if let urlString = item.linkURL,
+           !urlString.isEmpty,
+           let url = URL(string: urlString),
+           let host = url.host,
+           host.contains(".") {
             Link(destination: url) {
                 HStack {
-                    Text(urlString)
-                        .lineLimit(2)
-                        .truncationMode(.middle)
+                    Text("Open in Browser")
                     Spacer()
                     Image(systemName: "arrow.up.right.square")
-                        .foregroundStyle(.secondary)
                 }
-            }
-        } else {
-            linkField
-            Text("Enter a URL to save a link")
-                .font(.footnote)
                 .foregroundStyle(.secondary)
+                .font(.subheadline)
+            }
         }
     }
 
