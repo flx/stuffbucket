@@ -282,13 +282,21 @@ struct ItemDetailView: View {
     @ViewBuilder
     private func linkSection(for item: Item) -> some View {
         if isEditingLink {
-            // Edit mode: show text field with Done button
-            HStack {
+            // Edit mode: show text field with Done/Cancel buttons
+            VStack(alignment: .leading, spacing: 8) {
                 linkField
-                Button("Done") {
-                    isEditingLink = false
+                HStack {
+                    Button("Cancel") {
+                        // Revert to saved value
+                        linkText = item.linkURL ?? ""
+                        isEditingLink = false
+                    }
+                    Spacer()
+                    Button("Done") {
+                        isEditingLink = false
+                    }
+                    .buttonStyle(.borderedProminent)
                 }
-                .buttonStyle(.borderedProminent)
             }
         } else if let urlString = item.linkURL,
                   !urlString.isEmpty,
@@ -311,31 +319,43 @@ struct ItemDetailView: View {
             }
             .font(.subheadline)
         } else if let urlString = item.linkURL, !urlString.isEmpty {
-            // Display mode with incomplete URL (still editing)
-            Text(urlString)
-                .foregroundStyle(.secondary)
+            // Display mode with incomplete/invalid URL
+            HStack {
+                Text(urlString)
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Text("Invalid URL")
+                    .font(.caption)
+                    .foregroundStyle(.red)
+            }
             Button("Edit Link") {
                 isEditingLink = true
             }
             .font(.subheadline)
         } else {
-            // No link yet - show field directly
-            linkField
-            Text("Enter a URL to save a link")
-                .font(.footnote)
+            // No link yet - show "Add Link" button
+            Button {
+                linkText = ""
+                isEditingLink = true
+            } label: {
+                HStack {
+                    Image(systemName: "link.badge.plus")
+                    Text("Add Link")
+                }
                 .foregroundStyle(.secondary)
+            }
         }
     }
 
     @ViewBuilder
     private var linkField: some View {
 #if os(iOS)
-        TextField("https://example.com", text: $linkText)
+        TextField("Enter URL", text: $linkText)
             .textInputAutocapitalization(.never)
             .disableAutocorrection(true)
             .keyboardType(.URL)
 #else
-        TextField("https://example.com", text: $linkText)
+        TextField("Enter URL", text: $linkText)
 #endif
     }
 
