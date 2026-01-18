@@ -38,6 +38,7 @@ struct ItemDetailView: View {
     @State private var archiveError: ArchiveError?
     @State private var isPreparingArchive = false
     @State private var useReaderMode = false
+    @State private var isEditingLink = false
 
     init(itemID: UUID) {
         self.itemID = itemID
@@ -166,12 +167,22 @@ struct ItemDetailView: View {
             syncFromItem(item)
         }
         .onChange(of: linkText) { _, newValue in
+            // Only auto-apply link changes when NOT in edit mode
+            // In edit mode, changes are applied when user taps Done
+            guard !isEditingLink else { return }
             linkUpdateTask?.cancel()
             linkUpdateTask = Task {
                 try? await Task.sleep(nanoseconds: 500_000_000)
                 _ = await MainActor.run {
                     applyLink(newValue, to: item)
                 }
+            }
+        }
+        .onChange(of: isEditingLink) { _, isEditing in
+            // When exiting edit mode, apply the link
+            if !isEditing {
+                linkUpdateTask?.cancel()
+                applyLink(linkText, to: item)
             }
         }
         .onChange(of: tagsText) { _, newValue in
@@ -270,23 +281,49 @@ struct ItemDetailView: View {
 
     @ViewBuilder
     private func linkSection(for item: Item) -> some View {
-        linkField
-
-        // Show clickable link only when we have a valid-looking URL
-        if let urlString = item.linkURL,
-           !urlString.isEmpty,
-           let url = URL(string: urlString),
-           let host = url.host,
-           host.contains(".") {
+        if isEditingLink {
+            // Edit mode: show text field with Done button
+            HStack {
+                linkField
+                Button("Done") {
+                    isEditingLink = false
+                }
+                .buttonStyle(.borderedProminent)
+            }
+        } else if let urlString = item.linkURL,
+                  !urlString.isEmpty,
+                  let url = URL(string: urlString),
+                  let host = url.host,
+                  host.contains(".") {
+            // Display mode with valid URL
             Link(destination: url) {
                 HStack {
-                    Text("Open in Browser")
+                    Text(urlString)
+                        .lineLimit(2)
+                        .truncationMode(.middle)
                     Spacer()
                     Image(systemName: "arrow.up.right.square")
+                        .foregroundStyle(.secondary)
                 }
-                .foregroundStyle(.secondary)
-                .font(.subheadline)
             }
+            Button("Edit Link") {
+                isEditingLink = true
+            }
+            .font(.subheadline)
+        } else if let urlString = item.linkURL, !urlString.isEmpty {
+            // Display mode with incomplete URL (still editing)
+            Text(urlString)
+                .foregroundStyle(.secondary)
+            Button("Edit Link") {
+                isEditingLink = true
+            }
+            .font(.subheadline)
+        } else {
+            // No link yet - show field directly
+            linkField
+            Text("Enter a URL to save a link")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
         }
     }
 
