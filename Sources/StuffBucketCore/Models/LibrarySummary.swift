@@ -18,11 +18,38 @@ public struct CollectionSummary: Identifiable, Hashable {
     }
 }
 
+public enum CollectionTagParser {
+    public static let prefix = "collection:"
+
+    /// Extracts collection name from a tag if it has the collection: prefix
+    public static func collectionName(from tag: String) -> String? {
+        let trimmed = tag.trimmingCharacters(in: .whitespaces)
+        guard trimmed.lowercased().hasPrefix(prefix) else { return nil }
+        let name = String(trimmed.dropFirst(prefix.count)).trimmingCharacters(in: .whitespaces)
+        return name.isEmpty ? nil : name
+    }
+
+    /// Creates a collection tag from a collection name
+    public static func tag(forCollection name: String) -> String {
+        "\(prefix)\(name)"
+    }
+
+    /// Returns true if the tag is a collection tag
+    public static func isCollectionTag(_ tag: String) -> Bool {
+        tag.trimmingCharacters(in: .whitespaces).lowercased().hasPrefix(prefix)
+    }
+}
+
 public enum LibrarySummaryBuilder {
+    /// Returns tag summaries excluding collection: prefixed tags
     public static func tags(from items: [Item]) -> [TagSummary] {
         var counts: [String: Int] = [:]
         for item in items {
             for tag in item.tagList {
+                // Skip collection tags and trashcan tag
+                if CollectionTagParser.isCollectionTag(tag) || tag == Item.trashTag {
+                    continue
+                }
                 counts[tag, default: 0] += 1
             }
         }
@@ -31,14 +58,30 @@ public enum LibrarySummaryBuilder {
             .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
     }
 
+    /// Returns collection summaries extracted from collection: prefixed tags
     public static func collections(from items: [Item]) -> [CollectionSummary] {
         var counts: [String: Int] = [:]
         for item in items {
-            guard let name = item.collectionDisplayName else { continue }
-            counts[name, default: 0] += 1
+            for collectionName in item.collectionList {
+                // Use lowercased name for case-insensitive grouping, but preserve first seen casing
+                let key = collectionName.lowercased()
+                if counts[key] == nil {
+                    counts[key] = 0
+                }
+                counts[key]! += 1
+            }
         }
+        // Convert back to display names (use the key which is lowercased, but we could track original)
+        // For simplicity, capitalize the first letter
         return counts
-            .map { CollectionSummary(name: $0.key, count: $0.value) }
+            .map { CollectionSummary(name: $0.key.capitalizingFirstLetter(), count: $0.value) }
             .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+    }
+}
+
+private extension String {
+    func capitalizingFirstLetter() -> String {
+        guard let first = first else { return self }
+        return String(first).uppercased() + dropFirst()
     }
 }

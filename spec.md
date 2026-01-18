@@ -35,11 +35,19 @@ Every captured object is an **Item**:
 
 All item types support:
 - Tags
-- Collections
+- Collections (via tag-based pseudo-collections)
 - Optional protection (lock)
 - Optional attachments: **text**, **link**, and **document** can co-exist on any item.
 - Attachments can be added/edited after creation in the item detail view.
 - `type` is treated as the **creation kind** (how the item started), not a capability limiter.
+
+### 2.2 Collections (tag-based)
+Collections are implemented as special tags with a `collection:` prefix:
+- A tag `collection:ProjectX` places the item in the "ProjectX" collection.
+- The UI surfaces collections separately from regular tags, displaying just the collection name.
+- Items can belong to multiple collections by having multiple `collection:` tags.
+- Collection names are case-preserved but matched case-insensitively.
+- Safari bookmark imports map folder paths to `collection:` tags.
 
 ---
 
@@ -164,12 +172,12 @@ PDF export is optional, not canonical.
 - `type: enum { note, snippet, link, document }`
 - `title: String?`
 - `textContent: String?`        // optional note/snippet body for any item
-- `tags: [String]`
+- `tags: [String]`              // includes regular tags and collection: prefixed tags
 - `trashedAt: Date?`            // when item was moved to trash (nil = not trashed)
 - `createdAt: Date`
 - `updatedAt: Date`
 - `isProtected: Bool`
-- `collectionID: UUID?`
+- `collectionID: UUID?`         // legacy, unused - collections now via tags
 - `source: enum { manual, share_sheet, safari_bookmarks, import }`
 - `sourceExternalID: String?`   // stable ID for external sync (e.g. Safari)
 - `sourceFolderPath: String?`   // external folder path (e.g. Safari bookmark folder)
@@ -307,24 +315,28 @@ If a link is marked protected:
 - Sources (macOS):
   - User-granted access to Safari bookmarks file, or HTML export from Safari.
 - Imported bookmarks become **Link** items (optional background archive).
-- Folder structure maps to Collections; a default `Safari` tag is applied.
+- Folder structure maps to `collection:` tags (e.g., `collection:Recipes`); a default `Safari` tag is applied.
 
 ---
 
 ## 11. UI behavior (current)
 
-### 9.1 Browse
+### 11.1 Browse
 - Default view surfaces **Tags** and **Collections** with counts.
+- Tags list shows regular tags only (excludes `collection:` prefixed tags).
+- Collections list shows collection names extracted from `collection:` tags.
 - Selecting a tag or collection pre-fills search with `tag:` / `collection:` filters.
 - Recent items list is shown above tags and collections.
 - Link items display an archive status badge (Pending / Archived / Partial / Failed).
 - Empty states surface primary capture actions (Add Link, Import Document).
 
-### 9.2 Item detail
+### 11.2 Item detail
 - Tag editing is available on the item detail view (comma-separated input).
+- Collection assignment is available separately from tag editing.
+- Tags display excludes `collection:` prefixed tags (shown in collections section).
 - De-duplication based on URL + title + folder path; keep a sync link when possible.
-- Document items show the filename and a “Show in Finder” action on macOS.
-- macOS list rows expose “Show in Finder” for documents via context menu.
+- Document items show the filename and a "Show in Finder" action on macOS.
+- macOS list rows expose "Show in Finder" for documents via context menu.
 
 ---
 

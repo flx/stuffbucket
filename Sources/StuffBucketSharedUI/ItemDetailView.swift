@@ -27,6 +27,7 @@ struct ItemDetailView: View {
     @Environment(\.managedObjectContext) private var context
     @FetchRequest private var items: FetchedResults<Item>
     @State private var tagsText = ""
+    @State private var collectionsText = ""
     @State private var contentText = ""
     @State private var linkText = ""
     @State private var linkUpdateTask: Task<Void, Never>?
@@ -118,6 +119,13 @@ struct ItemDetailView: View {
                 tagsField
             }
 
+            Section("Collections") {
+                collectionsField
+                Text("Add collection names separated by commas")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+
             Section {
                 if item.isTrashed {
                     Button("Restore from Trash") {
@@ -162,6 +170,9 @@ struct ItemDetailView: View {
         }
         .onChange(of: tagsText) { _, newValue in
             applyTags(newValue, to: item)
+        }
+        .onChange(of: collectionsText) { _, newValue in
+            applyCollections(newValue, to: item)
         }
         .onChange(of: contentText) { _, newValue in
             applyContent(newValue, to: item)
@@ -230,6 +241,17 @@ struct ItemDetailView: View {
     }
 
     @ViewBuilder
+    private var collectionsField: some View {
+#if os(iOS)
+        TextField("collection1, collection2", text: $collectionsText)
+            .textInputAutocapitalization(.never)
+            .disableAutocorrection(true)
+#else
+        TextField("collection1, collection2", text: $collectionsText)
+#endif
+    }
+
+    @ViewBuilder
     private var contentEditor: some View {
 #if os(iOS)
         TextEditor(text: $contentText)
@@ -253,9 +275,13 @@ struct ItemDetailView: View {
     }
 
     private func syncFromItem(_ item: Item) {
-        let current = item.tagList.joined(separator: ", ")
-        if current != tagsText {
-            tagsText = current
+        let currentTags = item.displayTagList.joined(separator: ", ")
+        if currentTags != tagsText {
+            tagsText = currentTags
+        }
+        let currentCollections = item.collectionList.joined(separator: ", ")
+        if currentCollections != collectionsText {
+            collectionsText = currentCollections
         }
         let currentContent = item.textContent ?? ""
         if currentContent != contentText {
@@ -269,8 +295,20 @@ struct ItemDetailView: View {
 
     private func applyTags(_ text: String, to item: Item) {
         let parsed = parseTags(text)
-        guard parsed != item.tagList else { return }
-        item.setTagList(parsed)
+        guard parsed != item.displayTagList else { return }
+        item.setDisplayTagList(parsed)
+        item.updatedAt = Date()
+        do {
+            try context.save()
+        } catch {
+            context.rollback()
+        }
+    }
+
+    private func applyCollections(_ text: String, to item: Item) {
+        let parsed = parseTags(text)
+        guard parsed != item.collectionList else { return }
+        item.setCollectionList(parsed)
         item.updatedAt = Date()
         do {
             try context.save()

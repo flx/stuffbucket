@@ -99,11 +99,57 @@ public extension Item {
         self.tags = TagCodec.encode(tags)
     }
 
+    /// Returns tags excluding collection: prefixed tags and the trashcan tag
+    var displayTagList: [String] {
+        tagList.filter { !CollectionTagParser.isCollectionTag($0) && $0 != Self.trashTag }
+    }
+
+    /// Sets the display tags (non-collection tags), preserving existing collection tags
+    func setDisplayTagList(_ displayTags: [String]) {
+        let collectionTags = tagList.filter { CollectionTagParser.isCollectionTag($0) }
+        let trashTags = tagList.filter { $0 == Self.trashTag }
+        setTagList(displayTags + collectionTags + trashTags)
+    }
+
+    /// Returns collection names extracted from collection: prefixed tags
+    var collectionList: [String] {
+        tagList.compactMap { CollectionTagParser.collectionName(from: $0) }
+    }
+
+    /// Sets the collections, preserving existing non-collection tags
+    func setCollectionList(_ collections: [String]) {
+        let nonCollectionTags = tagList.filter { !CollectionTagParser.isCollectionTag($0) }
+        let collectionTags = collections.map { CollectionTagParser.tag(forCollection: $0) }
+        setTagList(nonCollectionTags + collectionTags)
+    }
+
+    /// Adds item to a collection
+    func addToCollection(_ name: String) {
+        var collections = collectionList
+        let normalizedName = name.trimmingCharacters(in: .whitespaces)
+        if !collections.contains(where: { $0.lowercased() == normalizedName.lowercased() }) {
+            collections.append(normalizedName)
+            setCollectionList(collections)
+        }
+    }
+
+    /// Removes item from a collection
+    func removeFromCollection(_ name: String) {
+        let normalizedName = name.lowercased()
+        let collections = collectionList.filter { $0.lowercased() != normalizedName }
+        setCollectionList(collections)
+    }
+
     var collectionDisplayName: String? {
+        // First check tag-based collections
+        if let firstCollection = collectionList.first {
+            return firstCollection
+        }
+        // Legacy: check sourceFolderPath (for Safari imports)
         if let sourceFolderPath, !sourceFolderPath.isEmpty {
             return sourceFolderPath
         }
-        return collectionID?.uuidString
+        return nil
     }
 
     // MARK: - Trash
