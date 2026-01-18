@@ -37,6 +37,7 @@ struct ItemDetailView: View {
     @State private var isImportingDocument = false
     @State private var archiveError: ArchiveError?
     @State private var isPreparingArchive = false
+    @State private var useReaderMode = false
 
     init(itemID: UUID) {
         self.itemID = itemID
@@ -78,6 +79,7 @@ struct ItemDetailView: View {
     }
 
     private func detailView(for item: Item) -> some View {
+        let hasSnippet = item.hasText
         let base = Form {
             Section("Details") {
                 Text(displayTitle(for: item))
@@ -88,27 +90,21 @@ struct ItemDetailView: View {
                 }
             }
 
-            Section("Link") {
-                linkField
-                if item.hasLink {
-                    Text(item.linkURL ?? "")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                } else {
-                    Text("No link attached yet.")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
+            // Snippet at top if it has content
+            if hasSnippet {
+                Section("Snippet") {
+                    contentEditor
                 }
+            }
+
+            Section("Link") {
+                linkSection(for: item)
             }
 
             if item.hasLink {
                 Section("Archive") {
                     archiveSection(for: item)
                 }
-            }
-
-            Section("Content") {
-                contentEditor
             }
 
             Section("Document") {
@@ -124,6 +120,16 @@ struct ItemDetailView: View {
                 Text("Add collection names separated by commas")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
+            }
+
+            // Snippet at bottom if empty (for adding new)
+            if !hasSnippet {
+                Section("Snippet") {
+                    contentEditor
+                    Text("Add notes or text content")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
             }
 
             Section {
@@ -260,6 +266,27 @@ struct ItemDetailView: View {
         TextEditor(text: $contentText)
             .frame(minHeight: 180)
 #endif
+    }
+
+    @ViewBuilder
+    private func linkSection(for item: Item) -> some View {
+        if item.hasLink, let urlString = item.linkURL, let url = URL(string: urlString) {
+            Link(destination: url) {
+                HStack {
+                    Text(urlString)
+                        .lineLimit(2)
+                        .truncationMode(.middle)
+                    Spacer()
+                    Image(systemName: "arrow.up.right.square")
+                        .foregroundStyle(.secondary)
+                }
+            }
+        } else {
+            linkField
+            Text("Enter a URL to save a link")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+        }
     }
 
     @ViewBuilder
@@ -432,22 +459,27 @@ struct ItemDetailView: View {
         let pageURL = item.archivedPageURL
         let readerURL = item.archivedReaderURL
         let pageExpected = (item.htmlRelativePath?.isEmpty == false)
-        let pageAvailable = archiveFileExists(pageURL)
         let readerAvailable = archiveFileExists(readerURL)
 
-        Button("Open Page Archive") {
-            guard let url = pageURL else { return }
-            openArchive(item: item, url: url, title: "Page Archive")
+        Toggle("Reader Mode", isOn: $useReaderMode)
+            .disabled(!readerAvailable)
+
+        Button("View Archive") {
+            let url: URL?
+            let title: String
+            if useReaderMode, let reader = readerURL, readerAvailable {
+                url = reader
+                title = "Reader Archive"
+            } else {
+                url = pageURL
+                title = "Page Archive"
+            }
+            guard let archiveURL = url else { return }
+            openArchive(item: item, url: archiveURL, title: title)
         }
         .disabled(!pageExpected)
 
-        Button("Open Reader Archive") {
-            guard let url = readerURL else { return }
-            openArchive(item: item, url: url, title: "Reader Archive")
-        }
-        .disabled(!readerAvailable)
-
-        Button("Archive with Login") {
+        Button("Re-archive with Login") {
             guard let linkURL = item.linkURL, let url = URL(string: linkURL) else { return }
             loginArchiveURL = url
             isShowingLoginArchive = true
@@ -465,12 +497,12 @@ struct ItemDetailView: View {
         }
 #endif
 
-        if !pageAvailable, pageExpected {
-            Text("Page archive is syncing from iCloud.")
+        if !pageExpected {
+            Text("Archive is being created...")
                 .font(.footnote)
                 .foregroundStyle(.secondary)
         } else if !readerAvailable {
-            Text("Reader archive not ready yet.")
+            Text("Reader mode not available for this page.")
                 .font(.footnote)
                 .foregroundStyle(.secondary)
         }
