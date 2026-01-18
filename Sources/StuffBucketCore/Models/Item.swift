@@ -54,14 +54,15 @@ public extension Item {
         if let title, !title.isEmpty {
             return title
         }
+        // Prioritize text content (snippets) over link title
+        if let textContent, !textContent.isEmpty {
+            return TitleBuilder.title(from: textContent)
+        }
         if let linkTitle, !linkTitle.isEmpty {
             return linkTitle
         }
         if let fileName = documentFileName, !fileName.isEmpty {
             return fileName
-        }
-        if let textContent, !textContent.isEmpty {
-            return TitleBuilder.title(from: textContent)
         }
         return "Untitled"
     }
@@ -218,11 +219,23 @@ private enum TitleBuilder {
     static func title(from text: String) -> String {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return "Untitled" }
+
+        // Get first line
         let firstLine = trimmed.split(whereSeparator: { $0 == "\n" || $0 == "\r" }).first ?? Substring(trimmed)
-        let maxLength = 80
-        if firstLine.count > maxLength {
-            return String(firstLine.prefix(maxLength)) + "..."
+
+        // Take first ~6 words
+        let words = firstLine.split(separator: " ", omittingEmptySubsequences: true)
+        let maxWords = 6
+        if words.count <= maxWords {
+            let result = String(firstLine)
+            // Still truncate if very long single "word" (like a URL)
+            if result.count > 50 {
+                return String(result.prefix(47)) + "..."
+            }
+            return result
         }
-        return String(firstLine)
+
+        let preview = words.prefix(maxWords).joined(separator: " ")
+        return preview + "..."
     }
 }
