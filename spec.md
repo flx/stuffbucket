@@ -116,24 +116,37 @@ Optional enhancements:
 ### 4.3 Fallback modes
 If full HTML capture fails:
 - Store a raw HTML snapshot (without asset rewriting) when available.
-- Mark link as **“partial archive”** in metadata.
+- Mark link as **"partial archive"** in metadata.
 If both rendered and raw capture fail:
-- Mark link as **“failed archive.”**
+- Mark link as **"failed archive."**
 
-### 4.4 Viewing links
+### 4.4 Archive sync strategy (hybrid)
+Archives are synced using a hybrid approach combining iCloud Drive and CloudKit:
+
+1. **Primary: iCloud Drive** – Archives are stored as files in iCloud Drive for user accessibility and Finder visibility.
+2. **Fallback: CloudKit bundle** – A compressed archive bundle (`archiveZipData`) syncs via CloudKit as a fallback when iCloud Drive sync is slow or incomplete.
+3. **Asset manifest** – A JSON list of asset filenames (`assetManifestJSON`) enables explicit iCloud file downloads.
+
+When opening an archive:
+- First attempt to load from iCloud Drive (with timeout).
+- If unavailable, extract from CloudKit bundle to local cache.
+- Once iCloud Drive sync completes, clean up the CloudKit bundle to avoid storage duplication.
+
+### 4.5 Viewing links
 - iOS/iPadOS: open the locally stored `page.html` (and `reader.html`) inside StuffBucket.
 - If the archive lives in iCloud and is not yet downloaded, trigger download and show a loading state before displaying it.
 - macOS: open the archived HTML in the default browser.
 - macOS triggers iCloud download before opening archived HTML when needed.
 - macOS allows opening page archives while syncing; if the file is not yet present locally, show a sync-pending message and an explicit unavailable alert.
-- macOS attempts to download archive assets (images/styles) before opening and shows a brief "downloading assets" state; assets may still be missing when opened (known issue, see `syncingBug.md`).
+- macOS attempts to download archive assets (images/styles) before opening and shows a brief "downloading assets" state.
+- If iCloud Drive sync is incomplete, falls back to CloudKit bundle extraction.
 - If archives are missing, show an unavailable state.
-- Secondary action: “Open Original URL” in browser (planned).
+- Secondary action: "Open Original URL" in browser (planned).
 - Provide **Export as HTML / PDF** (planned).
 - When captured from the macOS share sheet, StuffBucket should foreground and surface the new item quickly.
 - Archive status badges should update live as the archive completes.
 
-### 4.5 Why HTML, not PDF?
+### 4.6 Why HTML, not PDF?
 - Searchable
 - Lightweight
 - Preserves links and structure
@@ -152,6 +165,7 @@ PDF export is optional, not canonical.
 - `title: String?`
 - `textContent: String?`        // optional note/snippet body for any item
 - `tags: [String]`
+- `trashedAt: Date?`            // when item was moved to trash (nil = not trashed)
 - `createdAt: Date`
 - `updatedAt: Date`
 - `isProtected: Bool`
@@ -168,6 +182,8 @@ PDF export is optional, not canonical.
 - `linkPublishedDate: Date?`
 - `htmlRelativePath: String`   // Links/<uuid>/page.html
 - `archiveStatus: enum { full, partial, failed }`
+- `assetManifestJSON: String?` // JSON array of asset filenames for iCloud download
+- `archiveZipData: Binary?`    // compressed archive bundle for CloudKit sync fallback
 
 ### 5.2 Derived / AI metadata (new)
 - `aiSummary: String?`
@@ -214,13 +230,34 @@ If a link is marked protected:
 
 ---
 
-## 8. Debug tooling (temporary)
+## 8. Trash and deletion
+
+### 8.1 Soft delete
+- Items can be moved to trash via a "Move to Trash" action in the item detail view.
+- Trashed items are marked with a `trashcan` tag and `trashedAt` timestamp.
+- Trashed items are hidden from the main view and search results.
+- Searching for `trashcan` reveals trashed items.
+- Trashed items can be restored via "Restore from Trash" action.
+- Items in trash for more than 10 days are permanently deleted on app launch.
+
+### 8.2 Permanent deletion
+- Permanent deletion removes:
+  - The Core Data record (synced via CloudKit)
+  - iCloud Drive archive files (Links/<uuid>/)
+  - iCloud Drive document files (Documents/<uuid>/)
+  - Local cache files
+  - Search index entries
+- Deletion propagates across devices via iCloud sync.
+
+---
+
+## 9. Debug tooling (temporary)
 - Provide a temporary "Delete All Data" toolbar button to wipe Core Data items and stored files during development.
 - This control is debug-only and should be removed before release.
 
 ---
 
-## 8. Capture & import flows (amended)
+## 10. Capture & import flows (amended)
 
 ### iOS / iPadOS Share Sheet
 - In-app quick add:
@@ -274,7 +311,7 @@ If a link is marked protected:
 
 ---
 
-## 9. UI behavior (current)
+## 11. UI behavior (current)
 
 ### 9.1 Browse
 - Default view surfaces **Tags** and **Collections** with counts.
@@ -291,7 +328,7 @@ If a link is marked protected:
 
 ---
 
-## 9. Search (high quality)
+## 12. Search (high quality)
 
 ### 9.1 Scope
 - Full-text search across:
@@ -325,7 +362,7 @@ If a link is marked protected:
 ### 9.6 Spotlight (optional v1.1)
 - Index content and titles for system-wide search.
 
-## 10. Safari Bookmarks import & sync (new, macOS only)
+## 13. Safari Bookmarks import & sync (new, macOS only)
 
 ### 10.1 Import behavior
 - Bulk import creates Link items with `source = safari_bookmarks`.
@@ -345,7 +382,7 @@ If a link is marked protected:
 - De-dup by `sourceExternalID` when present; fall back to URL + folder path.
 - If a URL already exists, merge metadata and keep the earliest Item ID.
 
-## 11. OpenAI / ChatGPT integration (new)
+## 14. OpenAI / ChatGPT integration (new)
 
 ### 11.1 Capabilities
 - Summaries, key points, and tag suggestions for items.
@@ -368,7 +405,7 @@ If a link is marked protected:
 
 ---
 
-## 12. UX expectations for links
+## 15. UX expectations for links
 
 - Badge showing:
   - "Archived" / "Partial" / "Live only"
@@ -378,7 +415,7 @@ If a link is marked protected:
 
 ---
 
-## 13. Edge cases
+## 16. Edge cases
 
 - Paywalled content (e.g. NYTimes):
   - Capture occurs using user’s authenticated session when possible (WKWebView-based fetch).
@@ -396,7 +433,7 @@ If a link is marked protected:
 
 ---
 
-## 14. Acceptance criteria
+## 17. Acceptance criteria
 
 - Saved NYTimes article remains readable offline after original URL changes.
 - HTML file visible in iCloud Drive.
@@ -407,14 +444,14 @@ If a link is marked protected:
 
 ---
 
-## 15. Versioning
+## 18. Versioning
 - v0.2: HTML-backed link persistence
 - v0.3: high-quality search, Safari bookmarks import & sync, ChatGPT integration
 - v0.4 (future): reader cleanup, PDF export, OCR
 
 ---
 
-## 16. Quality checks (engineering)
+## 19. Quality checks (engineering)
 - Unit tests cover search query parsing/builder output, tag list encoding/decoding, and link metadata parsing with HTML entity decoding on both iOS and macOS targets.
 - macOS unit tests run with an app host configuration so Xcodegen builds execute them reliably.
 - Core Data item creation in tests uses context-scoped entity lookup to avoid entity ambiguity warnings when multiple models load.

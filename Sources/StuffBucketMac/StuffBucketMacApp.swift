@@ -40,6 +40,8 @@ private func refreshPendingData(using persistenceController: PersistenceControll
     SearchIndexer.shared.seedIndexIfNeeded(context: persistenceController.viewContext)
     importPendingSharedLinks(using: persistenceController)
     archivePendingLinks(using: persistenceController)
+    let backgroundContext = persistenceController.container.newBackgroundContext()
+    TrashCleanupService.cleanupExpiredTrashItems(context: backgroundContext)
 }
 
 private func importPendingSharedLinks(using persistenceController: PersistenceController) {

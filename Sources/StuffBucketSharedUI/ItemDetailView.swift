@@ -9,8 +9,11 @@ import AppKit
 
 struct ArchivePresentation: Identifiable {
     let id = UUID()
+    let itemID: UUID
     let url: URL
     let title: String
+    let assetManifestJSON: String?
+    let archiveZipData: Data?
 }
 
 struct ArchiveError: Identifiable {
@@ -114,6 +117,26 @@ struct ItemDetailView: View {
             Section("Tags") {
                 tagsField
             }
+
+            Section {
+                if item.isTrashed {
+                    Button("Restore from Trash") {
+                        restoreItem(item)
+                    }
+                    Button("Delete Permanently", role: .destructive) {
+                        permanentlyDeleteItem(item)
+                    }
+                    if let trashedAt = item.trashedAt {
+                        Text("Will be permanently deleted \(deletionDateText(from: trashedAt))")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
+                } else {
+                    Button("Move to Trash", role: .destructive) {
+                        trashItem(item)
+                    }
+                }
+            }
         }
         .navigationTitle(displayTitle(for: item))
         .onAppear {
@@ -161,7 +184,14 @@ struct ItemDetailView: View {
 #if os(iOS)
         return base
             .sheet(item: $archivePresentation) { presentation in
-                ArchivedLinkSheet(url: presentation.url, title: presentation.title)
+                ArchivedLinkSheet(
+                    itemID: presentation.itemID,
+                    url: presentation.url,
+                    title: presentation.title,
+                    assetManifestJSON: presentation.assetManifestJSON,
+                    archiveZipData: presentation.archiveZipData
+                )
+                .environment(\.managedObjectContext, context)
             }
             .sheet(isPresented: $isShowingLoginArchive) {
                 loginArchiveSheet
@@ -369,13 +399,13 @@ struct ItemDetailView: View {
 
         Button("Open Page Archive") {
             guard let url = pageURL else { return }
-            openArchive(url: url, title: "Page Archive")
+            openArchive(item: item, url: url, title: "Page Archive")
         }
         .disabled(!pageExpected)
 
         Button("Open Reader Archive") {
             guard let url = readerURL else { return }
-            openArchive(url: url, title: "Reader Archive")
+            openArchive(item: item, url: url, title: "Reader Archive")
         }
         .disabled(!readerAvailable)
 
@@ -413,26 +443,25 @@ struct ItemDetailView: View {
         return FileManager.default.fileExists(atPath: url.path)
     }
 
-    private func openArchive(url: URL, title: String) {
+    private func openArchive(item: Item, url: URL, title: String) {
 #if os(iOS)
-        archivePresentation = ArchivePresentation(url: url, title: title)
+        archivePresentation = ArchivePresentation(
+            itemID: item.id ?? UUID(),
+            url: url,
+            title: title,
+            assetManifestJSON: item.assetManifestJSON,
+            archiveZipData: item.archiveZipData
+        )
 #elseif os(macOS)
         Task {
-            await openArchiveOnMac(url: url, title: title)
+            await openArchiveOnMac(item: item, url: url, title: title)
         }
 #endif
     }
 
 #if os(macOS)
-    private func openArchiveOnMac(url: URL, title: String) async {
+    private func openArchiveOnMac(item: Item, url: URL, title: String) async {
         if isPreparingArchive {
-            return
-        }
-        let fileManager = FileManager.default
-        guard fileManager.fileExists(atPath: url.path) else {
-            _ = await MainActor.run {
-                archiveError = ArchiveError(message: "Archive file not synced to this Mac yet. Try again in a moment.")
-            }
             return
         }
 
@@ -445,91 +474,85 @@ struct ItemDetailView: View {
             }
         }
 
-        let filesToDownload = archiveFilesForDownload(from: url)
-        startDownloadingIfNeeded(filesToDownload)
-        let ready = await waitForUbiquitousFiles(filesToDownload, timeoutSeconds: 8)
-        guard ready else {
+        // Build list of files to download from iCloud
+        let filesToDownload = buildFilesToDownload(url: url, assetManifestJSON: item.assetManifestJSON)
+        ArchiveResolver.startDownloading(filesToDownload)
+
+        // Wait for iCloud files (with timeout)
+        let iCloudReady = await waitForFiles(filesToDownload, timeoutSeconds: 5)
+
+        if iCloudReady {
+            // iCloud files ready, open them and trigger cleanup
             _ = await MainActor.run {
-                archiveError = ArchiveError(
-                    message: "Archive assets are still syncing from iCloud. Try again in a moment."
-                )
+                NSWorkspace.shared.open(url)
             }
+            triggerCleanupIfNeeded(item: item)
             return
         }
 
+        // iCloud not ready, try bundle fallback
+        if let itemID = item.id, let bundleData = item.archiveZipData {
+            let cacheDir = LinkStorage.localCacheDirectoryURL(for: itemID)
+            let cachePageURL = LinkStorage.localCachePageURL(for: itemID)
+
+            // Extract if not already cached
+            if !FileManager.default.fileExists(atPath: cachePageURL.path) {
+                _ = ArchiveBundle.extract(bundleData, to: cacheDir)
+            }
+
+            if FileManager.default.fileExists(atPath: cachePageURL.path) {
+                _ = await MainActor.run {
+                    NSWorkspace.shared.open(cachePageURL)
+                }
+                return
+            }
+        }
+
+        // No bundle available and iCloud not ready
         _ = await MainActor.run {
-            NSWorkspace.shared.open(url)
+            archiveError = ArchiveError(
+                message: "Archive is still syncing from iCloud. Try again in a moment."
+            )
         }
     }
 
-    private func archiveFilesForDownload(from url: URL) -> [URL] {
+    private func buildFilesToDownload(url: URL, assetManifestJSON: String?) -> [URL] {
         var files: [URL] = [url]
-        let fileManager = FileManager.default
         let archiveFolder = url.deletingLastPathComponent()
         let assetsFolder = archiveFolder.appendingPathComponent("assets", isDirectory: true)
 
-        if fileManager.isUbiquitousItem(at: archiveFolder) {
-            try? fileManager.startDownloadingUbiquitousItem(at: archiveFolder)
-        }
-        if fileManager.isUbiquitousItem(at: assetsFolder) {
-            try? fileManager.startDownloadingUbiquitousItem(at: assetsFolder)
-        }
-
-        guard fileManager.fileExists(atPath: assetsFolder.path) else { return files }
-
-        let keys: Set<URLResourceKey> = [.isDirectoryKey]
-        if let enumerator = fileManager.enumerator(
-            at: assetsFolder,
-            includingPropertiesForKeys: Array(keys),
-            options: [.skipsHiddenFiles]
-        ) {
-            for case let fileURL as URL in enumerator {
-                let isDirectory = (try? fileURL.resourceValues(forKeys: keys))?.isDirectory ?? false
-                if !isDirectory {
-                    files.append(fileURL)
-                }
+        // Use manifest if available
+        if let manifestJSON = assetManifestJSON,
+           let manifestData = manifestJSON.data(using: .utf8),
+           let assetFileNames = try? JSONDecoder().decode([String].self, from: manifestData) {
+            for fileName in assetFileNames {
+                files.append(assetsFolder.appendingPathComponent(fileName))
             }
         }
+
         return files
     }
 
-    private func startDownloadingIfNeeded(_ urls: [URL]) {
-        let fileManager = FileManager.default
-        for url in urls {
-            if fileManager.isUbiquitousItem(at: url) {
-                try? fileManager.startDownloadingUbiquitousItem(at: url)
-            }
-        }
-    }
-
-    private func waitForUbiquitousFiles(_ urls: [URL], timeoutSeconds: Double) async -> Bool {
+    private func waitForFiles(_ urls: [URL], timeoutSeconds: Double) async -> Bool {
         let timeoutNanos = UInt64(timeoutSeconds * 1_000_000_000)
         let step: UInt64 = 200_000_000
         var waited: UInt64 = 0
 
         while waited < timeoutNanos {
             if Task.isCancelled { return false }
-            if urls.allSatisfy(isUbiquitousFileReady) {
+            if urls.allSatisfy({ ArchiveResolver.isFileReady($0) }) {
                 return true
             }
             try? await Task.sleep(nanoseconds: step)
             waited += step
         }
-        return urls.allSatisfy(isUbiquitousFileReady)
+        return urls.allSatisfy({ ArchiveResolver.isFileReady($0) })
     }
 
-    private func isUbiquitousFileReady(_ url: URL) -> Bool {
-        let fileManager = FileManager.default
-        guard fileManager.fileExists(atPath: url.path) else { return false }
-
-        guard fileManager.isUbiquitousItem(at: url) else { return true }
-
-        let keys: Set<URLResourceKey> = [.ubiquitousItemDownloadingStatusKey]
-        let values = try? url.resourceValues(forKeys: keys)
-        if let status = values?.ubiquitousItemDownloadingStatus {
-            return status == .current || status == .downloaded
+    private func triggerCleanupIfNeeded(item: Item) {
+        context.perform {
+            ArchiveResolver.cleanupBundleIfSynced(item: item, context: context)
         }
-        return true
     }
 #endif
 
@@ -549,6 +572,50 @@ struct ItemDetailView: View {
         return parts
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }
+    }
+
+    // MARK: - Trash Actions
+
+    private func trashItem(_ item: Item) {
+        item.moveToTrash()
+        if context.hasChanges {
+            try? context.save()
+        }
+    }
+
+    private func restoreItem(_ item: Item) {
+        item.restoreFromTrash()
+        if context.hasChanges {
+            try? context.save()
+        }
+    }
+
+    private func permanentlyDeleteItem(_ item: Item) {
+        // Delete associated files
+        if let itemID = item.id {
+            let archiveDir = LinkStorage.archiveDirectoryURL(for: itemID)
+            try? FileManager.default.removeItem(at: archiveDir)
+
+            let cacheDir = LinkStorage.localCacheDirectoryURL(for: itemID)
+            try? FileManager.default.removeItem(at: cacheDir)
+
+            if let docPath = item.documentRelativePath {
+                let docURL = DocumentStorage.url(forRelativePath: docPath)
+                try? FileManager.default.removeItem(at: docURL.deletingLastPathComponent())
+            }
+        }
+
+        context.delete(item)
+        if context.hasChanges {
+            try? context.save()
+        }
+    }
+
+    private func deletionDateText(from trashedAt: Date) -> String {
+        let deletionDate = Calendar.current.date(byAdding: .day, value: 10, to: trashedAt) ?? trashedAt
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .full
+        return formatter.localizedString(for: deletionDate, relativeTo: Date())
     }
 }
 
@@ -603,22 +670,26 @@ struct QuickAddSnippetView: View {
 
 #if os(iOS)
 struct ArchivedLinkSheet: View {
+    let itemID: UUID
     let url: URL
     let title: String
+    let assetManifestJSON: String?
+    let archiveZipData: Data?
 
+    @Environment(\.managedObjectContext) private var context
     @Environment(\.dismiss) private var dismiss
-    @State private var isFileReady = false
+    @State private var resolvedURL: URL?
     @State private var checkTask: Task<Void, Never>?
 
     var body: some View {
         NavigationStack {
             Group {
-                if isFileReady {
-                    ArchivedLinkWebView(url: url)
+                if let resolvedURL {
+                    ArchivedLinkWebView(url: resolvedURL)
                 } else {
                     VStack(spacing: 16) {
                         ProgressView()
-                        Text("Loading archive...")
+                        Text("Preparing archive...")
                             .foregroundStyle(.secondary)
                     }
                 }
@@ -635,56 +706,99 @@ struct ArchivedLinkSheet: View {
             }
         }
         .onAppear {
-            startFileCheck()
+            resolveArchive()
         }
         .onDisappear {
             checkTask?.cancel()
         }
     }
 
-    private func startFileCheck() {
+    private func resolveArchive() {
         checkTask = Task {
-            // Start download if needed
-            if FileManager.default.isUbiquitousItem(at: url) {
-                try? FileManager.default.startDownloadingUbiquitousItem(at: url)
+            // First, try to download from iCloud Drive
+            let filesToDownload = buildFilesToDownload()
+            ArchiveResolver.startDownloading(filesToDownload)
+
+            // Wait for iCloud files (with timeout)
+            let iCloudReady = await waitForFiles(filesToDownload, timeoutSeconds: 5)
+
+            if iCloudReady {
+                // iCloud files are ready, use them
+                await MainActor.run {
+                    resolvedURL = url
+                }
+                // Trigger cleanup of bundle since iCloud is synced
+                triggerCleanupIfNeeded()
+                return
             }
 
-            // Poll until file is available (max ~5 seconds)
-            for _ in 0..<50 {
-                if Task.isCancelled { return }
+            // iCloud not ready, try bundle fallback
+            if let bundleData = archiveZipData {
+                let cacheDir = LinkStorage.localCacheDirectoryURL(for: itemID)
+                let cachePageURL = LinkStorage.localCachePageURL(for: itemID)
 
-                if isFileAvailableLocally(url) {
-                    _ = await MainActor.run {
-                        isFileReady = true
+                // Extract if not already cached
+                if !FileManager.default.fileExists(atPath: cachePageURL.path) {
+                    _ = ArchiveBundle.extract(bundleData, to: cacheDir)
+                }
+
+                if FileManager.default.fileExists(atPath: cachePageURL.path) {
+                    await MainActor.run {
+                        resolvedURL = cachePageURL
                     }
                     return
                 }
-                try? await Task.sleep(nanoseconds: 100_000_000) // 100ms
             }
 
-            // Timeout - show anyway and let WebView handle it
-            _ = await MainActor.run {
-                isFileReady = true
+            // Last resort: show iCloud URL anyway (may be incomplete)
+            await MainActor.run {
+                resolvedURL = url
             }
         }
     }
 
-    private func isFileAvailableLocally(_ url: URL) -> Bool {
-        let fm = FileManager.default
-        guard fm.fileExists(atPath: url.path) else { return false }
+    private func buildFilesToDownload() -> [URL] {
+        var files: [URL] = [url]
+        let archiveFolder = url.deletingLastPathComponent()
+        let assetsFolder = archiveFolder.appendingPathComponent("assets", isDirectory: true)
 
-        // Check if it's still downloading from iCloud
-        if fm.isUbiquitousItem(at: url) {
-            do {
-                let downloadStatus: URLResourceValues = try url.resourceValues(forKeys: [.ubiquitousItemDownloadingStatusKey])
-                if let status = downloadStatus.ubiquitousItemDownloadingStatus {
-                    return status == .current
-                }
-            } catch {
-                // If we can't check status, assume it's ready if file exists
+        // Use manifest if available
+        if let manifestJSON = assetManifestJSON,
+           let manifestData = manifestJSON.data(using: .utf8),
+           let assetFileNames = try? JSONDecoder().decode([String].self, from: manifestData) {
+            for fileName in assetFileNames {
+                files.append(assetsFolder.appendingPathComponent(fileName))
             }
         }
-        return true
+
+        return files
+    }
+
+    private func waitForFiles(_ urls: [URL], timeoutSeconds: Double) async -> Bool {
+        let timeoutNanos = UInt64(timeoutSeconds * 1_000_000_000)
+        let step: UInt64 = 200_000_000
+        var waited: UInt64 = 0
+
+        while waited < timeoutNanos {
+            if Task.isCancelled { return false }
+            if urls.allSatisfy({ ArchiveResolver.isFileReady($0) }) {
+                return true
+            }
+            try? await Task.sleep(nanoseconds: step)
+            waited += step
+        }
+        return urls.allSatisfy({ ArchiveResolver.isFileReady($0) })
+    }
+
+    private func triggerCleanupIfNeeded() {
+        // Clean up bundle data now that iCloud is synced
+        context.perform {
+            let request = NSFetchRequest<Item>(entityName: "Item")
+            request.predicate = NSPredicate(format: "id == %@", itemID as CVarArg)
+            request.fetchLimit = 1
+            guard let item = try? context.fetch(request).first else { return }
+            ArchiveResolver.cleanupBundleIfSynced(item: item, context: context)
+        }
     }
 }
 

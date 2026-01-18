@@ -105,6 +105,41 @@ public extension Item {
         }
         return collectionID?.uuidString
     }
+
+    // MARK: - Trash
+
+    static let trashTag = "trashcan"
+
+    var isTrashed: Bool {
+        trashedAt != nil
+    }
+
+    /// Moves the item to trash by adding the trashcan tag and setting trashedAt
+    func moveToTrash() {
+        var currentTags = tagList
+        if !currentTags.contains(Self.trashTag) {
+            currentTags.append(Self.trashTag)
+            setTagList(currentTags)
+        }
+        trashedAt = Date()
+        updatedAt = Date()
+    }
+
+    /// Restores the item from trash by removing the trashcan tag and clearing trashedAt
+    func restoreFromTrash() {
+        var currentTags = tagList
+        currentTags.removeAll { $0 == Self.trashTag }
+        setTagList(currentTags)
+        trashedAt = nil
+        updatedAt = Date()
+    }
+
+    /// Returns true if the item has been in trash for more than the specified number of days
+    func isExpiredInTrash(days: Int = 10) -> Bool {
+        guard let trashedAt else { return false }
+        let expirationDate = Calendar.current.date(byAdding: .day, value: days, to: trashedAt) ?? trashedAt
+        return Date() > expirationDate
+    }
 }
 
 private enum TagCodec {

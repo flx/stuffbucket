@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		04C1F20034405ECDAA03582D /* LinkStatusBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7D95BC8968F47F9EEE076BA /* LinkStatusBadge.swift */; };
 		06C3CC56E338C56F4990B8BD /* SearchIndexMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ECA20E7784097D2A130917E /* SearchIndexMetadata.swift */; };
+		0774DCDB5A6918A200215BD3 /* ArchiveBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5874E11BFA8C2C8DAA597092 /* ArchiveBundle.swift */; };
 		0B636D62485E37CA9AB95AEC /* StuffBucketModel.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = A0E7D6443688015B5AD0915C /* StuffBucketModel.xcdatamodeld */; };
 		0DAD5813CCC54F7369D1D93E /* SharedCaptureStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB12F39F12A0E85EF8522A4F /* SharedCaptureStore.swift */; };
 		0F55D1A2F13947D0394C501F /* SharedCaptureStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB12F39F12A0E85EF8522A4F /* SharedCaptureStore.swift */; };
@@ -32,6 +33,7 @@
 		4A2310E940D292587003DBAA /* OpenAIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3967E8E4395E7A531ABB2E62 /* OpenAIClient.swift */; };
 		4A8A152DBF678089079E23FA /* SearchTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2362C758E3E3EC455DA86B6 /* SearchTypes.swift */; };
 		4D7F7071C5B3C4A38ED552CD /* LibrarySummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84AFF605547F5932FC2491C8 /* LibrarySummary.swift */; };
+		57B967F8D64BABD4A795CB0B /* ArchiveResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17A07BF1D67735F33F4F6C02 /* ArchiveResolver.swift */; };
 		5F55015554ECD27FF920B8CD /* StuffBucketCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B361E6BED62FB2575D9451B2 /* StuffBucketCore.framework */; };
 		621E0E2B76F2A6F7C0EC12B2 /* LinkMetadataParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61B5AEE244404891A0F3F772 /* LinkMetadataParser.swift */; };
 		62A8E4C504E25F033A587A43 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 395F5C4997E19A6D5275D018 /* libsqlite3.tbd */; };
@@ -51,6 +53,7 @@
 		8EE483CB89F18849A66F8AB8 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DF1288BED3A4351F145A788 /* ShareViewController.swift */; };
 		91F3C3288D3140283B8352B4 /* ItemType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492673B57623F50F88A8ADA2 /* ItemType.swift */; };
 		966376487199F9084473382B /* SearchQueryBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4930E261A822ECF2BA2B9C65 /* SearchQueryBuilder.swift */; };
+		9689C43F9A296F9388E52C27 /* TrashCleanupService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82C20CAC8A2A042A62AA1254 /* TrashCleanupService.swift */; };
 		A3616876C4CA9FDE6E590941 /* LinkStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 427A151E99D8C9E78755C44F /* LinkStorage.swift */; };
 		A41D6A37792859DA717F2B9C /* StuffBucketCore.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = B361E6BED62FB2575D9451B2 /* StuffBucketCore.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		A4B7752A6E94C6C1939AB68E /* OpenAIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3967E8E4395E7A531ABB2E62 /* OpenAIClient.swift */; };
@@ -68,11 +71,14 @@
 		D7AB4EEB19D2B702E1B4D902 /* SearchDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 905F62C8A186C9FB500CDA04 /* SearchDatabase.swift */; };
 		DC27835D5F2AD8A5BFAD75C4 /* StuffBucketShareExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 971ED3B90D0BC6EA793D9090 /* StuffBucketShareExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		DC8A8AA04064C930F4AB54EE /* AIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1981F222EFC6022AFB2BDFC /* AIService.swift */; };
+		DE556398D2BEACA54502FED7 /* TrashCleanupService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82C20CAC8A2A042A62AA1254 /* TrashCleanupService.swift */; };
 		E12947893CCC16D9108DDBF3 /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3519E626243FD84BBF5EDA7F /* PersistenceController.swift */; };
 		E1D7292B327AE124B4D139DE /* SearchIndexer.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA005B6C0E3259CDAE104D1C /* SearchIndexer.swift */; };
+		E4D4ED8F788E8233C962716B /* ArchiveBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5874E11BFA8C2C8DAA597092 /* ArchiveBundle.swift */; };
 		E5A30EB1358147F2E89BA621 /* SearchIndexer.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA005B6C0E3259CDAE104D1C /* SearchIndexer.swift */; };
 		EB096307CAE1A8CA130E0770 /* LinkArchiveAssets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48D00BC42AD400BFB7C6B154 /* LinkArchiveAssets.swift */; };
 		F2D713C24B245503BD6058C9 /* SearchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4768A08056EEFBD1E643C51 /* SearchService.swift */; };
+		F412DDA2BF0C87D53035C619 /* ArchiveResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17A07BF1D67735F33F4F6C02 /* ArchiveResolver.swift */; };
 		F545F48693406383B085E724 /* StuffBucketCoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F43BBF55811196859694BD81 /* StuffBucketCoreTests.swift */; };
 		F84C3AF740D4926FC2E203CC /* LinkArchiveAssets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48D00BC42AD400BFB7C6B154 /* LinkArchiveAssets.swift */; };
 		FABB5C46F68A88842020892B /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3229BC032C43225982B053D2 /* ContentView.swift */; };
@@ -176,6 +182,7 @@
 		090F3B08EC5B484CB3FB4396 /* StuffBucketMacTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = StuffBucketMacTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		09FB00910A27DBAC7AF0C1D9 /* StuffBucketCoreMacTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StuffBucketCoreMacTests.swift; sourceTree = "<group>"; };
 		0AB2C2597AE76B5FA3455BC7 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		17A07BF1D67735F33F4F6C02 /* ArchiveResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchiveResolver.swift; sourceTree = "<group>"; };
 		25A4DA1230BA55D528E93587 /* StuffBucketMac.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = StuffBucketMac.entitlements; sourceTree = "<group>"; };
 		2AF01B94C0FF40F312225194 /* LinkArchiver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkArchiver.swift; sourceTree = "<group>"; };
 		2F4C286550AA4838919B3DF4 /* project.yml */ = {isa = PBXFileReference; lastKnownFileType = text.yaml; path = project.yml; sourceTree = "<group>"; };
@@ -193,6 +200,7 @@
 		4C0B04C9F62DBD0825C38DC6 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		4D938428DC51F63A22016D37 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		4ECA20E7784097D2A130917E /* SearchIndexMetadata.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchIndexMetadata.swift; sourceTree = "<group>"; };
+		5874E11BFA8C2C8DAA597092 /* ArchiveBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchiveBundle.swift; sourceTree = "<group>"; };
 		59DCBC7B3D1435C4D3287924 /* ItemDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemDetailView.swift; sourceTree = "<group>"; };
 		5AE0A3DE6401EC33AC94C171 /* StuffBucketCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = StuffBucketCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		5FE07D9B43A9ED142BC4791E /* Implementation_Plan.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = Implementation_Plan.md; sourceTree = "<group>"; };
@@ -201,6 +209,7 @@
 		782EEF98196F744E7BA7C335 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		79BD0E7E15F68204548BA1B4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		7DF1288BED3A4351F145A788 /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
+		82C20CAC8A2A042A62AA1254 /* TrashCleanupService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrashCleanupService.swift; sourceTree = "<group>"; };
 		84AFF605547F5932FC2491C8 /* LibrarySummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibrarySummary.swift; sourceTree = "<group>"; };
 		866E858862E2D5D0B3FF2A10 /* AI_Copy.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = AI_Copy.md; sourceTree = "<group>"; };
 		87ECF4AE6D652BBD6E10682D /* StuffBucket.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = StuffBucket.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -272,6 +281,7 @@
 		0014BAE11E2E5827DF5BC980 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				82C20CAC8A2A042A62AA1254 /* TrashCleanupService.swift */,
 				C972833534812387DABC039E /* AI */,
 				E646CF6141C67CFB0AC039D5 /* Links */,
 				D2DD0AEF9214BCD114310B66 /* Search */,
@@ -472,6 +482,8 @@
 		E646CF6141C67CFB0AC039D5 /* Links */ = {
 			isa = PBXGroup;
 			children = (
+				5874E11BFA8C2C8DAA597092 /* ArchiveBundle.swift */,
+				17A07BF1D67735F33F4F6C02 /* ArchiveResolver.swift */,
 				48D00BC42AD400BFB7C6B154 /* LinkArchiveAssets.swift */,
 				2AF01B94C0FF40F312225194 /* LinkArchiver.swift */,
 				61B5AEE244404891A0F3F772 /* LinkMetadataParser.swift */,
@@ -763,6 +775,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				DC8A8AA04064C930F4AB54EE /* AIService.swift in Sources */,
+				0774DCDB5A6918A200215BD3 /* ArchiveBundle.swift in Sources */,
+				57B967F8D64BABD4A795CB0B /* ArchiveResolver.swift in Sources */,
 				7D265F05B8433408B87BEA95 /* Item.swift in Sources */,
 				1629127A33E68B72BE6B0797 /* ItemType.swift in Sources */,
 				CDC82418C4C9FF5238579ED7 /* LibrarySummary.swift in Sources */,
@@ -782,6 +796,7 @@
 				648AA9C43B4433FBC71003D3 /* SearchService.swift in Sources */,
 				4A8A152DBF678089079E23FA /* SearchTypes.swift in Sources */,
 				636A5458895A0EFAB3548B53 /* StuffBucketModel.xcdatamodeld in Sources */,
+				9689C43F9A296F9388E52C27 /* TrashCleanupService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -828,6 +843,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				1684E9613F720EDFB183041E /* AIService.swift in Sources */,
+				E4D4ED8F788E8233C962716B /* ArchiveBundle.swift in Sources */,
+				F412DDA2BF0C87D53035C619 /* ArchiveResolver.swift in Sources */,
 				71EACB034052AEA96271B70A /* Item.swift in Sources */,
 				91F3C3288D3140283B8352B4 /* ItemType.swift in Sources */,
 				4D7F7071C5B3C4A38ED552CD /* LibrarySummary.swift in Sources */,
@@ -847,6 +864,7 @@
 				F2D713C24B245503BD6058C9 /* SearchService.swift in Sources */,
 				3DB1EAC92B925A9163115A56 /* SearchTypes.swift in Sources */,
 				0B636D62485E37CA9AB95AEC /* StuffBucketModel.xcdatamodeld in Sources */,
+				DE556398D2BEACA54502FED7 /* TrashCleanupService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

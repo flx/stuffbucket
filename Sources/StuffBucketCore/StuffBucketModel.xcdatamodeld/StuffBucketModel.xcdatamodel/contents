@@ -6,6 +6,7 @@
         <attribute name="title" attributeType="String" optional="YES"/>
         <attribute name="textContent" attributeType="String" optional="YES"/>
         <attribute name="tags" attributeType="String" optional="YES"/>
+        <attribute name="trashedAt" attributeType="Date" optional="YES"/>
         <attribute name="createdAt" attributeType="Date" optional="YES"/>
         <attribute name="updatedAt" attributeType="Date" optional="YES"/>
         <attribute name="isProtected" attributeType="Boolean" optional="NO" defaultValueString="NO"/>
@@ -20,6 +21,8 @@
         <attribute name="linkPublishedDate" attributeType="Date" optional="YES"/>
         <attribute name="htmlRelativePath" attributeType="String" optional="YES"/>
         <attribute name="archiveStatus" attributeType="String" optional="YES"/>
+        <attribute name="archiveZipData" attributeType="Binary" optional="YES" allowsExternalBinaryDataStorage="YES"/>
+        <attribute name="assetManifestJSON" attributeType="String" optional="YES"/>
         <attribute name="aiSummary" attributeType="String" optional="YES"/>
         <attribute name="aiArtifactsJSON" attributeType="String" optional="YES"/>
         <attribute name="aiModelID" attributeType="String" optional="YES"/>

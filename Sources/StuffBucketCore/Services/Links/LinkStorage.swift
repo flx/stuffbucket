@@ -132,8 +132,8 @@ public enum StorageMigration {
     }
 }
 
-enum LinkStorage {
-    static func url(forRelativePath relativePath: String) -> URL {
+public enum LinkStorage {
+    public static func url(forRelativePath relativePath: String) -> URL {
         rootDirectory().appendingPathComponent(relativePath)
     }
 
@@ -189,6 +189,32 @@ enum LinkStorage {
         "assets/\(fileName)"
     }
 
+    /// Returns the directory URL for an item's archive (contains page.html, reader.html, assets/)
+    public static func archiveDirectoryURL(for itemID: UUID) -> URL {
+        itemDirectory(for: itemID)
+    }
+
+    /// Returns the local cache directory URL for an extracted archive bundle.
+    /// Used when iCloud Drive files aren't available but the CloudKit bundle is.
+    public static func localCacheDirectoryURL(for itemID: UUID) -> URL {
+        localCacheRoot().appendingPathComponent(itemID.uuidString, isDirectory: true)
+    }
+
+    /// Returns the page.html URL from the local cache
+    public static func localCachePageURL(for itemID: UUID) -> URL {
+        localCacheDirectoryURL(for: itemID).appendingPathComponent("page.html")
+    }
+
+    /// Returns the reader.html URL from the local cache
+    public static func localCacheReaderURL(for itemID: UUID) -> URL {
+        localCacheDirectoryURL(for: itemID).appendingPathComponent("reader.html")
+    }
+
+    private static func localCacheRoot() -> URL {
+        let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+        return caches.appendingPathComponent("ExtractedArchives", isDirectory: true)
+    }
+
     private static func linksDirectory() -> URL {
         rootDirectory().appendingPathComponent("Links", isDirectory: true)
     }
@@ -205,7 +231,7 @@ enum LinkStorage {
     }
 }
 
-enum DocumentStorage {
+public enum DocumentStorage {
     static func copyDocument(from sourceURL: URL, itemID: UUID, fileName: String) throws -> String {
         let name = fileName.isEmpty ? "Document" : fileName
         let destinationURL = documentURL(for: itemID, fileName: name)
@@ -218,11 +244,11 @@ enum DocumentStorage {
         return relativePath(for: itemID, fileName: name)
     }
 
-    static func url(forRelativePath relativePath: String) -> URL {
+    public static func url(forRelativePath relativePath: String) -> URL {
         rootDirectory().appendingPathComponent(relativePath)
     }
 
-    static func documentURL(for itemID: UUID, fileName: String) -> URL {
+    public static func documentURL(for itemID: UUID, fileName: String) -> URL {
         documentsDirectory()
             .appendingPathComponent(itemID.uuidString, isDirectory: true)
             .appendingPathComponent(fileName)

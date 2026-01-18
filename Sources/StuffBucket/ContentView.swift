@@ -19,16 +19,20 @@ struct ContentView: View {
     )
     private var items: FetchedResults<Item>
 
+    private var activeItems: [Item] {
+        items.filter { !$0.isTrashed }
+    }
+
     private var tagSummaries: [TagSummary] {
-        LibrarySummaryBuilder.tags(from: Array(items))
+        LibrarySummaryBuilder.tags(from: activeItems)
     }
 
     private var collectionSummaries: [CollectionSummary] {
-        LibrarySummaryBuilder.collections(from: Array(items))
+        LibrarySummaryBuilder.collections(from: activeItems)
     }
 
     private var recentItems: [Item] {
-        Array(items.prefix(10))
+        Array(activeItems.prefix(10))
     }
 
     private var itemLookup: [UUID: Item] {
@@ -229,7 +233,11 @@ struct ContentView: View {
                 let results = await searchService.search(text: newValue)
                 await MainActor.run {
                     let lookup = self.itemLookup
-                    self.results = results.filter { lookup[$0.itemID] != nil }
+                    let showTrashed = newValue.localizedCaseInsensitiveContains(Item.trashTag)
+                    self.results = results.filter { result in
+                        guard let item = lookup[result.itemID] else { return false }
+                        return showTrashed || !item.isTrashed
+                    }
                 }
             }
         }
