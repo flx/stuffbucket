@@ -99,6 +99,23 @@ struct ContentView: View {
         return lookup
     }
 
+    private var selectedTagFilters: Set<String> {
+        let filters = SearchQueryParser().parse(searchText).filters
+        let tags = filters
+            .filter { $0.key == .tag }
+            .map { $0.value.lowercased() }
+            .filter { $0 != "none" }
+        return Set(tags)
+    }
+
+    private var selectedCollectionFilters: Set<String> {
+        let filters = SearchQueryParser().parse(searchText).filters
+        let collections = filters
+            .filter { $0.key == .collection }
+            .map { $0.value.lowercased() }
+        return Set(collections)
+    }
+
     var body: some View {
         NavigationSplitView {
             List {
@@ -355,6 +372,13 @@ struct ContentView: View {
                                         Text(snippet)
                                             .font(.subheadline)
                                             .foregroundStyle(.secondary)
+                                    }
+                                    if let item = itemLookup[result.itemID] {
+                                        TagLineView(
+                                            item: item,
+                                            selectedTags: selectedTagFilters,
+                                            selectedCollections: selectedCollectionFilters
+                                        )
                                     }
                                     if let item = itemLookup[result.itemID], item.isLinkItem {
                                         ItemArchiveStatusBadge(item: item)

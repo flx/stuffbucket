@@ -299,6 +299,7 @@ When opening an archive:
 - Recent items list is shown above tags and collections.
 - Link items display an archive status badge (Pending / Archived / Partial / Failed).
 - Empty states surface primary capture actions (Add Link, Import Document).
+- Search results show all item tags (including `collection:` tags) under each item, with active tag/collection filters wrapped in brackets.
 
 ### Item detail
 - Tag editing is available on the item detail view (comma-separated input).

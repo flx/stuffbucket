@@ -100,6 +100,7 @@
 - Ensure search input modifiers are platform-appropriate (iOS-only autocap settings). completed [x]
 - Add a recent items list on the empty state. completed [x]
   - Show live-updating link archive status badges in lists. completed [x]
+  - Show all tags + collection tags in search results, bracketing active filters. completed [x]
 - macOS:
   - Add basic search UI and result preview. completed [x]
   - Add search sidebar and filter controls.
@@ -108,6 +109,7 @@
   - Use the system toolbar search field via `.searchable` on macOS. completed [x]
   - Add a recent items list on the empty state. completed [x]
   - Show live-updating link archive status badges in lists. completed [x]
+  - Show all tags + collection tags in search results, bracketing active filters. completed [x]
 
 ## 3. Safari bookmarks import and sync (macOS only)
 
