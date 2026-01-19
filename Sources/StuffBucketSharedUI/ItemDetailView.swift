@@ -546,32 +546,28 @@ struct ItemDetailView: View {
 
     @ViewBuilder
     private func documentSection(for item: Item) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            if item.hasDocument {
-                Text(item.documentFileName ?? "Document")
-                    .foregroundStyle(.secondary)
-            } else {
-                Text("No document attached yet.")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-            }
+        if item.hasDocument {
+            Text(item.documentFileName ?? "Document")
+                .foregroundStyle(.secondary)
+        } else {
+            Text("No document attached yet.")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+        }
 
-            if let documentURL = item.documentURL {
-                Button("Open Document") {
-                    openDocument(at: documentURL)
-                }
-            }
-
-            Button(item.hasDocument ? "Replace Document..." : "Attach Document...") {
-                isImportingDocument = true
+        if let documentURL = item.documentURL {
+            Button("Open Document") {
+                openDocument(at: documentURL)
             }
 #if os(macOS)
-            if let documentURL = item.documentURL {
-                Button("Show in Finder") {
-                    NSWorkspace.shared.activateFileViewerSelecting([documentURL])
-                }
+            Button("Show in Finder") {
+                NSWorkspace.shared.activateFileViewerSelecting([documentURL])
             }
 #endif
+        }
+
+        Button(item.hasDocument ? "Replace Document..." : "Attach Document...") {
+            isImportingDocument = true
         }
     }
 
