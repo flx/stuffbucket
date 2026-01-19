@@ -5,6 +5,8 @@ import UniformTypeIdentifiers
 import WebKit
 #if os(macOS)
 import AppKit
+#else
+import QuickLook
 #endif
 
 struct ArchivePresentation: Identifiable {
@@ -39,6 +41,7 @@ struct ItemDetailView: View {
     @State private var isShowingLoginArchive = false
     @State private var loginArchiveURL: URL?
     @State private var isImportingDocument = false
+    @State private var quickLookURL: URL?
     @State private var archiveError: ArchiveError?
     @State private var isPreparingArchive = false
     @State private var useReaderMode = false
@@ -249,6 +252,7 @@ struct ItemDetailView: View {
                     tagSuggestionSheet(for: item)
                 }
             }
+            .quickLookPreview($quickLookURL)
 #else
         return base
             .sheet(isPresented: $isShowingLoginArchive) {
@@ -551,6 +555,13 @@ struct ItemDetailView: View {
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
+
+            if let documentURL = item.documentURL {
+                Button("Open Document") {
+                    openDocument(at: documentURL)
+                }
+            }
+
             Button(item.hasDocument ? "Replace Document..." : "Attach Document...") {
                 isImportingDocument = true
             }
@@ -562,6 +573,14 @@ struct ItemDetailView: View {
             }
 #endif
         }
+    }
+
+    private func openDocument(at url: URL) {
+#if os(macOS)
+        NSWorkspace.shared.open(url)
+#else
+        quickLookURL = url
+#endif
     }
 
     private func attachDocument(_ url: URL, to item: Item) {
