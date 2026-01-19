@@ -47,11 +47,15 @@ struct SearchBarView: View {
             .textInputAutocapitalization(.never)
             .disableAutocorrection(true)
             .focused($isFocused)
+            .frame(maxWidth: .infinity)
+            .layoutPriority(1)
 #else
         TextField("Search", text: $text)
             .textFieldStyle(.plain)
             .controlSize(.small)
             .focused($isFocused)
+            .frame(maxWidth: .infinity)
+            .layoutPriority(1)
 #endif
     }
 
