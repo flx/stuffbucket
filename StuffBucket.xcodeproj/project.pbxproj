@@ -13,6 +13,7 @@
 		0774DCDB5A6918A200215BD3 /* ArchiveBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5874E11BFA8C2C8DAA597092 /* ArchiveBundle.swift */; };
 		0B636D62485E37CA9AB95AEC /* StuffBucketModel.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = A0E7D6443688015B5AD0915C /* StuffBucketModel.xcdatamodeld */; };
 		0DAD5813CCC54F7369D1D93E /* SharedCaptureStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB12F39F12A0E85EF8522A4F /* SharedCaptureStore.swift */; };
+		0E39E6C7754F1D5189AD02B1 /* DocumentActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6295350E838171B021DDDF6B /* DocumentActions.swift */; };
 		0F55D1A2F13947D0394C501F /* SharedCaptureStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB12F39F12A0E85EF8522A4F /* SharedCaptureStore.swift */; };
 		0F79E7C81927D22558262D18 /* AIKeyStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56BAD194C9AAF0A27DD99898 /* AIKeyStorage.swift */; };
 		1057C6B010B8BF21AB3CE383 /* LinkMetadataParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61B5AEE244404891A0F3F772 /* LinkMetadataParser.swift */; };
@@ -222,6 +223,7 @@
 		5F8286C47253B852B0B855A2 /* AnthropicClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnthropicClient.swift; sourceTree = "<group>"; };
 		5FE07D9B43A9ED142BC4791E /* Implementation_Plan.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = Implementation_Plan.md; sourceTree = "<group>"; };
 		61B5AEE244404891A0F3F772 /* LinkMetadataParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkMetadataParser.swift; sourceTree = "<group>"; };
+		6295350E838171B021DDDF6B /* DocumentActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentActions.swift; sourceTree = "<group>"; };
 		759B8C6613B6A7906FABD215 /* Item.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Item.swift; sourceTree = "<group>"; };
 		782EEF98196F744E7BA7C335 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		79BD0E7E15F68204548BA1B4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -521,6 +523,7 @@
 			isa = PBXGroup;
 			children = (
 				3229BC032C43225982B053D2 /* ContentView.swift */,
+				6295350E838171B021DDDF6B /* DocumentActions.swift */,
 				79BD0E7E15F68204548BA1B4 /* Info.plist */,
 				25A4DA1230BA55D528E93587 /* StuffBucketMac.entitlements */,
 				026D6ACFAAE7EF7A081F6194 /* StuffBucketMacApp.swift */,
@@ -861,6 +864,7 @@
 			files = (
 				E5847FE8949A334E9C72AAD9 /* AISettingsView.swift in Sources */,
 				FABB5C46F68A88842020892B /* ContentView.swift in Sources */,
+				0E39E6C7754F1D5189AD02B1 /* DocumentActions.swift in Sources */,
 				2EF760054F3B6D1BDC9442D5 /* ItemDetailView.swift in Sources */,
 				04C1F20034405ECDAA03582D /* LinkStatusBadge.swift in Sources */,
 				37B561B46F79E7E0FBE37F02 /* SearchBarView.swift in Sources */,

@@ -223,6 +223,7 @@ struct ContentView: View {
                                                 } else {
                                                     NavigationLink {
                                                         ItemDetailView(itemID: itemID)
+                                                            .environment(\.showInFinderAction, DocumentActions.showInFinder)
                                                     } label: {
                                                         itemRowContent(item: item)
                                                     }
@@ -326,6 +327,7 @@ struct ContentView: View {
                                             } else {
                                                 NavigationLink {
                                                     ItemDetailView(itemID: itemID)
+                                                            .environment(\.showInFinderAction, DocumentActions.showInFinder)
                                                 } label: {
                                                     itemRowContent(item: item)
                                                 }
@@ -367,6 +369,7 @@ struct ContentView: View {
                                             } else {
                                                 NavigationLink {
                                                     ItemDetailView(itemID: itemID)
+                                                            .environment(\.showInFinderAction, DocumentActions.showInFinder)
                                                 } label: {
                                                     itemRowContent(item: item)
                                                 }
@@ -389,6 +392,7 @@ struct ContentView: View {
                         List(results) { result in
                             NavigationLink {
                                 ItemDetailView(itemID: result.itemID)
+                                    .environment(\.showInFinderAction, DocumentActions.showInFinder)
                             } label: {
                                 VStack(alignment: .leading, spacing: 6) {
                                     Text(result.title)

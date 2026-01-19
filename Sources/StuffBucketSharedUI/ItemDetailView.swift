@@ -9,6 +9,19 @@ import AppKit
 import QuickLook
 #endif
 
+// MARK: - Show in Finder Environment Key
+
+struct ShowInFinderActionKey: EnvironmentKey {
+    static let defaultValue: ((URL) -> Void)? = nil
+}
+
+extension EnvironmentValues {
+    var showInFinderAction: ((URL) -> Void)? {
+        get { self[ShowInFinderActionKey.self] }
+        set { self[ShowInFinderActionKey.self] = newValue }
+    }
+}
+
 struct ArchivePresentation: Identifiable {
     let id = UUID()
     let itemID: UUID
@@ -27,6 +40,7 @@ struct ItemDetailView: View {
     let itemID: UUID
 
     @Environment(\.managedObjectContext) private var context
+    @Environment(\.showInFinderAction) private var showInFinderAction
     @FetchRequest private var items: FetchedResults<Item>
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \Item.updatedAt, ascending: false)]
@@ -559,11 +573,11 @@ struct ItemDetailView: View {
             Button("Open Document") {
                 openDocument(at: documentURL)
             }
-#if os(macOS)
-            Button("Show in Finder") {
-                NSWorkspace.shared.activateFileViewerSelecting([documentURL])
+            if let showInFinder = showInFinderAction {
+                Button("Show in Finder") {
+                    showInFinder(documentURL)
+                }
             }
-#endif
         }
 
         Button(item.hasDocument ? "Replace Document..." : "Attach Document...") {
