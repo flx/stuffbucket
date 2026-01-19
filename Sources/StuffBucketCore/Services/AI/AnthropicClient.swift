@@ -75,23 +75,26 @@ public struct AnthropicClient {
         return textContent.text
     }
 
-    public func suggestTagsWithImage(
+    public func suggestTagsWithDocument(
         systemPrompt: String,
         userPrompt: String,
-        imageData: Data,
+        documentData: Data,
         mediaType: String,
         model: String,
         maxTokens: Int = 500
     ) async throws -> String {
-        let base64Image = imageData.base64EncodedString()
+        let base64Data = documentData.base64EncodedString()
+
+        // Claude uses "document" type for PDFs, "image" type for images
+        let contentType = mediaType == "application/pdf" ? "document" : "image"
 
         let content: [[String: Any]] = [
             [
-                "type": "image",
+                "type": contentType,
                 "source": [
                     "type": "base64",
                     "media_type": mediaType,
-                    "data": base64Image
+                    "data": base64Data
                 ]
             ],
             [

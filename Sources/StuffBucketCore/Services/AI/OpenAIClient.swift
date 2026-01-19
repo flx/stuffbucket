@@ -68,22 +68,36 @@ public struct OpenAIClient {
         return content
     }
 
-    public func suggestTagsWithImage(
+    public func suggestTagsWithDocument(
         systemPrompt: String,
         userPrompt: String,
-        imageData: Data,
+        documentData: Data,
         mediaType: String,
         model: String,
         maxTokens: Int = 500
     ) async throws -> String {
-        let base64Image = imageData.base64EncodedString()
-        let dataURL = "data:\(mediaType);base64,\(base64Image)"
+        let base64Data = documentData.base64EncodedString()
+        let dataURL = "data:\(mediaType);base64,\(base64Data)"
 
-        let userContent: [[String: Any]] = [
-            [
+        // OpenAI uses different content types for images vs files (PDFs)
+        let contentBlock: [String: Any]
+        if mediaType == "application/pdf" {
+            contentBlock = [
+                "type": "file",
+                "file": [
+                    "filename": "document.pdf",
+                    "file_data": dataURL
+                ]
+            ]
+        } else {
+            contentBlock = [
                 "type": "image_url",
                 "image_url": ["url": dataURL]
-            ],
+            ]
+        }
+
+        let userContent: [[String: Any]] = [
+            contentBlock,
             [
                 "type": "text",
                 "text": userPrompt

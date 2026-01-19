@@ -41,17 +41,38 @@ public final class TagSuggestionService {
 
         let response: String
 
-        // Check if item has an image document
-        if let imageInfo = extractImageData(from: item) {
-            let userPrompt = buildImageUserPrompt(item: item)
-            response = try await suggestTagsWithImage(
-                apiKey: apiKey,
-                systemPrompt: systemPrompt,
-                userPrompt: userPrompt,
-                imageData: imageInfo.data,
-                mediaType: imageInfo.mediaType,
-                model: modelID
-            )
+        // Check if item has a document attachment
+        if let docInfo = extractDocumentData(from: item) {
+            switch docInfo.type {
+            case .image, .pdf:
+                // Send images and PDFs to vision/document API
+                let userPrompt = buildDocumentUserPrompt(item: item, documentType: docInfo.type)
+                response = try await suggestTagsWithDocument(
+                    apiKey: apiKey,
+                    systemPrompt: systemPrompt,
+                    userPrompt: userPrompt,
+                    documentData: docInfo.data,
+                    mediaType: docInfo.mediaType,
+                    model: modelID
+                )
+            case .text:
+                // Extract text from text documents and include in content
+                var content = extractContent(from: item)
+                if let docText = extractTextFromDocument(docInfo.data) {
+                    let truncated = String(docText.prefix(4000))
+                    content += "\n\nDocument content:\n\(truncated)"
+                }
+                guard !content.isEmpty else {
+                    throw TagSuggestionError.noContent
+                }
+                let userPrompt = buildUserPrompt(content: content)
+                response = try await suggestTagsWithText(
+                    apiKey: apiKey,
+                    systemPrompt: systemPrompt,
+                    userPrompt: userPrompt,
+                    model: modelID
+                )
+            }
         } else {
             let content = extractContent(from: item)
             guard !content.isEmpty else {
@@ -59,23 +80,12 @@ public final class TagSuggestionService {
             }
 
             let userPrompt = buildUserPrompt(content: content)
-
-            switch keyStorage.selectedProvider {
-            case .anthropic:
-                let client = AnthropicClient(apiKey: apiKey)
-                response = try await client.suggestTags(
-                    systemPrompt: systemPrompt,
-                    userPrompt: userPrompt,
-                    model: modelID
-                )
-            case .openAI:
-                let client = OpenAIClient(apiKey: apiKey)
-                response = try await client.suggestTags(
-                    systemPrompt: systemPrompt,
-                    userPrompt: userPrompt,
-                    model: modelID
-                )
-            }
+            response = try await suggestTagsWithText(
+                apiKey: apiKey,
+                systemPrompt: systemPrompt,
+                userPrompt: userPrompt,
+                model: modelID
+            )
         }
 
         let tags = parseTagResponse(response)
@@ -89,31 +99,55 @@ public final class TagSuggestionService {
         }
     }
 
-    private func suggestTagsWithImage(
+    private func suggestTagsWithDocument(
         apiKey: String,
         systemPrompt: String,
         userPrompt: String,
-        imageData: Data,
+        documentData: Data,
         mediaType: String,
         model: String
     ) async throws -> String {
         switch keyStorage.selectedProvider {
         case .anthropic:
             let client = AnthropicClient(apiKey: apiKey)
-            return try await client.suggestTagsWithImage(
+            return try await client.suggestTagsWithDocument(
                 systemPrompt: systemPrompt,
                 userPrompt: userPrompt,
-                imageData: imageData,
+                documentData: documentData,
                 mediaType: mediaType,
                 model: model
             )
         case .openAI:
             let client = OpenAIClient(apiKey: apiKey)
-            return try await client.suggestTagsWithImage(
+            return try await client.suggestTagsWithDocument(
                 systemPrompt: systemPrompt,
                 userPrompt: userPrompt,
-                imageData: imageData,
+                documentData: documentData,
                 mediaType: mediaType,
+                model: model
+            )
+        }
+    }
+
+    private func suggestTagsWithText(
+        apiKey: String,
+        systemPrompt: String,
+        userPrompt: String,
+        model: String
+    ) async throws -> String {
+        switch keyStorage.selectedProvider {
+        case .anthropic:
+            let client = AnthropicClient(apiKey: apiKey)
+            return try await client.suggestTags(
+                systemPrompt: systemPrompt,
+                userPrompt: userPrompt,
+                model: model
+            )
+        case .openAI:
+            let client = OpenAIClient(apiKey: apiKey)
+            return try await client.suggestTags(
+                systemPrompt: systemPrompt,
+                userPrompt: userPrompt,
                 model: model
             )
         }
@@ -152,40 +186,81 @@ public final class TagSuggestionService {
         "jpg", "jpeg", "png", "gif", "webp", "heic", "heif"
     ]
 
-    private struct ImageInfo {
+    private static let textExtensions: Set<String> = [
+        "txt", "md", "markdown", "rtf", "json", "xml", "csv", "log",
+        "swift", "js", "ts", "py", "rb", "java", "c", "cpp", "h", "m",
+        "html", "css", "sh", "yaml", "yml"
+    ]
+
+    private enum DocumentType {
+        case image
+        case pdf
+        case text
+    }
+
+    private struct DocumentInfo {
         let data: Data
         let mediaType: String
+        let type: DocumentType
     }
 
-    private func extractImageData(from item: Item) -> ImageInfo? {
+    private func extractDocumentData(from item: Item) -> DocumentInfo? {
         guard let documentURL = item.documentURL else { return nil }
-
         let ext = documentURL.pathExtension.lowercased()
-        guard Self.imageExtensions.contains(ext) else { return nil }
 
-        guard let data = try? Data(contentsOf: documentURL) else { return nil }
-
-        let mediaType: String
-        switch ext {
-        case "jpg", "jpeg":
-            mediaType = "image/jpeg"
-        case "png":
-            mediaType = "image/png"
-        case "gif":
-            mediaType = "image/gif"
-        case "webp":
-            mediaType = "image/webp"
-        case "heic", "heif":
-            mediaType = "image/heic"
-        default:
-            mediaType = "image/jpeg"
+        // Check for images
+        if Self.imageExtensions.contains(ext) {
+            guard let data = try? Data(contentsOf: documentURL) else { return nil }
+            let mediaType: String
+            switch ext {
+            case "jpg", "jpeg":
+                mediaType = "image/jpeg"
+            case "png":
+                mediaType = "image/png"
+            case "gif":
+                mediaType = "image/gif"
+            case "webp":
+                mediaType = "image/webp"
+            case "heic", "heif":
+                mediaType = "image/heic"
+            default:
+                mediaType = "image/jpeg"
+            }
+            return DocumentInfo(data: data, mediaType: mediaType, type: .image)
         }
 
-        return ImageInfo(data: data, mediaType: mediaType)
+        // Check for PDFs
+        if ext == "pdf" {
+            guard let data = try? Data(contentsOf: documentURL) else { return nil }
+            return DocumentInfo(data: data, mediaType: "application/pdf", type: .pdf)
+        }
+
+        // Check for text files
+        if Self.textExtensions.contains(ext) {
+            guard let text = try? String(contentsOf: documentURL, encoding: .utf8),
+                  let data = text.data(using: .utf8) else { return nil }
+            return DocumentInfo(data: data, mediaType: "text/plain", type: .text)
+        }
+
+        return nil
     }
 
-    private func buildImageUserPrompt(item: Item) -> String {
-        var parts: [String] = ["Suggest tags for this image."]
+    private func extractTextFromDocument(_ data: Data) -> String? {
+        return String(data: data, encoding: .utf8)
+    }
+
+    private func buildDocumentUserPrompt(item: Item, documentType: DocumentType) -> String {
+        let typeDescription: String
+        switch documentType {
+        case .image:
+            typeDescription = "image"
+        case .pdf:
+            typeDescription = "PDF document"
+        case .text:
+            typeDescription = "text document"
+        }
+
+        var parts: [String] = ["Suggest tags for this \(typeDescription)."]
 
         if let title = item.title, !title.isEmpty {
             parts.append("Title: \(title)")
