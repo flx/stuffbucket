@@ -33,12 +33,13 @@ public struct AISettingsView: View {
                 }
             }
             #else
+            .formStyle(.grouped)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") { dismiss() }
                 }
             }
-            .frame(minWidth: 400, minHeight: 300)
+            .frame(width: 450, height: 280)
             #endif
             .onAppear {
                 claudeKey = keyStorage.claudeAPIKey ?? ""
@@ -63,8 +64,8 @@ public struct AISettingsView: View {
     }
 
     private var providerSection: some View {
-        Section("Provider") {
-            Picker("AI Provider", selection: Binding(
+        Section {
+            Picker("Provider", selection: Binding(
                 get: { keyStorage.selectedProvider },
                 set: { keyStorage.setSelectedProvider($0) }
             )) {
@@ -83,7 +84,7 @@ public struct AISettingsView: View {
             switch keyStorage.selectedProvider {
             case .anthropic:
                 HStack {
-                    SecureField("Claude API Key", text: $claudeKey)
+                    SecureField("API Key", text: $claudeKey)
                         .textContentType(.password)
                         .autocorrectionDisabled()
                     #if os(iOS)
@@ -103,7 +104,7 @@ public struct AISettingsView: View {
 
             case .openAI:
                 HStack {
-                    SecureField("OpenAI API Key", text: $openAIKey)
+                    SecureField("API Key", text: $openAIKey)
                         .textContentType(.password)
                         .autocorrectionDisabled()
                     #if os(iOS)
@@ -121,8 +122,6 @@ public struct AISettingsView: View {
                     }
                 }
             }
-        } header: {
-            Text("API Key")
         } footer: {
             switch keyStorage.selectedProvider {
             case .anthropic:
@@ -134,7 +133,7 @@ public struct AISettingsView: View {
     }
 
     private var modelSection: some View {
-        Section("Model") {
+        Section {
             let models = keyStorage.selectedProvider == .anthropic ? claudeModels : openAIModels
             let recommended = keyStorage.selectedProvider == .anthropic
                 ? AnthropicModelDefaults.recommendedModels

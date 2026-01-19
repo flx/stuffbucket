@@ -99,11 +99,6 @@ For each Link item:
   - `page.html` (full page snapshot)
   - `reader.html` (reader-mode extraction)
 - Fallback to a raw `URLSession` HTML fetch if WebKit capture fails.
-- Provide an **Archive with Login** option that:
-  - Opens an in-app browser with a **persistent** WebView data store.
-  - Lets the user sign in (AutoFill supported) without exposing credentials to StuffBucket.
-  - Uses the in-app session cookies to download assets for the archive.
-  - Never reads Safari passwords/cookies or stores user credentials itself.
 - Save as:
   ```
   StuffBucket/Links/<uuid>/page.html
@@ -297,7 +292,7 @@ When opening an archive:
 ## 10. UI behavior
 
 ### Browse
-- Default view surfaces **Tags** and **Collections** with counts.
+- Default view surfaces **Collections** and **Tags** with counts (collections first, then tags).
 - Tags list shows regular tags only (excludes `collection:` prefixed tags).
 - Collections list shows collection names extracted from `collection:` tags.
 - Selecting a tag or collection pre-fills search with `tag:` / `collection:` filters.

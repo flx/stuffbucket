@@ -193,7 +193,6 @@
 - Use a custom iOS share sheet UI with a comment field; parse quotes into snippet + tags and open the app after capture. completed [x]
 - Add link archive viewer actions (open page/reader HTML in-app). completed [x]
 - Show a loading state while archived HTML downloads from iCloud before rendering. completed [x]
-- Add Archive with Login sheet using a persistent in-app WebView for paywalled captures. completed [x]
 - Add a temporary Delete All Data toolbar button for debugging (remove before release). completed [x]
 - Allow link and text editing on all item types in detail view. completed [x]
 - Allow document attach/replace on all item types in detail view. completed [x]
@@ -202,7 +201,7 @@
 - Filter trashed items from main list (show only when searching for trashcan). completed [x]
 - Add automatic cleanup of items trashed for more than 10 days on app launch. completed [x]
 - Item detail actions for AI tasks (summarize, key points, tags).
-- AI settings screen (API key management + advanced model picker).
+- AI settings screen (API key management + model picker). completed [x]
 - Show a pricing disclosure line with per-token rates sourced from the OpenAI pricing page.
 - Maintain share sheet capture flow for links.
 
@@ -228,7 +227,6 @@
 - Enable page archive open while syncing from iCloud; show sync-pending status and alert when not yet local. completed [x]
 - Trigger iCloud download before opening archived HTML. completed [x]
 - Download archive assets from iCloud before opening on macOS; show a brief syncing state and an unavailable alert when assets are not yet local. completed [x]
-- Add Archive with Login sheet using a persistent in-app WebView for paywalled captures. completed [x]
 - Add a temporary Delete All Data toolbar button for debugging (remove before release). completed [x]
 - Allow link and text editing on all item types in detail view. completed [x]
 - Allow document attach/replace on all item types in detail view. completed [x]
@@ -237,7 +235,7 @@
 - Filter trashed items from main list (show only when searching for trashcan). completed [x]
 - Add automatic cleanup of items trashed for more than 10 days on app launch. completed [x]
 - AI actions integrated into item detail and toolbar.
-- AI settings screen (API key management + advanced model picker).
+- AI settings screen (API key management + model picker). completed [x]
 - Show a pricing disclosure line with per-token rates sourced from the OpenAI pricing page.
 
 ## 6. Background tasks and performance

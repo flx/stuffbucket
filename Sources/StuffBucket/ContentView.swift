@@ -157,6 +157,42 @@ struct ContentView: View {
                                 }
                             }
                         }
+                        Section("Collections") {
+                            if collectionSummaries.isEmpty {
+                                Text("No collections yet")
+                                    .foregroundStyle(.secondary)
+                            } else {
+                                ForEach(collectionSummaries) { summary in
+                                    if isSelectMode {
+                                        Button {
+                                            toggleCollectionSelection(summary.name)
+                                        } label: {
+                                            HStack {
+                                                Image(systemName: selectedCollections.contains(summary.name) ? "checkmark.circle.fill" : "circle")
+                                                    .foregroundStyle(selectedCollections.contains(summary.name) ? .blue : .secondary)
+                                                Label(summary.name, systemImage: "folder")
+                                                Spacer()
+                                                Text("\(summary.count)")
+                                                    .foregroundStyle(.secondary)
+                                            }
+                                        }
+                                        .buttonStyle(.plain)
+                                    } else {
+                                        Button {
+                                            searchText = filterToken(prefix: "collection", value: summary.name)
+                                        } label: {
+                                            HStack {
+                                                Label(summary.name, systemImage: "folder")
+                                                Spacer()
+                                                Text("\(summary.count)")
+                                                    .foregroundStyle(.secondary)
+                                            }
+                                        }
+                                        .buttonStyle(.plain)
+                                    }
+                                }
+                            }
+                        }
                         Section("Tags") {
                             if tagSummaries.isEmpty {
                                 Text("No tags yet")
@@ -194,42 +230,6 @@ struct ContentView: View {
                                         } label: {
                                             HStack {
                                                 Label(summary.name, systemImage: "tag")
-                                                Spacer()
-                                                Text("\(summary.count)")
-                                                    .foregroundStyle(.secondary)
-                                            }
-                                        }
-                                        .buttonStyle(.plain)
-                                    }
-                                }
-                            }
-                        }
-                        Section("Collections") {
-                            if collectionSummaries.isEmpty {
-                                Text("No collections yet")
-                                    .foregroundStyle(.secondary)
-                            } else {
-                                ForEach(collectionSummaries) { summary in
-                                    if isSelectMode {
-                                        Button {
-                                            toggleCollectionSelection(summary.name)
-                                        } label: {
-                                            HStack {
-                                                Image(systemName: selectedCollections.contains(summary.name) ? "checkmark.circle.fill" : "circle")
-                                                    .foregroundStyle(selectedCollections.contains(summary.name) ? .blue : .secondary)
-                                                Label(summary.name, systemImage: "folder")
-                                                Spacer()
-                                                Text("\(summary.count)")
-                                                    .foregroundStyle(.secondary)
-                                            }
-                                        }
-                                        .buttonStyle(.plain)
-                                    } else {
-                                        Button {
-                                            searchText = filterToken(prefix: "collection", value: summary.name)
-                                        } label: {
-                                            HStack {
-                                                Label(summary.name, systemImage: "folder")
                                                 Spacer()
                                                 Text("\(summary.count)")
                                                     .foregroundStyle(.secondary)

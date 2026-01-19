@@ -102,6 +102,42 @@ struct ContentView: View {
     var body: some View {
         NavigationSplitView {
             List {
+                Section("Collections") {
+                    if collectionSummaries.isEmpty {
+                        Text("No collections yet")
+                            .foregroundStyle(.secondary)
+                    } else {
+                        ForEach(collectionSummaries) { summary in
+                            if isSelectMode {
+                                Button {
+                                    toggleCollectionSelection(summary.name)
+                                } label: {
+                                    HStack {
+                                        Image(systemName: selectedCollections.contains(summary.name) ? "checkmark.circle.fill" : "circle")
+                                            .foregroundStyle(selectedCollections.contains(summary.name) ? .blue : .secondary)
+                                        Label(summary.name, systemImage: "folder")
+                                        Spacer()
+                                        Text("\(summary.count)")
+                                            .foregroundStyle(.secondary)
+                                    }
+                                }
+                                .buttonStyle(.plain)
+                            } else {
+                                Button {
+                                    searchText = filterToken(prefix: "collection", value: summary.name)
+                                } label: {
+                                    HStack {
+                                        Label(summary.name, systemImage: "folder")
+                                        Spacer()
+                                        Text("\(summary.count)")
+                                            .foregroundStyle(.secondary)
+                                    }
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                    }
+                }
                 Section("Tags") {
                     if tagSummaries.isEmpty {
                         Text("No tags yet")
@@ -139,42 +175,6 @@ struct ContentView: View {
                                 } label: {
                                     HStack {
                                         Label(summary.name, systemImage: "tag")
-                                        Spacer()
-                                        Text("\(summary.count)")
-                                            .foregroundStyle(.secondary)
-                                    }
-                                }
-                                .buttonStyle(.plain)
-                            }
-                        }
-                    }
-                }
-                Section("Collections") {
-                    if collectionSummaries.isEmpty {
-                        Text("No collections yet")
-                            .foregroundStyle(.secondary)
-                    } else {
-                        ForEach(collectionSummaries) { summary in
-                            if isSelectMode {
-                                Button {
-                                    toggleCollectionSelection(summary.name)
-                                } label: {
-                                    HStack {
-                                        Image(systemName: selectedCollections.contains(summary.name) ? "checkmark.circle.fill" : "circle")
-                                            .foregroundStyle(selectedCollections.contains(summary.name) ? .blue : .secondary)
-                                        Label(summary.name, systemImage: "folder")
-                                        Spacer()
-                                        Text("\(summary.count)")
-                                            .foregroundStyle(.secondary)
-                                    }
-                                }
-                                .buttonStyle(.plain)
-                            } else {
-                                Button {
-                                    searchText = filterToken(prefix: "collection", value: summary.name)
-                                } label: {
-                                    HStack {
-                                        Label(summary.name, systemImage: "folder")
                                         Spacer()
                                         Text("\(summary.count)")
                                             .foregroundStyle(.secondary)
@@ -223,8 +223,7 @@ struct ContentView: View {
                                                 } else {
                                                     NavigationLink {
                                                         ItemDetailView(itemID: itemID)
-                                                            .environment(\.showInFinderAction, DocumentActions.showInFinder)
-                                                    } label: {
+                                                                                                                } label: {
                                                         itemRowContent(item: item)
                                                     }
                                                     .buttonStyle(.plain)
@@ -246,52 +245,6 @@ struct ContentView: View {
                                                     Image(systemName: showAllItems ? "chevron.up" : "chevron.down")
                                                 }
                                                 .foregroundStyle(.secondary)
-                                            }
-                                            .buttonStyle(.plain)
-                                        }
-                                    }
-                                }
-
-                                VStack(alignment: .leading, spacing: 12) {
-                                    Label("Tags", systemImage: "tag")
-                                        .font(.title3.bold())
-                                    if tagSummaries.isEmpty {
-                                        Text("No tags yet")
-                                            .foregroundStyle(.secondary)
-                                    } else {
-                                        ForEach(tagSummaries) { summary in
-                                            Button {
-                                                searchText = filterToken(prefix: "tag", value: summary.name)
-                                            } label: {
-                                                HStack {
-                                                    Text(summary.name)
-                                                    Spacer()
-                                                    Text("\(summary.count)")
-                                                        .foregroundStyle(.secondary)
-                                                }
-                                            }
-                                            .buttonStyle(.plain)
-                                        }
-                                    }
-                                }
-
-                                VStack(alignment: .leading, spacing: 12) {
-                                    Label("Collections", systemImage: "folder")
-                                        .font(.title3.bold())
-                                    if collectionSummaries.isEmpty {
-                                        Text("No collections yet")
-                                            .foregroundStyle(.secondary)
-                                    } else {
-                                        ForEach(collectionSummaries) { summary in
-                                            Button {
-                                                searchText = filterToken(prefix: "collection", value: summary.name)
-                                            } label: {
-                                                HStack {
-                                                    Text(summary.name)
-                                                    Spacer()
-                                                    Text("\(summary.count)")
-                                                        .foregroundStyle(.secondary)
-                                                }
                                             }
                                             .buttonStyle(.plain)
                                         }
@@ -327,8 +280,7 @@ struct ContentView: View {
                                             } else {
                                                 NavigationLink {
                                                     ItemDetailView(itemID: itemID)
-                                                            .environment(\.showInFinderAction, DocumentActions.showInFinder)
-                                                } label: {
+                                                                                                            } label: {
                                                     itemRowContent(item: item)
                                                 }
                                                 .buttonStyle(.plain)
@@ -369,8 +321,7 @@ struct ContentView: View {
                                             } else {
                                                 NavigationLink {
                                                     ItemDetailView(itemID: itemID)
-                                                            .environment(\.showInFinderAction, DocumentActions.showInFinder)
-                                                } label: {
+                                                                                                            } label: {
                                                     itemRowContent(item: item)
                                                 }
                                                 .buttonStyle(.plain)
@@ -392,8 +343,7 @@ struct ContentView: View {
                         List(results) { result in
                             NavigationLink {
                                 ItemDetailView(itemID: result.itemID)
-                                    .environment(\.showInFinderAction, DocumentActions.showInFinder)
-                            } label: {
+                                                                } label: {
                                 VStack(alignment: .leading, spacing: 6) {
                                     Text(result.title)
                                         .font(.headline)
@@ -418,7 +368,7 @@ struct ContentView: View {
                     }
                 }
         }
-        .frame(minWidth: 900, minHeight: 600)
+                .frame(minWidth: 900, minHeight: 600)
         .toolbar {
             ToolbarItem(placement: .automatic) {
                 if isSelectMode && (!selectedItems.isEmpty || !selectedTags.isEmpty || !selectedCollections.isEmpty) {

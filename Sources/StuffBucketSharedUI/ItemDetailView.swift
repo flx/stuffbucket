@@ -9,17 +9,15 @@ import AppKit
 import QuickLook
 #endif
 
-// MARK: - Show in Finder Environment Key
+// MARK: - Platform Actions
 
-struct ShowInFinderActionKey: EnvironmentKey {
-    static let defaultValue: ((URL) -> Void)? = nil
-}
+/// Singleton holder for platform-specific actions that can be set at app launch
+public final class PlatformActions {
+    public static let shared = PlatformActions()
+    private init() {}
 
-extension EnvironmentValues {
-    var showInFinderAction: ((URL) -> Void)? {
-        get { self[ShowInFinderActionKey.self] }
-        set { self[ShowInFinderActionKey.self] = newValue }
-    }
+    /// Set by macOS app to enable "Show in Finder" functionality
+    public var showInFinder: ((URL) -> Void)?
 }
 
 struct ArchivePresentation: Identifiable {
@@ -40,7 +38,6 @@ struct ItemDetailView: View {
     let itemID: UUID
 
     @Environment(\.managedObjectContext) private var context
-    @Environment(\.showInFinderAction) private var showInFinderAction
     @FetchRequest private var items: FetchedResults<Item>
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \Item.updatedAt, ascending: false)]
@@ -52,8 +49,6 @@ struct ItemDetailView: View {
     @State private var linkText = ""
     @State private var linkUpdateTask: Task<Void, Never>?
     @State private var archivePresentation: ArchivePresentation?
-    @State private var isShowingLoginArchive = false
-    @State private var loginArchiveURL: URL?
     @State private var isImportingDocument = false
     @State private var quickLookURL: URL?
     @State private var archiveError: ArchiveError?
@@ -136,6 +131,10 @@ struct ItemDetailView: View {
                 documentSection(for: item)
             }
 
+            Section("Collections") {
+                collectionsField
+            }
+
             Section("Tags") {
                 tagsField
                 if aiKeyStorage.hasValidKey {
@@ -145,13 +144,6 @@ struct ItemDetailView: View {
                         Label("Suggest Tags", systemImage: "sparkles")
                     }
                 }
-            }
-
-            Section("Collections") {
-                collectionsField
-                Text("Add collection names separated by commas")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
             }
 
             // Snippet at bottom if empty or editing from empty state
@@ -258,9 +250,6 @@ struct ItemDetailView: View {
                 )
                 .environment(\.managedObjectContext, context)
             }
-            .sheet(isPresented: $isShowingLoginArchive) {
-                loginArchiveSheet
-            }
             .sheet(isPresented: $isShowingTagSuggestions) {
                 if let item = items.first {
                     tagSuggestionSheet(for: item)
@@ -269,9 +258,9 @@ struct ItemDetailView: View {
             .quickLookPreview($quickLookURL)
 #else
         return base
-            .sheet(isPresented: $isShowingLoginArchive) {
-                loginArchiveSheet
-            }
+            .formStyle(.grouped)
+            .scrollContentBackground(.hidden)
+            .background(Color(NSColor.windowBackgroundColor))
             .sheet(isPresented: $isShowingTagSuggestions) {
                 if let item = items.first {
                     tagSuggestionSheet(for: item)
@@ -297,22 +286,36 @@ struct ItemDetailView: View {
     @ViewBuilder
     private var tagsField: some View {
 #if os(iOS)
-        TextField("tag1, tag2", text: $tagsText)
+        TextField("Add tags", text: $tagsText)
             .textInputAutocapitalization(.never)
             .disableAutocorrection(true)
 #else
-        TextField("tag1, tag2", text: $tagsText)
+        LabeledContent {
+            TextField("", text: $tagsText)
+                .textFieldStyle(.plain)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        } label: {
+            EmptyView()
+        }
+        .labelsHidden()
 #endif
     }
 
     @ViewBuilder
     private var collectionsField: some View {
 #if os(iOS)
-        TextField("collection1, collection2", text: $collectionsText)
+        TextField("Add collections", text: $collectionsText)
             .textInputAutocapitalization(.never)
             .disableAutocorrection(true)
 #else
-        TextField("collection1, collection2", text: $collectionsText)
+        LabeledContent {
+            TextField("", text: $collectionsText)
+                .textFieldStyle(.plain)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        } label: {
+            EmptyView()
+        }
+        .labelsHidden()
 #endif
     }
 
@@ -561,7 +564,7 @@ struct ItemDetailView: View {
     @ViewBuilder
     private func documentSection(for item: Item) -> some View {
         if item.hasDocument {
-            Text(item.documentFileName ?? "Document")
+            Label(item.documentFileName ?? "Document", systemImage: "doc.fill")
                 .foregroundStyle(.secondary)
         } else {
             Text("No document attached yet.")
@@ -570,14 +573,26 @@ struct ItemDetailView: View {
         }
 
         if let documentURL = item.documentURL {
+#if os(macOS)
+            HStack(spacing: 12) {
+                Button {
+                    openDocument(at: documentURL)
+                } label: {
+                    Label("Open", systemImage: "arrow.up.forward.app")
+                }
+                if let showInFinder = PlatformActions.shared.showInFinder {
+                    Button {
+                        showInFinder(documentURL)
+                    } label: {
+                        Label("Show in Finder", systemImage: "folder")
+                    }
+                }
+            }
+#else
             Button("Open Document") {
                 openDocument(at: documentURL)
             }
-            if let showInFinder = showInFinderAction {
-                Button("Show in Finder") {
-                    showInFinder(documentURL)
-                }
-            }
+#endif
         }
 
         Button(item.hasDocument ? "Replace Document..." : "Attach Document...") {
@@ -632,13 +647,6 @@ struct ItemDetailView: View {
             openArchive(item: item, url: archiveURL, title: title)
         }
         .disabled(!pageExpected)
-
-        Button("Re-archive with Login") {
-            guard let linkURL = item.linkURL, let url = URL(string: linkURL) else { return }
-            loginArchiveURL = url
-            isShowingLoginArchive = true
-        }
-        .disabled(item.linkURL == nil)
 
 #if os(macOS)
         if isPreparingArchive {
@@ -779,17 +787,6 @@ struct ItemDetailView: View {
         }
     }
 #endif
-
-    @ViewBuilder
-    private var loginArchiveSheet: some View {
-        if let url = loginArchiveURL {
-            ArchiveWithLoginView(itemID: itemID, url: url)
-                .environment(\.managedObjectContext, context)
-        } else {
-            Text("Link unavailable.")
-                .padding()
-        }
-    }
 
     @ViewBuilder
     private func tagSuggestionSheet(for item: Item) -> some View {
@@ -1084,208 +1081,3 @@ struct ArchivedLinkWebView: UIViewRepresentable {
 }
 #endif
 
-final class ArchiveLoginWebViewStore: ObservableObject {
-    @Published var isLoading = false
-    var webView: WKWebView?
-}
-
-struct ArchiveWithLoginView: View {
-    let itemID: UUID
-    let url: URL
-
-    @Environment(\.managedObjectContext) private var context
-    @Environment(\.dismiss) private var dismiss
-    @StateObject private var webViewStore = ArchiveLoginWebViewStore()
-    @State private var isArchiving = false
-    @State private var errorMessage: String?
-
-    var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
-                Text("Sign in to the site, then tap Archive to capture the full page.")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-                    .padding(.horizontal)
-                    .padding(.vertical, 8)
-                Divider()
-                ArchiveLoginWebView(url: url, store: webViewStore)
-                    .overlay {
-                        if webViewStore.isLoading {
-                            ProgressView()
-                                .padding(8)
-                                .background(.thinMaterial)
-                                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-                        }
-                    }
-                if let errorMessage {
-                    Divider()
-                    Text(errorMessage)
-                        .font(.footnote)
-                        .foregroundStyle(.red)
-                        .padding(.horizontal)
-                        .padding(.vertical, 8)
-                }
-            }
-            .navigationTitle("Archive with Login")
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button(isArchiving ? "Archiving..." : "Archive") {
-                        archiveCurrentPage()
-                    }
-                    .disabled(isArchiving || webViewStore.webView == nil)
-                }
-            }
-        }
-    }
-
-    private func archiveCurrentPage() {
-        guard let webView = webViewStore.webView else { return }
-        let currentURL = webView.url ?? url
-        isArchiving = true
-        errorMessage = nil
-        webView.evaluateJavaScript(LinkArchiveScript.capturePayload) { result, error in
-            if let error {
-                finishArchiveFailure("Unable to read page: \(error.localizedDescription)")
-                return
-            }
-            guard let payload = result as? String else {
-                finishArchiveFailure("Unable to read page content.")
-                return
-            }
-            let cookieStore = webView.configuration.websiteDataStore.httpCookieStore
-            cookieStore.getAllCookies { cookies in
-                Task {
-                    let success = await LinkArchiver.shared.archiveCapturedPayload(
-                        payload,
-                        originalURL: currentURL,
-                        itemID: itemID,
-                        context: context,
-                        cookies: cookies
-                    )
-                    _ = await MainActor.run {
-                        isArchiving = false
-                        if success {
-                            dismiss()
-                        } else {
-                            errorMessage = "Archive failed. Try again."
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private func finishArchiveFailure(_ message: String) {
-        DispatchQueue.main.async {
-            isArchiving = false
-            errorMessage = message
-        }
-    }
-}
-
-#if os(iOS)
-struct ArchiveLoginWebView: UIViewRepresentable {
-    let url: URL
-    @ObservedObject var store: ArchiveLoginWebViewStore
-
-    func makeCoordinator() -> Coordinator {
-        Coordinator(store: store)
-    }
-
-    func makeUIView(context: Context) -> WKWebView {
-        let configuration = WKWebViewConfiguration()
-        configuration.websiteDataStore = .default()
-        configuration.preferences.javaScriptCanOpenWindowsAutomatically = false
-        let webView = WKWebView(frame: .zero, configuration: configuration)
-        webView.navigationDelegate = context.coordinator
-        store.webView = webView
-        webView.load(URLRequest(url: url))
-        return webView
-    }
-
-    func updateUIView(_ webView: WKWebView, context: Context) {
-        if webView.url != url {
-            webView.load(URLRequest(url: url))
-        }
-    }
-
-    final class Coordinator: NSObject, WKNavigationDelegate {
-        let store: ArchiveLoginWebViewStore
-
-        init(store: ArchiveLoginWebViewStore) {
-            self.store = store
-        }
-
-        func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
-            store.isLoading = true
-        }
-
-        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-            store.isLoading = false
-        }
-
-        func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
-            store.isLoading = false
-        }
-
-        func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
-            store.isLoading = false
-        }
-    }
-}
-#else
-struct ArchiveLoginWebView: NSViewRepresentable {
-    let url: URL
-    @ObservedObject var store: ArchiveLoginWebViewStore
-
-    func makeCoordinator() -> Coordinator {
-        Coordinator(store: store)
-    }
-
-    func makeNSView(context: Context) -> WKWebView {
-        let configuration = WKWebViewConfiguration()
-        configuration.websiteDataStore = .default()
-        configuration.preferences.javaScriptCanOpenWindowsAutomatically = false
-        let webView = WKWebView(frame: .zero, configuration: configuration)
-        webView.navigationDelegate = context.coordinator
-        store.webView = webView
-        webView.load(URLRequest(url: url))
-        return webView
-    }
-
-    func updateNSView(_ webView: WKWebView, context: Context) {
-        if webView.url != url {
-            webView.load(URLRequest(url: url))
-        }
-    }
-
-    final class Coordinator: NSObject, WKNavigationDelegate {
-        let store: ArchiveLoginWebViewStore
-
-        init(store: ArchiveLoginWebViewStore) {
-            self.store = store
-        }
-
-        func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
-            store.isLoading = true
-        }
-
-        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-            store.isLoading = false
-        }
-
-        func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
-            store.isLoading = false
-        }
-
-        func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
-            store.isLoading = false
-        }
-    }
-}
-#endif

@@ -13,6 +13,8 @@ struct StuffBucketMacApp: App {
     
     init() {
         SearchIndexer.shared.startObserving(context: PersistenceController.shared.viewContext)
+        // Set up platform-specific actions for shared UI
+        PlatformActions.shared.showInFinder = DocumentActions.showInFinder
     }
 
     var body: some Scene {
