@@ -430,11 +430,8 @@ struct ContentView: View {
                     }
                 }
             }
-            ToolbarItem(placement: .principal) {
-                SearchBarView(text: $searchText)
-                    .frame(minWidth: 200, maxWidth: 400)
-            }
         }
+        .searchable(text: $searchText, placement: .toolbar, prompt: "Search")
         .sheet(isPresented: $isShowingSnippetSheet) {
             QuickAddSnippetView(onSave: nil)
                 .environment(\.managedObjectContext, context)

@@ -9,7 +9,7 @@ Key guarantees:
 - Metadata is stored in **Core Data**, synced via **CloudKit**.
 - First-class support for **iOS, iPadOS, and macOS**.
 - **Full-text search** with relevance ranking and filters.
-- Search uses a custom centered search bar on iOS and a full-width capsule-style toolbar search field on macOS with an internal focus outline.
+- Search uses a custom centered search bar on iOS and the standard system toolbar search field on macOS.
 - Tag editing uses platform-appropriate text input behavior.
 - Optional **AI assistance** (summaries, key points, tags) powered by Claude or ChatGPT, opt-in and user-controlled.
 
