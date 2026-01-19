@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SearchBarView: View {
     @Binding var text: String
+    @FocusState private var isFocused: Bool
 
     var body: some View {
         HStack(spacing: 8) {
@@ -19,7 +20,7 @@ struct SearchBarView: View {
                 .accessibilityLabel("Clear search")
             }
         }
-        .padding(.vertical, 8)
+        .padding(.vertical, verticalPadding)
         .padding(.horizontal, 12)
         .background(
             Capsule()
@@ -27,7 +28,7 @@ struct SearchBarView: View {
         )
         .overlay(
             Capsule()
-                .strokeBorder(Color.secondary.opacity(0.2), lineWidth: 1)
+                .strokeBorder(borderColor, lineWidth: borderWidth)
         )
     }
 
@@ -45,8 +46,36 @@ struct SearchBarView: View {
         TextField("Search", text: $text)
             .textInputAutocapitalization(.never)
             .disableAutocorrection(true)
+            .focused($isFocused)
 #else
         TextField("Search", text: $text)
+            .textFieldStyle(.plain)
+            .controlSize(.small)
+            .focused($isFocused)
+#endif
+    }
+
+    private var verticalPadding: CGFloat {
+#if os(macOS)
+        return 5
+#else
+        return 8
+#endif
+    }
+
+    private var borderColor: Color {
+#if os(macOS)
+        return isFocused ? Color.accentColor.opacity(0.8) : Color.secondary.opacity(0.2)
+#else
+        return Color.secondary.opacity(0.2)
+#endif
+    }
+
+    private var borderWidth: CGFloat {
+#if os(macOS)
+        return 1
+#else
+        return 1
 #endif
     }
 }

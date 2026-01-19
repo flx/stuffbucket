@@ -429,8 +429,7 @@ struct ContentView: View {
                 }
             }
             ToolbarItem(placement: .principal) {
-                TextField("Search", text: $searchText)
-                    .textFieldStyle(.roundedBorder)
+                SearchBarView(text: $searchText)
                     .frame(minWidth: 200, maxWidth: 400)
             }
         }

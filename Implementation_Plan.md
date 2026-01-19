@@ -105,7 +105,7 @@
   - Add search sidebar and filter controls.
   - Allow command-click on macOS tags to accumulate multiple tag filters. completed [x]
   - Replace placeholder landing UI with tag/collection lists. completed [x]
-  - Add a toolbar search field with a rounded text box. completed [x]
+  - Add a toolbar search field using SearchBarView with a custom focus outline. completed [x]
   - Add a recent items list on the empty state. completed [x]
   - Show live-updating link archive status badges in lists. completed [x]
 
