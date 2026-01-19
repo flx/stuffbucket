@@ -43,7 +43,7 @@ schemes:
 targets:
   StuffBucket:
     type: application
-    platform: auto
+    platform: iOS
     supportedDestinations: [iOS]
     sources:
       - path: Sources/StuffBucket
@@ -72,7 +72,7 @@ targets:
 
   StuffBucketMac:
     type: application
-    platform: auto
+    platform: macOS
     supportedDestinations: [macOS]
     sources:
       - path: Sources/StuffBucketMac

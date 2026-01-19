@@ -7,12 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0135C773D7F9CB889BA11269 /* AISettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39F1D7ACF847D433B9562943 /* AISettingsView.swift */; };
 		04C1F20034405ECDAA03582D /* LinkStatusBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7D95BC8968F47F9EEE076BA /* LinkStatusBadge.swift */; };
 		06C3CC56E338C56F4990B8BD /* SearchIndexMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ECA20E7784097D2A130917E /* SearchIndexMetadata.swift */; };
 		0774DCDB5A6918A200215BD3 /* ArchiveBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5874E11BFA8C2C8DAA597092 /* ArchiveBundle.swift */; };
 		0B636D62485E37CA9AB95AEC /* StuffBucketModel.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = A0E7D6443688015B5AD0915C /* StuffBucketModel.xcdatamodeld */; };
 		0DAD5813CCC54F7369D1D93E /* SharedCaptureStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB12F39F12A0E85EF8522A4F /* SharedCaptureStore.swift */; };
 		0F55D1A2F13947D0394C501F /* SharedCaptureStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB12F39F12A0E85EF8522A4F /* SharedCaptureStore.swift */; };
+		0F79E7C81927D22558262D18 /* AIKeyStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56BAD194C9AAF0A27DD99898 /* AIKeyStorage.swift */; };
 		1057C6B010B8BF21AB3CE383 /* LinkMetadataParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61B5AEE244404891A0F3F772 /* LinkMetadataParser.swift */; };
 		1629127A33E68B72BE6B0797 /* ItemType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492673B57623F50F88A8ADA2 /* ItemType.swift */; };
 		1684E9613F720EDFB183041E /* AIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1981F222EFC6022AFB2BDFC /* AIService.swift */; };
@@ -26,7 +28,9 @@
 		37B561B46F79E7E0FBE37F02 /* SearchBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CE026328EAC215EAEB06286 /* SearchBarView.swift */; };
 		38B9DEBA5B010F94ADFDC2DC /* RenderedPageCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E8092DFDAEA2EBCCCEC238 /* RenderedPageCapture.swift */; };
 		3DB1EAC92B925A9163115A56 /* SearchTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2362C758E3E3EC455DA86B6 /* SearchTypes.swift */; };
+		3E0E3DA717778AE70E0926F0 /* HTMLTextExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BEC37F9EC80FDD84721704D /* HTMLTextExtractor.swift */; };
 		3E13D18149A2F3D4D040D8D8 /* SearchBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CE026328EAC215EAEB06286 /* SearchBarView.swift */; };
+		4312679B4C3B96160947C27A /* AnthropicClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F8286C47253B852B0B855A2 /* AnthropicClient.swift */; };
 		43E74AD975C0A0ECD9F1F898 /* SearchDatabase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 905F62C8A186C9FB500CDA04 /* SearchDatabase.swift */; };
 		44B63DF7EA7517242F967299 /* SafariBookmarksImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E70E88CA2D3A12D3916610DF /* SafariBookmarksImporter.swift */; };
 		45DF98E80EF17852BE3498AD /* StuffBucketCoreMacTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09FB00910A27DBAC7AF0C1D9 /* StuffBucketCoreMacTests.swift */; };
@@ -50,6 +54,7 @@
 		7EEFA8A7ED48AB7844FEC2C5 /* SharedCaptureStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB12F39F12A0E85EF8522A4F /* SharedCaptureStore.swift */; };
 		85DE227A7108CCF34C637DFD /* SearchQueryBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4930E261A822ECF2BA2B9C65 /* SearchQueryBuilder.swift */; };
 		865A957FA76BE7E7AFBF645A /* SearchIndexMetadata.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ECA20E7784097D2A130917E /* SearchIndexMetadata.swift */; };
+		88E3605A6ADCC3B256A8A2CB /* AnthropicClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F8286C47253B852B0B855A2 /* AnthropicClient.swift */; };
 		8EE483CB89F18849A66F8AB8 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DF1288BED3A4351F145A788 /* ShareViewController.swift */; };
 		91F3C3288D3140283B8352B4 /* ItemType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492673B57623F50F88A8ADA2 /* ItemType.swift */; };
 		966376487199F9084473382B /* SearchQueryBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4930E261A822ECF2BA2B9C65 /* SearchQueryBuilder.swift */; };
@@ -57,23 +62,16 @@
 		A3616876C4CA9FDE6E590941 /* LinkStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 427A151E99D8C9E78755C44F /* LinkStorage.swift */; };
 		A41D6A37792859DA717F2B9C /* StuffBucketCore.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = B361E6BED62FB2575D9451B2 /* StuffBucketCore.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		A4B7752A6E94C6C1939AB68E /* OpenAIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3967E8E4395E7A531ABB2E62 /* OpenAIClient.swift */; };
-		9CFDD734CC327AF1452F5D3C /* AIKeyStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED69980F244F2F5F991C3B73 /* AIKeyStorage.swift */; };
-		A3F0F61400C5710327C09B1A /* AIKeyStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED69980F244F2F5F991C3B73 /* AIKeyStorage.swift */; };
-		D3BE5DD0D5BAE017A7E9AEF1 /* TagSuggestionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA2F02A7BECCEFE5AD7CFA83 /* TagSuggestionService.swift */; };
-		C922BAE61ACAD22BB741F540 /* TagSuggestionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA2F02A7BECCEFE5AD7CFA83 /* TagSuggestionService.swift */; };
-		0EDC0B3F30F54D1782A915CB /* HTMLTextExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50EFD6EC2E8CCA24C1233DBF /* HTMLTextExtractor.swift */; };
-		A7F9436B74D4785B3553FC11 /* HTMLTextExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50EFD6EC2E8CCA24C1233DBF /* HTMLTextExtractor.swift */; };
-		6FA36A0C19167CA030F6264D /* AnthropicClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = B52826FDA3D126306AA73913 /* AnthropicClient.swift */; };
-		C8F657F4EDF295C179808DC2 /* AnthropicClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = B52826FDA3D126306AA73913 /* AnthropicClient.swift */; };
-		6635F5C67DC50D4E55CE178B /* AISettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 723D32C719851E68D05F7038 /* AISettingsView.swift */; };
-		29262DD7A617571CB9092E5D /* AISettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 723D32C719851E68D05F7038 /* AISettingsView.swift */; };
-		1C0DEC98ED295F5EF2024903 /* TagSuggestionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2908A98761543610C1A58A5 /* TagSuggestionView.swift */; };
-		5C19E675FA5CB496CB73F3DB /* TagSuggestionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2908A98761543610C1A58A5 /* TagSuggestionView.swift */; };
 		A58B7B11FF9D05D5D88ABC61 /* SharedCaptureStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB12F39F12A0E85EF8522A4F /* SharedCaptureStore.swift */; };
 		A6C15F3AB78AD3EEBEA10398 /* RenderedPageCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E8092DFDAEA2EBCCCEC238 /* RenderedPageCapture.swift */; };
+		A8EF408D16ECDDEED3454171 /* TagSuggestionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B4E8FF47EEF3BC57B054751 /* TagSuggestionService.swift */; };
 		AACA028DDA00DE54A4DA6C38 /* LinkArchiver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AF01B94C0FF40F312225194 /* LinkArchiver.swift */; };
+		AE607C078A1BCC852A51D5E9 /* AIKeyStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56BAD194C9AAF0A27DD99898 /* AIKeyStorage.swift */; };
 		BF0A039D793E0C0E4F733F1E /* SafariBookmarksImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E70E88CA2D3A12D3916610DF /* SafariBookmarksImporter.swift */; };
+		C190A1AB47A1F12A21E7A3E5 /* TagSuggestionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5DF574B999553E0B86F1550 /* TagSuggestionView.swift */; };
+		C4A78FA6BDE2AED6C108F4C0 /* TagSuggestionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B4E8FF47EEF3BC57B054751 /* TagSuggestionService.swift */; };
 		C5523BBEEFEA8580CF55986C /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AB2C2597AE76B5FA3455BC7 /* ContentView.swift */; };
+		CA9F9CE3720BFD2356827CE6 /* TagSuggestionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5DF574B999553E0B86F1550 /* TagSuggestionView.swift */; };
 		CCEFAF9BDCB0665F0DE35AD5 /* ModelDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7D12DAD6A6B4D0D441AF4CC /* ModelDefaults.swift */; };
 		CDC82418C4C9FF5238579ED7 /* LibrarySummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84AFF605547F5932FC2491C8 /* LibrarySummary.swift */; };
 		CE3E34A3552642C322D5AC15 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 395F5C4997E19A6D5275D018 /* libsqlite3.tbd */; };
@@ -87,6 +85,7 @@
 		E12947893CCC16D9108DDBF3 /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3519E626243FD84BBF5EDA7F /* PersistenceController.swift */; };
 		E1D7292B327AE124B4D139DE /* SearchIndexer.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA005B6C0E3259CDAE104D1C /* SearchIndexer.swift */; };
 		E4D4ED8F788E8233C962716B /* ArchiveBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5874E11BFA8C2C8DAA597092 /* ArchiveBundle.swift */; };
+		E5847FE8949A334E9C72AAD9 /* AISettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39F1D7ACF847D433B9562943 /* AISettingsView.swift */; };
 		E5A30EB1358147F2E89BA621 /* SearchIndexer.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA005B6C0E3259CDAE104D1C /* SearchIndexer.swift */; };
 		EB096307CAE1A8CA130E0770 /* LinkArchiveAssets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48D00BC42AD400BFB7C6B154 /* LinkArchiveAssets.swift */; };
 		F2D713C24B245503BD6058C9 /* SearchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4768A08056EEFBD1E643C51 /* SearchService.swift */; };
@@ -94,6 +93,7 @@
 		F545F48693406383B085E724 /* StuffBucketCoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F43BBF55811196859694BD81 /* StuffBucketCoreTests.swift */; };
 		F84C3AF740D4926FC2E203CC /* LinkArchiveAssets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48D00BC42AD400BFB7C6B154 /* LinkArchiveAssets.swift */; };
 		FABB5C46F68A88842020892B /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3229BC032C43225982B053D2 /* ContentView.swift */; };
+		FAD37364B2C1689BEB758B8A /* HTMLTextExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BEC37F9EC80FDD84721704D /* HTMLTextExtractor.swift */; };
 		FDE7A2C81BBED5946ED27206 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 40515F24B8E9ACE644668DCF /* WebKit.framework */; };
 /* End PBXBuildFile section */
 
@@ -194,6 +194,7 @@
 		090F3B08EC5B484CB3FB4396 /* StuffBucketMacTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = StuffBucketMacTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		09FB00910A27DBAC7AF0C1D9 /* StuffBucketCoreMacTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StuffBucketCoreMacTests.swift; sourceTree = "<group>"; };
 		0AB2C2597AE76B5FA3455BC7 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		0BEC37F9EC80FDD84721704D /* HTMLTextExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTMLTextExtractor.swift; sourceTree = "<group>"; };
 		17A07BF1D67735F33F4F6C02 /* ArchiveResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchiveResolver.swift; sourceTree = "<group>"; };
 		25A4DA1230BA55D528E93587 /* StuffBucketMac.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = StuffBucketMac.entitlements; sourceTree = "<group>"; };
 		2AF01B94C0FF40F312225194 /* LinkArchiver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkArchiver.swift; sourceTree = "<group>"; };
@@ -203,12 +204,8 @@
 		362CA95B53A55DBC2BE406C0 /* StuffBucketMacShareExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = StuffBucketMacShareExtension.entitlements; sourceTree = "<group>"; };
 		395F5C4997E19A6D5275D018 /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
 		3967E8E4395E7A531ABB2E62 /* OpenAIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAIClient.swift; sourceTree = "<group>"; };
-		ED69980F244F2F5F991C3B73 /* AIKeyStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIKeyStorage.swift; sourceTree = "<group>"; };
-		EA2F02A7BECCEFE5AD7CFA83 /* TagSuggestionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagSuggestionService.swift; sourceTree = "<group>"; };
-		50EFD6EC2E8CCA24C1233DBF /* HTMLTextExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTMLTextExtractor.swift; sourceTree = "<group>"; };
-		B52826FDA3D126306AA73913 /* AnthropicClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnthropicClient.swift; sourceTree = "<group>"; };
-		723D32C719851E68D05F7038 /* AISettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AISettingsView.swift; sourceTree = "<group>"; };
-		D2908A98761543610C1A58A5 /* TagSuggestionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagSuggestionView.swift; sourceTree = "<group>"; };
+		39F1D7ACF847D433B9562943 /* AISettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AISettingsView.swift; sourceTree = "<group>"; };
+		3B4E8FF47EEF3BC57B054751 /* TagSuggestionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagSuggestionService.swift; sourceTree = "<group>"; };
 		40515F24B8E9ACE644668DCF /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
 		427A151E99D8C9E78755C44F /* LinkStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkStorage.swift; sourceTree = "<group>"; };
 		4649777F76AD3EE1E9C4E3FE /* StuffBucketShareExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = StuffBucketShareExtension.entitlements; sourceTree = "<group>"; };
@@ -218,9 +215,11 @@
 		4C0B04C9F62DBD0825C38DC6 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		4D938428DC51F63A22016D37 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		4ECA20E7784097D2A130917E /* SearchIndexMetadata.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchIndexMetadata.swift; sourceTree = "<group>"; };
+		56BAD194C9AAF0A27DD99898 /* AIKeyStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIKeyStorage.swift; sourceTree = "<group>"; };
 		5874E11BFA8C2C8DAA597092 /* ArchiveBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchiveBundle.swift; sourceTree = "<group>"; };
 		59DCBC7B3D1435C4D3287924 /* ItemDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemDetailView.swift; sourceTree = "<group>"; };
 		5AE0A3DE6401EC33AC94C171 /* StuffBucketCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = StuffBucketCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		5F8286C47253B852B0B855A2 /* AnthropicClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnthropicClient.swift; sourceTree = "<group>"; };
 		5FE07D9B43A9ED142BC4791E /* Implementation_Plan.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = Implementation_Plan.md; sourceTree = "<group>"; };
 		61B5AEE244404891A0F3F772 /* LinkMetadataParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkMetadataParser.swift; sourceTree = "<group>"; };
 		759B8C6613B6A7906FABD215 /* Item.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Item.swift; sourceTree = "<group>"; };
@@ -240,12 +239,13 @@
 		971ED3B90D0BC6EA793D9090 /* StuffBucketShareExtension.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = StuffBucketShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		98FEBE9AF2D9ED305F35501F /* StuffBucketModel.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = StuffBucketModel.xcdatamodel; sourceTree = "<group>"; };
 		9B0D9ADADAD06E535CBC42CB /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
+		A5DF574B999553E0B86F1550 /* TagSuggestionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagSuggestionView.swift; sourceTree = "<group>"; };
 		A7D95BC8968F47F9EEE076BA /* LinkStatusBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkStatusBadge.swift; sourceTree = "<group>"; };
 		A9E8092DFDAEA2EBCCCEC238 /* RenderedPageCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RenderedPageCapture.swift; sourceTree = "<group>"; };
 		B361E6BED62FB2575D9451B2 /* StuffBucketCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = StuffBucketCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		B6D19BF8E42EED96A8C59100 /* StuffBucketTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = StuffBucketTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		BB12F39F12A0E85EF8522A4F /* SharedCaptureStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedCaptureStore.swift; sourceTree = "<group>"; };
-		CD33A00B462976D52F37AEF0 /* StuffBucketMac.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = StuffBucketMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		CD33A00B462976D52F37AEF0 /* StuffBucketMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = StuffBucketMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D153F84880F3059E01BA9478 /* spec.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = spec.md; sourceTree = "<group>"; };
 		D4768A08056EEFBD1E643C51 /* SearchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchService.swift; sourceTree = "<group>"; };
 		DA005B6C0E3259CDAE104D1C /* SearchIndexer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchIndexer.swift; sourceTree = "<group>"; };
@@ -383,11 +383,11 @@
 		80B168866FD1DF59D4435869 /* StuffBucketSharedUI */ = {
 			isa = PBXGroup;
 			children = (
+				39F1D7ACF847D433B9562943 /* AISettingsView.swift */,
 				59DCBC7B3D1435C4D3287924 /* ItemDetailView.swift */,
 				A7D95BC8968F47F9EEE076BA /* LinkStatusBadge.swift */,
 				8CE026328EAC215EAEB06286 /* SearchBarView.swift */,
-				723D32C719851E68D05F7038 /* AISettingsView.swift */,
-				D2908A98761543610C1A58A5 /* TagSuggestionView.swift */,
+				A5DF574B999553E0B86F1550 /* TagSuggestionView.swift */,
 			);
 			path = StuffBucketSharedUI;
 			sourceTree = "<group>";
@@ -432,13 +432,13 @@
 		C972833534812387DABC039E /* AI */ = {
 			isa = PBXGroup;
 			children = (
+				56BAD194C9AAF0A27DD99898 /* AIKeyStorage.swift */,
 				F1981F222EFC6022AFB2BDFC /* AIService.swift */,
+				5F8286C47253B852B0B855A2 /* AnthropicClient.swift */,
+				0BEC37F9EC80FDD84721704D /* HTMLTextExtractor.swift */,
 				E7D12DAD6A6B4D0D441AF4CC /* ModelDefaults.swift */,
 				3967E8E4395E7A531ABB2E62 /* OpenAIClient.swift */,
-				ED69980F244F2F5F991C3B73 /* AIKeyStorage.swift */,
-				EA2F02A7BECCEFE5AD7CFA83 /* TagSuggestionService.swift */,
-				50EFD6EC2E8CCA24C1233DBF /* HTMLTextExtractor.swift */,
-				B52826FDA3D126306AA73913 /* AnthropicClient.swift */,
+				3B4E8FF47EEF3BC57B054751 /* TagSuggestionService.swift */,
 			);
 			path = AI;
 			sourceTree = "<group>";
@@ -776,14 +776,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0135C773D7F9CB889BA11269 /* AISettingsView.swift in Sources */,
 				C5523BBEEFEA8580CF55986C /* ContentView.swift in Sources */,
-				29262DD7A617571CB9092E5D /* AISettingsView.swift in Sources */,
-				1C0DEC98ED295F5EF2024903 /* TagSuggestionView.swift in Sources */,
 				6DD4DF259E5BFA400116A1EB /* ItemDetailView.swift in Sources */,
 				75D21B3A9853C120555F781D /* LinkStatusBadge.swift in Sources */,
 				3E13D18149A2F3D4D040D8D8 /* SearchBarView.swift in Sources */,
 				A58B7B11FF9D05D5D88ABC61 /* SharedCaptureStore.swift in Sources */,
 				6684A51D3E6853AA9C05B79A /* StuffBucketApp.swift in Sources */,
+				C190A1AB47A1F12A21E7A3E5 /* TagSuggestionView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -800,9 +800,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0F79E7C81927D22558262D18 /* AIKeyStorage.swift in Sources */,
 				DC8A8AA04064C930F4AB54EE /* AIService.swift in Sources */,
+				88E3605A6ADCC3B256A8A2CB /* AnthropicClient.swift in Sources */,
 				0774DCDB5A6918A200215BD3 /* ArchiveBundle.swift in Sources */,
 				57B967F8D64BABD4A795CB0B /* ArchiveResolver.swift in Sources */,
+				FAD37364B2C1689BEB758B8A /* HTMLTextExtractor.swift in Sources */,
 				7D265F05B8433408B87BEA95 /* Item.swift in Sources */,
 				1629127A33E68B72BE6B0797 /* ItemType.swift in Sources */,
 				CDC82418C4C9FF5238579ED7 /* LibrarySummary.swift in Sources */,
@@ -812,10 +815,6 @@
 				A3616876C4CA9FDE6E590941 /* LinkStorage.swift in Sources */,
 				D2AA894706968FC3D078E99D /* ModelDefaults.swift in Sources */,
 				A4B7752A6E94C6C1939AB68E /* OpenAIClient.swift in Sources */,
-				A3F0F61400C5710327C09B1A /* AIKeyStorage.swift in Sources */,
-				D3BE5DD0D5BAE017A7E9AEF1 /* TagSuggestionService.swift in Sources */,
-				0EDC0B3F30F54D1782A915CB /* HTMLTextExtractor.swift in Sources */,
-				C8F657F4EDF295C179808DC2 /* AnthropicClient.swift in Sources */,
 				D46EBD7F3E366F2E7B3C8FE9 /* PersistenceController.swift in Sources */,
 				38B9DEBA5B010F94ADFDC2DC /* RenderedPageCapture.swift in Sources */,
 				BF0A039D793E0C0E4F733F1E /* SafariBookmarksImporter.swift in Sources */,
@@ -826,6 +825,7 @@
 				648AA9C43B4433FBC71003D3 /* SearchService.swift in Sources */,
 				4A8A152DBF678089079E23FA /* SearchTypes.swift in Sources */,
 				636A5458895A0EFAB3548B53 /* StuffBucketModel.xcdatamodeld in Sources */,
+				C4A78FA6BDE2AED6C108F4C0 /* TagSuggestionService.swift in Sources */,
 				9689C43F9A296F9388E52C27 /* TrashCleanupService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -859,14 +859,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E5847FE8949A334E9C72AAD9 /* AISettingsView.swift in Sources */,
 				FABB5C46F68A88842020892B /* ContentView.swift in Sources */,
-				6635F5C67DC50D4E55CE178B /* AISettingsView.swift in Sources */,
-				5C19E675FA5CB496CB73F3DB /* TagSuggestionView.swift in Sources */,
 				2EF760054F3B6D1BDC9442D5 /* ItemDetailView.swift in Sources */,
 				04C1F20034405ECDAA03582D /* LinkStatusBadge.swift in Sources */,
 				37B561B46F79E7E0FBE37F02 /* SearchBarView.swift in Sources */,
 				7EEFA8A7ED48AB7844FEC2C5 /* SharedCaptureStore.swift in Sources */,
 				D6C860C37CC33E7DE7EAADCF /* StuffBucketMacApp.swift in Sources */,
+				CA9F9CE3720BFD2356827CE6 /* TagSuggestionView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -874,9 +874,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AE607C078A1BCC852A51D5E9 /* AIKeyStorage.swift in Sources */,
 				1684E9613F720EDFB183041E /* AIService.swift in Sources */,
+				4312679B4C3B96160947C27A /* AnthropicClient.swift in Sources */,
 				E4D4ED8F788E8233C962716B /* ArchiveBundle.swift in Sources */,
 				F412DDA2BF0C87D53035C619 /* ArchiveResolver.swift in Sources */,
+				3E0E3DA717778AE70E0926F0 /* HTMLTextExtractor.swift in Sources */,
 				71EACB034052AEA96271B70A /* Item.swift in Sources */,
 				91F3C3288D3140283B8352B4 /* ItemType.swift in Sources */,
 				4D7F7071C5B3C4A38ED552CD /* LibrarySummary.swift in Sources */,
@@ -886,10 +889,6 @@
 				68D366FE1C7032E99FCC17EA /* LinkStorage.swift in Sources */,
 				CCEFAF9BDCB0665F0DE35AD5 /* ModelDefaults.swift in Sources */,
 				4A2310E940D292587003DBAA /* OpenAIClient.swift in Sources */,
-				9CFDD734CC327AF1452F5D3C /* AIKeyStorage.swift in Sources */,
-				C922BAE61ACAD22BB741F540 /* TagSuggestionService.swift in Sources */,
-				A7F9436B74D4785B3553FC11 /* HTMLTextExtractor.swift in Sources */,
-				6FA36A0C19167CA030F6264D /* AnthropicClient.swift in Sources */,
 				E12947893CCC16D9108DDBF3 /* PersistenceController.swift in Sources */,
 				A6C15F3AB78AD3EEBEA10398 /* RenderedPageCapture.swift in Sources */,
 				44B63DF7EA7517242F967299 /* SafariBookmarksImporter.swift in Sources */,
@@ -900,6 +899,7 @@
 				F2D713C24B245503BD6058C9 /* SearchService.swift in Sources */,
 				3DB1EAC92B925A9163115A56 /* SearchTypes.swift in Sources */,
 				0B636D62485E37CA9AB95AEC /* StuffBucketModel.xcdatamodeld in Sources */,
+				A8EF408D16ECDDEED3454171 /* TagSuggestionService.swift in Sources */,
 				DE556398D2BEACA54502FED7 /* TrashCleanupService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
