@@ -103,6 +103,7 @@
 - macOS:
   - Add basic search UI and result preview. completed [x]
   - Add search sidebar and filter controls.
+  - Allow command-click on macOS tags to accumulate multiple tag filters. completed [x]
   - Replace placeholder landing UI with tag/collection lists. completed [x]
   - Add a toolbar search field with a rounded text box. completed [x]
   - Add a recent items list on the empty state. completed [x]

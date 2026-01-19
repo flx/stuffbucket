@@ -171,7 +171,9 @@ struct ContentView: View {
                                 .buttonStyle(.plain)
                             } else {
                                 Button {
-                                    searchText = filterToken(prefix: "tag", value: summary.name)
+                                    let isAdditive = NSApp.currentEvent?.modifierFlags.contains(.command)
+                                        ?? NSEvent.modifierFlags.contains(.command)
+                                    applyTagFilter(summary.name, additive: isAdditive)
                                 } label: {
                                     HStack {
                                         Label(summary.name, systemImage: "tag")
@@ -515,6 +517,23 @@ struct ContentView: View {
             return "\(prefix):\"\(trimmed)\""
         }
         return "\(prefix):\(trimmed)"
+    }
+
+    private func applyTagFilter(_ tag: String, additive: Bool) {
+        let token = filterToken(prefix: "tag", value: tag)
+        let trimmedSearch = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !additive || trimmedSearch.isEmpty || trimmedSearch.lowercased() == "tag:none" {
+            searchText = token
+            return
+        }
+
+        let query = SearchQueryParser().parse(trimmedSearch)
+        if query.filters.contains(where: { $0.key == .tag && $0.value.caseInsensitiveCompare(tag) == .orderedSame }) {
+            return
+        }
+
+        let separator = trimmedSearch.hasSuffix(" ") ? "" : " "
+        searchText = trimmedSearch + separator + token
     }
 
     @ViewBuilder
