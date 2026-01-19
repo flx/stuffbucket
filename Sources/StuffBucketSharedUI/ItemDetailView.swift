@@ -290,7 +290,7 @@ struct ItemDetailView: View {
             .textInputAutocapitalization(.never)
             .disableAutocorrection(true)
 #else
-        TextField("Add tags", text: $tagsText)
+        TextField("", text: $tagsText)
             .textFieldStyle(.plain)
             .multilineTextAlignment(.leading)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -304,7 +304,7 @@ struct ItemDetailView: View {
             .textInputAutocapitalization(.never)
             .disableAutocorrection(true)
 #else
-        TextField("Add collections", text: $collectionsText)
+        TextField("", text: $collectionsText)
             .textFieldStyle(.plain)
             .multilineTextAlignment(.leading)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -319,6 +319,8 @@ struct ItemDetailView: View {
 #else
         TextEditor(text: $contentText)
             .frame(minHeight: 180)
+            .multilineTextAlignment(.leading)
+            .frame(maxWidth: .infinity, alignment: .leading)
 #endif
     }
 
