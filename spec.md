@@ -394,25 +394,38 @@ If a link is marked protected:
 - De-dup by `sourceExternalID` when present; fall back to URL + folder path.
 - If a URL already exists, merge metadata and keep the earliest Item ID.
 
-## 14. OpenAI / ChatGPT integration (new)
+## 14. AI Integration (Claude & OpenAI)
 
-### 11.1 Capabilities
-- Summaries, key points, and tag suggestions for items.
-- Optional tasks: title refinement, entity extraction, and Q&A over a single item.
-- Actions are always user-initiated (no silent background AI).
+### 14.1 Capabilities
+- **Tag suggestions** for items based on content analysis.
+- AI analyzes item title, snippet, URL, and archived article text.
+- Suggestions prefer existing library tags over creating new ones.
+- Actions are always user-initiated (manual "Suggest Tags" button).
 
-### 11.2 Models and authentication
-- Support ChatGPT-class models (e.g. GPT-4o family).
-- OpenAI API access requires API keys; keys must not be hardcoded or bundled with the client app.
-- ChatGPT Plus subscriptions do **not** grant API access or API billing.
-- Integration is BYOK only in v0.3 (user-provided API key).
-- Keys are stored in Keychain and never logged or exported.
-- Default model: `gpt-4o-mini` with an optional advanced model picker.
+### 14.2 Supported Providers
+- **Anthropic Claude** (claude-sonnet-4, claude-opus-4, claude-3.5-sonnet, claude-3.5-haiku)
+- **OpenAI GPT** (gpt-4o, gpt-4o-mini, gpt-4-turbo, gpt-3.5-turbo)
+- User selects provider and model in AI Settings.
+- Default models: `claude-sonnet-4-20250514` (Anthropic), `gpt-4o` (OpenAI).
 
-### 11.3 Privacy and protection
-- Explicit confirmation before sending content to OpenAI.
-- Protected items require unlock and an extra confirmation prompt.
-- AI outputs are stored locally in Core Data; users can delete or regenerate them.
+### 14.3 Authentication and Storage
+- BYOK (bring your own key) - user provides their own API keys.
+- Keys stored in both iCloud Key-Value Store (cross-device sync) and UserDefaults (local fallback).
+- Keys are never logged or exported.
+- API key validation on save (test request to verify key works).
+
+### 14.4 Tag Suggestion Flow
+1. User opens item detail view.
+2. User taps "Suggest Tags" button (visible when API key is configured).
+3. Sheet displays with loading state while AI analyzes content.
+4. Suggested tags shown with checkboxes (all pre-selected by default).
+5. Tags already in library marked with "existing" badge.
+6. User reviews, adjusts selection, and taps "Apply" to add tags.
+
+### 14.5 Privacy
+- Content sent to AI includes: title, snippet (truncated), URL, article text (truncated).
+- No automatic/background AI calls - always user-initiated.
+- AI outputs (suggested tags) are applied directly to items, not stored separately.
 
 
 ---

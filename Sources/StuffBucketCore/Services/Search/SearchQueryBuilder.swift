@@ -90,6 +90,8 @@ public struct SearchQueryBuilder {
         }
 
         for filter in query.filters {
+            // Skip date filters - they're handled as post-filtering
+            guard filter.key != .date else { continue }
             let column = columnName(for: filter.key)
             let valueClause = buildValueClause(for: filter.value)
             if !valueClause.isEmpty {
@@ -167,6 +169,8 @@ public struct SearchQueryBuilder {
             return "collection"
         case .source:
             return "source"
+        case .date:
+            return "" // Date filters are handled as post-filtering, not in FTS
         }
     }
 }

@@ -57,6 +57,18 @@
 		A3616876C4CA9FDE6E590941 /* LinkStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 427A151E99D8C9E78755C44F /* LinkStorage.swift */; };
 		A41D6A37792859DA717F2B9C /* StuffBucketCore.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = B361E6BED62FB2575D9451B2 /* StuffBucketCore.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		A4B7752A6E94C6C1939AB68E /* OpenAIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3967E8E4395E7A531ABB2E62 /* OpenAIClient.swift */; };
+		9CFDD734CC327AF1452F5D3C /* AIKeyStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED69980F244F2F5F991C3B73 /* AIKeyStorage.swift */; };
+		A3F0F61400C5710327C09B1A /* AIKeyStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED69980F244F2F5F991C3B73 /* AIKeyStorage.swift */; };
+		D3BE5DD0D5BAE017A7E9AEF1 /* TagSuggestionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA2F02A7BECCEFE5AD7CFA83 /* TagSuggestionService.swift */; };
+		C922BAE61ACAD22BB741F540 /* TagSuggestionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA2F02A7BECCEFE5AD7CFA83 /* TagSuggestionService.swift */; };
+		0EDC0B3F30F54D1782A915CB /* HTMLTextExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50EFD6EC2E8CCA24C1233DBF /* HTMLTextExtractor.swift */; };
+		A7F9436B74D4785B3553FC11 /* HTMLTextExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50EFD6EC2E8CCA24C1233DBF /* HTMLTextExtractor.swift */; };
+		6FA36A0C19167CA030F6264D /* AnthropicClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = B52826FDA3D126306AA73913 /* AnthropicClient.swift */; };
+		C8F657F4EDF295C179808DC2 /* AnthropicClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = B52826FDA3D126306AA73913 /* AnthropicClient.swift */; };
+		6635F5C67DC50D4E55CE178B /* AISettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 723D32C719851E68D05F7038 /* AISettingsView.swift */; };
+		29262DD7A617571CB9092E5D /* AISettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 723D32C719851E68D05F7038 /* AISettingsView.swift */; };
+		1C0DEC98ED295F5EF2024903 /* TagSuggestionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2908A98761543610C1A58A5 /* TagSuggestionView.swift */; };
+		5C19E675FA5CB496CB73F3DB /* TagSuggestionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2908A98761543610C1A58A5 /* TagSuggestionView.swift */; };
 		A58B7B11FF9D05D5D88ABC61 /* SharedCaptureStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB12F39F12A0E85EF8522A4F /* SharedCaptureStore.swift */; };
 		A6C15F3AB78AD3EEBEA10398 /* RenderedPageCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E8092DFDAEA2EBCCCEC238 /* RenderedPageCapture.swift */; };
 		AACA028DDA00DE54A4DA6C38 /* LinkArchiver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AF01B94C0FF40F312225194 /* LinkArchiver.swift */; };
@@ -191,6 +203,12 @@
 		362CA95B53A55DBC2BE406C0 /* StuffBucketMacShareExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = StuffBucketMacShareExtension.entitlements; sourceTree = "<group>"; };
 		395F5C4997E19A6D5275D018 /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
 		3967E8E4395E7A531ABB2E62 /* OpenAIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAIClient.swift; sourceTree = "<group>"; };
+		ED69980F244F2F5F991C3B73 /* AIKeyStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIKeyStorage.swift; sourceTree = "<group>"; };
+		EA2F02A7BECCEFE5AD7CFA83 /* TagSuggestionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagSuggestionService.swift; sourceTree = "<group>"; };
+		50EFD6EC2E8CCA24C1233DBF /* HTMLTextExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HTMLTextExtractor.swift; sourceTree = "<group>"; };
+		B52826FDA3D126306AA73913 /* AnthropicClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnthropicClient.swift; sourceTree = "<group>"; };
+		723D32C719851E68D05F7038 /* AISettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AISettingsView.swift; sourceTree = "<group>"; };
+		D2908A98761543610C1A58A5 /* TagSuggestionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagSuggestionView.swift; sourceTree = "<group>"; };
 		40515F24B8E9ACE644668DCF /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
 		427A151E99D8C9E78755C44F /* LinkStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkStorage.swift; sourceTree = "<group>"; };
 		4649777F76AD3EE1E9C4E3FE /* StuffBucketShareExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = StuffBucketShareExtension.entitlements; sourceTree = "<group>"; };
@@ -368,6 +386,8 @@
 				59DCBC7B3D1435C4D3287924 /* ItemDetailView.swift */,
 				A7D95BC8968F47F9EEE076BA /* LinkStatusBadge.swift */,
 				8CE026328EAC215EAEB06286 /* SearchBarView.swift */,
+				723D32C719851E68D05F7038 /* AISettingsView.swift */,
+				D2908A98761543610C1A58A5 /* TagSuggestionView.swift */,
 			);
 			path = StuffBucketSharedUI;
 			sourceTree = "<group>";
@@ -415,6 +435,10 @@
 				F1981F222EFC6022AFB2BDFC /* AIService.swift */,
 				E7D12DAD6A6B4D0D441AF4CC /* ModelDefaults.swift */,
 				3967E8E4395E7A531ABB2E62 /* OpenAIClient.swift */,
+				ED69980F244F2F5F991C3B73 /* AIKeyStorage.swift */,
+				EA2F02A7BECCEFE5AD7CFA83 /* TagSuggestionService.swift */,
+				50EFD6EC2E8CCA24C1233DBF /* HTMLTextExtractor.swift */,
+				B52826FDA3D126306AA73913 /* AnthropicClient.swift */,
 			);
 			path = AI;
 			sourceTree = "<group>";
@@ -753,6 +777,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				C5523BBEEFEA8580CF55986C /* ContentView.swift in Sources */,
+				29262DD7A617571CB9092E5D /* AISettingsView.swift in Sources */,
+				1C0DEC98ED295F5EF2024903 /* TagSuggestionView.swift in Sources */,
 				6DD4DF259E5BFA400116A1EB /* ItemDetailView.swift in Sources */,
 				75D21B3A9853C120555F781D /* LinkStatusBadge.swift in Sources */,
 				3E13D18149A2F3D4D040D8D8 /* SearchBarView.swift in Sources */,
@@ -786,6 +812,10 @@
 				A3616876C4CA9FDE6E590941 /* LinkStorage.swift in Sources */,
 				D2AA894706968FC3D078E99D /* ModelDefaults.swift in Sources */,
 				A4B7752A6E94C6C1939AB68E /* OpenAIClient.swift in Sources */,
+				A3F0F61400C5710327C09B1A /* AIKeyStorage.swift in Sources */,
+				D3BE5DD0D5BAE017A7E9AEF1 /* TagSuggestionService.swift in Sources */,
+				0EDC0B3F30F54D1782A915CB /* HTMLTextExtractor.swift in Sources */,
+				C8F657F4EDF295C179808DC2 /* AnthropicClient.swift in Sources */,
 				D46EBD7F3E366F2E7B3C8FE9 /* PersistenceController.swift in Sources */,
 				38B9DEBA5B010F94ADFDC2DC /* RenderedPageCapture.swift in Sources */,
 				BF0A039D793E0C0E4F733F1E /* SafariBookmarksImporter.swift in Sources */,
@@ -830,6 +860,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				FABB5C46F68A88842020892B /* ContentView.swift in Sources */,
+				6635F5C67DC50D4E55CE178B /* AISettingsView.swift in Sources */,
+				5C19E675FA5CB496CB73F3DB /* TagSuggestionView.swift in Sources */,
 				2EF760054F3B6D1BDC9442D5 /* ItemDetailView.swift in Sources */,
 				04C1F20034405ECDAA03582D /* LinkStatusBadge.swift in Sources */,
 				37B561B46F79E7E0FBE37F02 /* SearchBarView.swift in Sources */,
@@ -854,6 +886,10 @@
 				68D366FE1C7032E99FCC17EA /* LinkStorage.swift in Sources */,
 				CCEFAF9BDCB0665F0DE35AD5 /* ModelDefaults.swift in Sources */,
 				4A2310E940D292587003DBAA /* OpenAIClient.swift in Sources */,
+				9CFDD734CC327AF1452F5D3C /* AIKeyStorage.swift in Sources */,
+				C922BAE61ACAD22BB741F540 /* TagSuggestionService.swift in Sources */,
+				A7F9436B74D4785B3553FC11 /* HTMLTextExtractor.swift in Sources */,
+				6FA36A0C19167CA030F6264D /* AnthropicClient.swift in Sources */,
 				E12947893CCC16D9108DDBF3 /* PersistenceController.swift in Sources */,
 				A6C15F3AB78AD3EEBEA10398 /* RenderedPageCapture.swift in Sources */,
 				44B63DF7EA7517242F967299 /* SafariBookmarksImporter.swift in Sources */,

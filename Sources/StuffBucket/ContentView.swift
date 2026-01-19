@@ -14,6 +14,11 @@ struct ContentView: View {
     @State private var addLinkText = ""
     @State private var isShowingDeleteAllAlert = false
     @State private var showAllItems = false
+    @State private var isSelectMode = false
+    @State private var selectedItems: Set<UUID> = []
+    @State private var selectedTags: Set<String> = []
+    @State private var selectedCollections: Set<String> = []
+    @State private var isShowingAISettings = false
     private let searchService = SearchService()
     private let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -46,6 +51,42 @@ struct ContentView: View {
         activeItems.count > 10
     }
 
+    private var untaggedItemCount: Int {
+        activeItems.filter { $0.displayTagList.isEmpty }.count
+    }
+
+    private func extractDateFilter(from searchText: String) -> DateFilter? {
+        // Simple extraction of date: filter from search text
+        let pattern = #"date:("[^"]+"|[^\s]+)"#
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive),
+              let match = regex.firstMatch(in: searchText, range: NSRange(searchText.startIndex..., in: searchText)),
+              let range = Range(match.range, in: searchText) else {
+            return nil
+        }
+        let token = String(searchText[range])
+        guard let colonIndex = token.firstIndex(of: ":") else { return nil }
+        var value = String(token[token.index(after: colonIndex)...])
+        // Remove quotes if present
+        if value.hasPrefix("\"") && value.hasSuffix("\"") {
+            value = String(value.dropFirst().dropLast())
+        }
+        return DateFilter(from: value)
+    }
+
+    private func isDateOnlySearch(_ searchText: String) -> Bool {
+        // Check if search contains only date: filter(s) and no other text
+        let pattern = #"date:("[^"]+"|[^\s]+)"#
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive) else {
+            return false
+        }
+        let withoutDate = regex.stringByReplacingMatches(
+            in: searchText,
+            range: NSRange(searchText.startIndex..., in: searchText),
+            withTemplate: ""
+        )
+        return withoutDate.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
     private var itemLookup: [UUID: Item] {
         var lookup: [UUID: Item] = [:]
         for item in items {
@@ -64,7 +105,7 @@ struct ContentView: View {
                     .padding(.top, 8)
                 List {
                     if searchText.isEmpty {
-                        Section("Recent") {
+                        Section("Stuff") {
                             if recentItems.isEmpty {
                                 VStack(alignment: .leading, spacing: 12) {
                                     Text("No items yet")
@@ -80,26 +121,22 @@ struct ContentView: View {
                             } else {
                                 ForEach(recentItems, id: \.objectID) { item in
                                     if let itemID = item.id {
-                                        NavigationLink {
-                                            ItemDetailView(itemID: itemID)
-                                        } label: {
-                                            VStack(alignment: .leading, spacing: 6) {
-                                                Text(item.displayTitle)
-                                                    .font(.headline)
-                                                HStack(spacing: 8) {
-                                                    Text(item.itemType?.rawValue.capitalized ?? "Item")
-                                                        .font(.subheadline)
-                                                        .foregroundStyle(.secondary)
-                                                    if item.isLinkItem {
-                                                        ItemArchiveStatusBadge(item: item)
-                                                    }
-                                                    Spacer()
-                                                    if let date = item.createdAt {
-                                                        Text(dateFormatter.string(from: date))
-                                                            .font(.caption)
-                                                            .foregroundStyle(.tertiary)
-                                                    }
+                                        if isSelectMode {
+                                            Button {
+                                                toggleSelection(itemID)
+                                            } label: {
+                                                HStack {
+                                                    Image(systemName: selectedItems.contains(itemID) ? "checkmark.circle.fill" : "circle")
+                                                        .foregroundStyle(selectedItems.contains(itemID) ? .blue : .secondary)
+                                                    itemRowContent(item: item)
                                                 }
+                                            }
+                                            .buttonStyle(.plain)
+                                        } else {
+                                            NavigationLink {
+                                                ItemDetailView(itemID: itemID)
+                                            } label: {
+                                                itemRowContent(item: item)
                                             }
                                         }
                                     }
@@ -125,18 +162,45 @@ struct ContentView: View {
                                 Text("No tags yet")
                                     .foregroundStyle(.secondary)
                             } else {
-                                ForEach(tagSummaries) { summary in
-                                    Button {
-                                        searchText = filterToken(prefix: "tag", value: summary.name)
-                                    } label: {
-                                        HStack {
-                                            Label(summary.name, systemImage: "tag")
-                                            Spacer()
-                                            Text("\(summary.count)")
-                                                .foregroundStyle(.secondary)
-                                        }
+                                Button {
+                                    searchText = "tag:none"
+                                } label: {
+                                    HStack {
+                                        Label("Untagged", systemImage: "tag.slash")
+                                        Spacer()
+                                        Text("\(untaggedItemCount)")
+                                            .foregroundStyle(.secondary)
                                     }
-                                    .buttonStyle(.plain)
+                                }
+                                .buttonStyle(.plain)
+                                ForEach(tagSummaries) { summary in
+                                    if isSelectMode {
+                                        Button {
+                                            toggleTagSelection(summary.name)
+                                        } label: {
+                                            HStack {
+                                                Image(systemName: selectedTags.contains(summary.name) ? "checkmark.circle.fill" : "circle")
+                                                    .foregroundStyle(selectedTags.contains(summary.name) ? .blue : .secondary)
+                                                Label(summary.name, systemImage: "tag")
+                                                Spacer()
+                                                Text("\(summary.count)")
+                                                    .foregroundStyle(.secondary)
+                                            }
+                                        }
+                                        .buttonStyle(.plain)
+                                    } else {
+                                        Button {
+                                            searchText = filterToken(prefix: "tag", value: summary.name)
+                                        } label: {
+                                            HStack {
+                                                Label(summary.name, systemImage: "tag")
+                                                Spacer()
+                                                Text("\(summary.count)")
+                                                    .foregroundStyle(.secondary)
+                                            }
+                                        }
+                                        .buttonStyle(.plain)
+                                    }
                                 }
                             }
                         }
@@ -146,17 +210,93 @@ struct ContentView: View {
                                     .foregroundStyle(.secondary)
                             } else {
                                 ForEach(collectionSummaries) { summary in
-                                    Button {
-                                        searchText = filterToken(prefix: "collection", value: summary.name)
-                                    } label: {
-                                        HStack {
-                                            Label(summary.name, systemImage: "folder")
-                                            Spacer()
-                                            Text("\(summary.count)")
-                                                .foregroundStyle(.secondary)
+                                    if isSelectMode {
+                                        Button {
+                                            toggleCollectionSelection(summary.name)
+                                        } label: {
+                                            HStack {
+                                                Image(systemName: selectedCollections.contains(summary.name) ? "checkmark.circle.fill" : "circle")
+                                                    .foregroundStyle(selectedCollections.contains(summary.name) ? .blue : .secondary)
+                                                Label(summary.name, systemImage: "folder")
+                                                Spacer()
+                                                Text("\(summary.count)")
+                                                    .foregroundStyle(.secondary)
+                                            }
+                                        }
+                                        .buttonStyle(.plain)
+                                    } else {
+                                        Button {
+                                            searchText = filterToken(prefix: "collection", value: summary.name)
+                                        } label: {
+                                            HStack {
+                                                Label(summary.name, systemImage: "folder")
+                                                Spacer()
+                                                Text("\(summary.count)")
+                                                    .foregroundStyle(.secondary)
+                                            }
+                                        }
+                                        .buttonStyle(.plain)
+                                    }
+                                }
+                            }
+                        }
+                    } else if let dateFilter = extractDateFilter(from: searchText), isDateOnlySearch(searchText) {
+                        // Date-only search: show all items matching the date filter
+                        let matchingItems = activeItems.filter { dateFilter.matches(date: $0.createdAt) }
+                        if matchingItems.isEmpty {
+                            Text("No items match this date filter")
+                                .foregroundStyle(.secondary)
+                        } else {
+                            ForEach(matchingItems, id: \.objectID) { item in
+                                if let itemID = item.id {
+                                    if isSelectMode {
+                                        Button {
+                                            toggleSelection(itemID)
+                                        } label: {
+                                            HStack {
+                                                Image(systemName: selectedItems.contains(itemID) ? "checkmark.circle.fill" : "circle")
+                                                    .foregroundStyle(selectedItems.contains(itemID) ? .blue : .secondary)
+                                                itemRowContent(item: item)
+                                            }
+                                        }
+                                        .buttonStyle(.plain)
+                                    } else {
+                                        NavigationLink {
+                                            ItemDetailView(itemID: itemID)
+                                        } label: {
+                                            itemRowContent(item: item)
                                         }
                                     }
-                                    .buttonStyle(.plain)
+                                }
+                            }
+                        }
+                    } else if searchText.lowercased() == "tag:none" {
+                        // Special case: show untagged items
+                        let untaggedItems = activeItems.filter { $0.displayTagList.isEmpty }
+                        if untaggedItems.isEmpty {
+                            Text("No untagged items")
+                                .foregroundStyle(.secondary)
+                        } else {
+                            ForEach(untaggedItems, id: \.objectID) { item in
+                                if let itemID = item.id {
+                                    if isSelectMode {
+                                        Button {
+                                            toggleSelection(itemID)
+                                        } label: {
+                                            HStack {
+                                                Image(systemName: selectedItems.contains(itemID) ? "checkmark.circle.fill" : "circle")
+                                                    .foregroundStyle(selectedItems.contains(itemID) ? .blue : .secondary)
+                                                itemRowContent(item: item)
+                                            }
+                                        }
+                                        .buttonStyle(.plain)
+                                    } else {
+                                        NavigationLink {
+                                            ItemDetailView(itemID: itemID)
+                                        } label: {
+                                            itemRowContent(item: item)
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -188,36 +328,71 @@ struct ContentView: View {
                 .listStyle(.insetGrouped)
             }
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(role: .destructive) {
-                        isShowingDeleteAllAlert = true
-                    } label: {
-                        Image(systemName: "trash")
+                ToolbarItem(placement: .navigationBarLeading) {
+                    if isSelectMode && (!selectedItems.isEmpty || !selectedTags.isEmpty || !selectedCollections.isEmpty) {
+                        Button(role: .destructive) {
+                            deleteSelected()
+                        } label: {
+                            Image(systemName: "trash")
+                        }
+                        .accessibilityLabel("Delete Selected")
                     }
-                    .accessibilityLabel("Delete All Data")
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Menu {
-                        Button("New Snippet") {
-                            isShowingSnippetSheet = true
+                    Button(isSelectMode ? "Done" : "Select") {
+                        withAnimation {
+                            isSelectMode.toggle()
+                            if !isSelectMode {
+                                selectedItems.removeAll()
+                                selectedTags.removeAll()
+                                selectedCollections.removeAll()
+                            }
                         }
+                    }
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    if !isSelectMode {
+                        Button {
+                            isShowingAISettings = true
+                        } label: {
+                            Image(systemName: "sparkles")
+                        }
+                        .accessibilityLabel("AI Settings")
+                    }
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    if !isSelectMode {
+                        Menu {
+                            Button("New Snippet") {
+                                isShowingSnippetSheet = true
+                            }
 #if os(iOS)
-                        Button("Add Link...") {
-                            addLinkText = ""
-                            isShowingAddLinkAlert = true
-                        }
+                            Button("Add Link...") {
+                                addLinkText = ""
+                                isShowingAddLinkAlert = true
+                            }
 #endif
-                        Button("Import Document...") {
-                            isImportingDocument = true
+                            Button("Import Document...") {
+                                isImportingDocument = true
+                            }
+                            Divider()
+                            Button(role: .destructive) {
+                                isShowingDeleteAllAlert = true
+                            } label: {
+                                Label("Delete All Data", systemImage: "trash")
+                            }
+                        } label: {
+                            Image(systemName: "plus")
                         }
-                    } label: {
-                        Image(systemName: "plus")
                     }
                 }
             }
             .sheet(isPresented: $isShowingSnippetSheet) {
                 QuickAddSnippetView(onSave: nil)
                     .environment(\.managedObjectContext, context)
+            }
+            .sheet(isPresented: $isShowingAISettings) {
+                AISettingsView()
             }
             .fileImporter(
                 isPresented: $isImportingDocument,
@@ -258,6 +433,11 @@ struct ContentView: View {
                 results = []
                 return
             }
+            // Skip search service for special filters handled locally
+            if newValue.lowercased() == "tag:none" {
+                results = []
+                return
+            }
             searchTask = Task {
                 try? await Task.sleep(nanoseconds: 300_000_000)
                 guard !Task.isCancelled else { return }
@@ -265,12 +445,103 @@ struct ContentView: View {
                 await MainActor.run {
                     let lookup = self.itemLookup
                     let showTrashed = newValue.localizedCaseInsensitiveContains(Item.trashTag)
+                    let dateFilter = extractDateFilter(from: newValue)
                     self.results = results.filter { result in
                         guard let item = lookup[result.itemID] else { return false }
-                        return showTrashed || !item.isTrashed
+                        // Filter by trash status
+                        if !showTrashed && item.isTrashed { return false }
+                        // Filter by date if specified
+                        if let dateFilter, !dateFilter.matches(date: item.createdAt) { return false }
+                        return true
                     }
                 }
             }
+        }
+    }
+
+    @ViewBuilder
+    private func itemRowContent(item: Item) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(item.displayTitle)
+                .font(.headline)
+            HStack(spacing: 8) {
+                Text(item.itemType?.rawValue.capitalized ?? "Item")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                if item.isLinkItem {
+                    ItemArchiveStatusBadge(item: item)
+                }
+                Spacer()
+                if let date = item.createdAt {
+                    Text(dateFormatter.string(from: date))
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                }
+            }
+        }
+    }
+
+    private func toggleSelection(_ itemID: UUID) {
+        if selectedItems.contains(itemID) {
+            selectedItems.remove(itemID)
+        } else {
+            selectedItems.insert(itemID)
+        }
+    }
+
+    private func deleteSelected() {
+        // Trash selected items
+        for itemID in selectedItems {
+            if let item = itemLookup[itemID] {
+                item.moveToTrash()
+            }
+        }
+        // Remove selected tags from all items
+        if !selectedTags.isEmpty {
+            for item in activeItems {
+                var tags = item.displayTagList
+                let originalCount = tags.count
+                tags.removeAll { selectedTags.contains($0) }
+                if tags.count != originalCount {
+                    item.setDisplayTagList(tags)
+                    item.updatedAt = Date()
+                }
+            }
+        }
+        // Remove selected collections from all items
+        if !selectedCollections.isEmpty {
+            let lowercasedSelected = Set(selectedCollections.map { $0.lowercased() })
+            for item in activeItems {
+                var collections = item.collectionList
+                let originalCount = collections.count
+                collections.removeAll { lowercasedSelected.contains($0.lowercased()) }
+                if collections.count != originalCount {
+                    item.setCollectionList(collections)
+                    item.updatedAt = Date()
+                }
+            }
+        }
+        if context.hasChanges {
+            try? context.save()
+        }
+        selectedItems.removeAll()
+        selectedTags.removeAll()
+        selectedCollections.removeAll()
+    }
+
+    private func toggleTagSelection(_ tag: String) {
+        if selectedTags.contains(tag) {
+            selectedTags.remove(tag)
+        } else {
+            selectedTags.insert(tag)
+        }
+    }
+
+    private func toggleCollectionSelection(_ collection: String) {
+        if selectedCollections.contains(collection) {
+            selectedCollections.remove(collection)
+        } else {
+            selectedCollections.insert(collection)
         }
     }
 

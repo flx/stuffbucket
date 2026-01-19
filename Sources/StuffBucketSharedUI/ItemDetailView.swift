@@ -26,6 +26,10 @@ struct ItemDetailView: View {
 
     @Environment(\.managedObjectContext) private var context
     @FetchRequest private var items: FetchedResults<Item>
+    @FetchRequest(
+        sortDescriptors: [NSSortDescriptor(keyPath: \Item.updatedAt, ascending: false)]
+    )
+    private var allItems: FetchedResults<Item>
     @State private var tagsText = ""
     @State private var collectionsText = ""
     @State private var contentText = ""
@@ -39,6 +43,9 @@ struct ItemDetailView: View {
     @State private var isPreparingArchive = false
     @State private var useReaderMode = false
     @State private var isEditingLink = false
+    @State private var isEditingSnippet = false
+    @State private var isShowingTagSuggestions = false
+    @ObservedObject private var aiKeyStorage = AIKeyStorage.shared
 
     init(itemID: UUID) {
         self.itemID = itemID
@@ -91,8 +98,8 @@ struct ItemDetailView: View {
                 }
             }
 
-            // Snippet at top if it has content
-            if hasSnippet {
+            // Snippet at top if it has content (not when editing from empty)
+            if hasSnippet && !isEditingSnippet {
                 Section("Snippet") {
                     contentEditor
                 }
@@ -114,6 +121,13 @@ struct ItemDetailView: View {
 
             Section("Tags") {
                 tagsField
+                if aiKeyStorage.hasValidKey {
+                    Button {
+                        isShowingTagSuggestions = true
+                    } label: {
+                        Label("Suggest Tags", systemImage: "sparkles")
+                    }
+                }
             }
 
             Section("Collections") {
@@ -123,13 +137,10 @@ struct ItemDetailView: View {
                     .foregroundStyle(.secondary)
             }
 
-            // Snippet at bottom if empty (for adding new)
-            if !hasSnippet {
+            // Snippet at bottom if empty or editing from empty state
+            if !hasSnippet || isEditingSnippet {
                 Section("Snippet") {
-                    contentEditor
-                    Text("Add notes or text content")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
+                    snippetSection(for: item, hasContent: hasSnippet)
                 }
             }
 
@@ -192,7 +203,16 @@ struct ItemDetailView: View {
             applyCollections(newValue, to: item)
         }
         .onChange(of: contentText) { _, newValue in
+            // Only auto-apply content changes when NOT in edit mode
+            // In edit mode, changes are applied when user taps Done
+            guard !isEditingSnippet else { return }
             applyContent(newValue, to: item)
+        }
+        .onChange(of: isEditingSnippet) { _, isEditing in
+            // When exiting snippet edit mode, apply the content
+            if !isEditing {
+                applyContent(contentText, to: item)
+            }
         }
         .fileImporter(
             isPresented: $isImportingDocument,
@@ -224,10 +244,20 @@ struct ItemDetailView: View {
             .sheet(isPresented: $isShowingLoginArchive) {
                 loginArchiveSheet
             }
+            .sheet(isPresented: $isShowingTagSuggestions) {
+                if let item = items.first {
+                    tagSuggestionSheet(for: item)
+                }
+            }
 #else
         return base
             .sheet(isPresented: $isShowingLoginArchive) {
                 loginArchiveSheet
+            }
+            .sheet(isPresented: $isShowingTagSuggestions) {
+                if let item = items.first {
+                    tagSuggestionSheet(for: item)
+                }
             }
 #endif
     }
@@ -277,6 +307,43 @@ struct ItemDetailView: View {
         TextEditor(text: $contentText)
             .frame(minHeight: 180)
 #endif
+    }
+
+    @ViewBuilder
+    private func snippetSection(for item: Item, hasContent: Bool) -> some View {
+        if isEditingSnippet {
+            // Edit mode: show text editor with Done/Cancel buttons
+            VStack(alignment: .leading, spacing: 8) {
+                contentEditor
+                HStack {
+                    Button("Cancel") {
+                        // Revert to saved value
+                        contentText = item.textContent ?? ""
+                        isEditingSnippet = false
+                    }
+                    Spacer()
+                    Button("Done") {
+                        isEditingSnippet = false
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+            }
+        } else if hasContent {
+            // Has content - show inline editor (section is at top)
+            contentEditor
+        } else {
+            // No content yet - show "Add Snippet" button
+            Button {
+                contentText = ""
+                isEditingSnippet = true
+            } label: {
+                HStack {
+                    Image(systemName: "text.badge.plus")
+                    Text("Add Snippet")
+                }
+                .foregroundStyle(.secondary)
+            }
+        }
     }
 
     @ViewBuilder
@@ -693,6 +760,38 @@ struct ItemDetailView: View {
             Text("Link unavailable.")
                 .padding()
         }
+    }
+
+    @ViewBuilder
+    private func tagSuggestionSheet(for item: Item) -> some View {
+        let existingTags = LibrarySummaryBuilder.tags(from: Array(allItems)).map { $0.name }
+        TagSuggestionView(
+            item: item,
+            existingLibraryTags: existingTags,
+            onApply: { suggestedTags in
+                applyAISuggestedTags(suggestedTags, to: item)
+                isShowingTagSuggestions = false
+            },
+            onCancel: {
+                isShowingTagSuggestions = false
+            }
+        )
+    }
+
+    private func applyAISuggestedTags(_ suggestedTags: [String], to item: Item) {
+        var currentTags = item.displayTagList
+        for tag in suggestedTags {
+            let normalizedTag = tag.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            if !normalizedTag.isEmpty && !currentTags.contains(where: { $0.lowercased() == normalizedTag }) {
+                currentTags.append(tag)
+            }
+        }
+        item.setDisplayTagList(currentTags)
+        item.updatedAt = Date()
+        if context.hasChanges {
+            try? context.save()
+        }
+        syncFromItem(item)
     }
 
     private func parseTags(_ text: String) -> [String] {
