@@ -302,6 +302,7 @@ When opening an archive:
 
 ### Item detail
 - Tag editing is available on the item detail view (comma-separated input).
+- macOS tag input is left-aligned (no right-justified value column).
 - Collection assignment is available separately from tag editing.
 - Tags display excludes `collection:` prefixed tags (shown in collections section).
 - De-duplication based on URL + title + folder path; keep a sync link when possible.

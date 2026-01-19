@@ -181,6 +181,7 @@
 ### iOS/iPadOS
 - Search updates (filters, sorting, snippet previews).
 - Tag editor on item detail view. completed [x]
+- Left-align tag input field in item detail view (macOS). completed [x]
 - Shared item detail view for item metadata (tags). completed [x]
 - Ensure tag input modifiers are platform-appropriate. completed [x]
 - Implement tag-based collections (collection: prefix) with separate UI display. completed [x]

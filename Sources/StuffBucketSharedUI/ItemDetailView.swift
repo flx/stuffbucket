@@ -290,14 +290,10 @@ struct ItemDetailView: View {
             .textInputAutocapitalization(.never)
             .disableAutocorrection(true)
 #else
-        LabeledContent {
-            TextField("", text: $tagsText)
-                .textFieldStyle(.plain)
-                .frame(maxWidth: .infinity, alignment: .leading)
-        } label: {
-            EmptyView()
-        }
-        .labelsHidden()
+        TextField("Add tags", text: $tagsText)
+            .textFieldStyle(.plain)
+            .multilineTextAlignment(.leading)
+            .frame(maxWidth: .infinity, alignment: .leading)
 #endif
     }
 
@@ -1080,4 +1076,3 @@ struct ArchivedLinkWebView: UIViewRepresentable {
     }
 }
 #endif
-
