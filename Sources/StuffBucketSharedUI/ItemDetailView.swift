@@ -561,7 +561,7 @@ struct ItemDetailView: View {
             }
         }
 
-#if os(macOS)
+#if canImport(AppKit)
         if let documentURL = item.documentURL {
             Button("Show in Finder") {
                 NSWorkspace.shared.activateFileViewerSelecting([documentURL])
@@ -575,7 +575,7 @@ struct ItemDetailView: View {
     }
 
     private func openDocument(at url: URL) {
-#if os(macOS)
+#if canImport(AppKit)
         NSWorkspace.shared.open(url)
 #else
         quickLookURL = url
