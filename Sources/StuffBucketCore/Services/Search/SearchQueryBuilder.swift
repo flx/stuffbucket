@@ -93,7 +93,7 @@ public struct SearchQueryBuilder {
             // Skip date filters - they're handled as post-filtering
             guard filter.key != .date else { continue }
             let column = columnName(for: filter.key)
-            let valueClause = buildValueClause(for: filter.value)
+            let valueClause = buildFilterValueClause(for: filter)
             if !valueClause.isEmpty {
                 clauses.append("\(column):\(valueClause)")
             }
@@ -128,6 +128,31 @@ public struct SearchQueryBuilder {
         }
 
         return "\(trimmed)*"
+    }
+
+    private func buildFilterValueClause(for filter: SearchFilter) -> String {
+        let trimmed = filter.value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return "" }
+
+        if trimmed.contains("*") {
+            return trimmed
+        }
+
+        if shouldQuoteFilterValue(trimmed) {
+            return quoteValue(trimmed)
+        }
+
+        return buildValueClause(for: trimmed)
+    }
+
+    private func shouldQuoteFilterValue(_ value: String) -> Bool {
+        let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "_"))
+        return value.unicodeScalars.contains { !allowed.contains($0) }
+    }
+
+    private func quoteValue(_ value: String) -> String {
+        let escaped = value.replacingOccurrences(of: "\"", with: "\"\"")
+        return "\"\(escaped)\""
     }
 
     private func tokenize(_ input: String) -> [String] {

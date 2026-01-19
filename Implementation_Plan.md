@@ -82,6 +82,7 @@
   - `type:`, `tag:`, `collection:`, `source:` filters
   - quoted phrases
   - prefix matching
+- Quote filter values containing punctuation so hyphenated tags match in FTS (e.g. `tag:customer-service`). completed [x]
 - Ranking:
   - Use FTS5 `bm25` with column weights. completed [x]
   - Boost recency and exact-title matches.

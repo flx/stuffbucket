@@ -41,6 +41,17 @@ final class SearchQueryBuilderMacTests: XCTestCase {
 
         XCTAssertEqual(built, "\"hello world\"")
     }
+
+    func testQuotesHyphenatedTagFilter() {
+        let query = SearchQuery(
+            text: "",
+            filters: [SearchFilter(key: .tag, value: "customer-service")],
+            sort: .relevance
+        )
+        let built = SearchQueryBuilder().build(query: query)
+
+        XCTAssertEqual(built, "tags:\"customer-service\"")
+    }
 }
 
 final class TagCodecMacTests: XCTestCase {
