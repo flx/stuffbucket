@@ -559,10 +559,11 @@ struct ItemDetailView: View {
             Button("Open Document") {
                 openDocument(at: documentURL)
             }
-        }
-
-        if let documentURL = item.documentURL {
-            showInFinderButton(for: documentURL)
+#if os(macOS)
+            Button("Show in Finder") {
+                NSWorkspace.shared.activateFileViewerSelecting([documentURL])
+            }
+#endif
         }
 
         Button(item.hasDocument ? "Replace Document..." : "Attach Document...") {
@@ -575,17 +576,6 @@ struct ItemDetailView: View {
         NSWorkspace.shared.open(url)
 #else
         quickLookURL = url
-#endif
-    }
-
-    @ViewBuilder
-    private func showInFinderButton(for url: URL) -> some View {
-#if os(macOS)
-        Button("Show in Finder") {
-            NSWorkspace.shared.activateFileViewerSelecting([url])
-        }
-#else
-        EmptyView()
 #endif
     }
 
