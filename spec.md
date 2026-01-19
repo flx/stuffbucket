@@ -8,11 +8,10 @@ Key guarantees:
 - **Links are persisted**, including **saved HTML snapshots**, to avoid link rot (e.g. NYTimes articles).
 - Metadata is stored in **Core Data**, synced via **CloudKit**.
 - First-class support for **iOS, iPadOS, and macOS**.
-- Optional **per-item protection** for sensitive content.
-- **High-quality search** with relevance ranking, typo tolerance, and filters.
+- **Full-text search** with relevance ranking and filters.
 - Search uses a custom centered search bar on iOS and a toolbar search field on macOS.
 - Tag editing uses platform-appropriate text input behavior.
-- Optional **AI assistance** (summaries, key points, tags) powered by ChatGPT models, opt-in and user-controlled.
+- Optional **AI assistance** (summaries, key points, tags) powered by Claude or ChatGPT, opt-in and user-controlled.
 
 Non-goals (initial versions): collaboration, web client.
 
@@ -28,7 +27,6 @@ Non-goals (initial versions): collaboration, web client.
 ### 2.1 Item types
 Every captured object is an **Item**:
 
-- **Note** – rich text or markdown
 - **Snippet** – short plain text
 - **Link** – URL + metadata + **persisted HTML snapshot**
 - **Document** – user-visible file in iCloud Drive
@@ -36,7 +34,6 @@ Every captured object is an **Item**:
 All item types support:
 - Tags
 - Collections (via tag-based pseudo-collections)
-- Optional protection (lock)
 - Optional attachments: **text**, **link**, and **document** can co-exist on any item.
 - Attachments can be added/edited after creation in the item detail view.
 - `type` is treated as the **creation kind** (how the item started), not a capability limiter.
@@ -67,10 +64,7 @@ iCloud Drive/
     │       ├── reader.html
     │       ├── assets/        (images, css, js if needed)
     │       └── metadata.json  (optional, diagnostic)
-    ├── Protected/
-    │   └── <uuid>.sbf         (encrypted payloads)
-    ├── Inbox/
-    └── Exports/
+    └── Inbox/
 ```
 
 Principles:
@@ -149,8 +143,7 @@ When opening an archive:
 - macOS attempts to download archive assets (images/styles) before opening and shows a brief "downloading assets" state.
 - If iCloud Drive sync is incomplete, falls back to CloudKit bundle extraction.
 - If archives are missing, show an unavailable state.
-- Secondary action: "Open Original URL" in browser (planned).
-- Provide **Export as HTML / PDF** (planned).
+- Secondary action: Tapping the displayed URL opens the original link in the default browser.
 - When captured from the macOS share sheet, StuffBucket should foreground and surface the new item quickly.
 - Archive status badges should update live as the archive completes.
 
@@ -160,8 +153,6 @@ When opening an archive:
 - Preserves links and structure
 - Future-proof
 
-PDF export is optional, not canonical.
-
 ---
 
 ## 5. Metadata & Core Data model (amended)
@@ -169,14 +160,13 @@ PDF export is optional, not canonical.
 ### 5.1 Item entity (relevant fields)
 
 - `id: UUID`
-- `type: enum { note, snippet, link, document }`
+- `type: enum { snippet, link, document }`
 - `title: String?`
-- `textContent: String?`        // optional note/snippet body for any item
+- `textContent: String?`        // optional snippet body for any item
 - `tags: [String]`              // includes regular tags and collection: prefixed tags
 - `trashedAt: Date?`            // when item was moved to trash (nil = not trashed)
 - `createdAt: Date`
 - `updatedAt: Date`
-- `isProtected: Bool`
 - `collectionID: UUID?`         // legacy, unused - collections now via tags
 - `source: enum { manual, share_sheet, safari_bookmarks, import }`
 - `sourceExternalID: String?`   // stable ID for external sync (e.g. Safari)
@@ -201,24 +191,9 @@ PDF export is optional, not canonical.
 
 ---
 
-## 6. Protection / locking (unchanged conceptually)
+## 6. Sync model
 
-### 6.1 Protected links
-If a link is marked protected:
-- The HTML snapshot is encrypted into a single `.sbf` file.
-- Decrypted only after biometric/passcode unlock.
-- No readable HTML remains in iCloud Drive when locked.
-
-### 6.2 Encryption
-- AES-GCM via CryptoKit
-- Keys stored in Keychain (iCloud Keychain sync)
-- Optional app passphrase (future)
-
----
-
-## 7. Sync model
-
-### 7.1 Metadata
+### Metadata
 - Core Data + `NSPersistentCloudKitContainer`
 - CloudKit container: `iCloud.com.digitalhandstand.stuffbucketapp`
 - Core Data schema remains CloudKit-compatible (non-optional attributes have defaults or are optional).
@@ -226,9 +201,9 @@ If a link is marked protected:
   - last-writer-wins for scalars
   - set merge for tags
 
-### 7.2 Files
+### Files
 - iCloud Drive handles sync.
-- If iCloud storage is unavailable at write time, save locally and migrate into iCloud when the container becomes available (migration only touches `Links/`, `Documents/`, and `Protected/`, never the Core Data store).
+- If iCloud storage is unavailable at write time, save locally and migrate into iCloud when the container becomes available (migration only touches `Links/` and `Documents/`, never the Core Data store).
 - App watches for:
   - missing HTML files
   - externally modified files
@@ -238,9 +213,9 @@ If a link is marked protected:
 
 ---
 
-## 8. Trash and deletion
+## 7. Trash and deletion
 
-### 8.1 Soft delete
+### Soft delete
 - Items can be moved to trash via a "Move to Trash" action in the item detail view.
 - Trashed items are marked with a `trashcan` tag and `trashedAt` timestamp.
 - Trashed items are hidden from the main view and search results.
@@ -248,7 +223,7 @@ If a link is marked protected:
 - Trashed items can be restored via "Restore from Trash" action.
 - Items in trash for more than 10 days are permanently deleted on app launch.
 
-### 8.2 Permanent deletion
+### Permanent deletion
 - Permanent deletion removes:
   - The Core Data record (synced via CloudKit)
   - iCloud Drive archive files (Links/<uuid>/)
@@ -259,13 +234,13 @@ If a link is marked protected:
 
 ---
 
-## 9. Debug tooling (temporary)
+## 8. Debug tooling (temporary)
 - Provide a temporary "Delete All Data" toolbar button to wipe Core Data items and stored files during development.
 - This control is debug-only and should be removed before release.
 
 ---
 
-## 10. Capture & import flows (amended)
+## 9. Capture & import flows
 
 ### iOS / iPadOS Share Sheet
 - In-app quick add:
@@ -319,9 +294,9 @@ If a link is marked protected:
 
 ---
 
-## 11. UI behavior (current)
+## 10. UI behavior
 
-### 11.1 Browse
+### Browse
 - Default view surfaces **Tags** and **Collections** with counts.
 - Tags list shows regular tags only (excludes `collection:` prefixed tags).
 - Collections list shows collection names extracted from `collection:` tags.
@@ -330,7 +305,7 @@ If a link is marked protected:
 - Link items display an archive status badge (Pending / Archived / Partial / Failed).
 - Empty states surface primary capture actions (Add Link, Import Document).
 
-### 11.2 Item detail
+### Item detail
 - Tag editing is available on the item detail view (comma-separated input).
 - Collection assignment is available separately from tag editing.
 - Tags display excludes `collection:` prefixed tags (shown in collections section).
@@ -340,81 +315,68 @@ If a link is marked protected:
 
 ---
 
-## 12. Search (high quality)
+## 11. Search
 
-### 9.1 Scope
+### Scope
 - Full-text search across:
-  - Notes/snippets
+  - Snippets
   - **Extracted text from saved HTML**
   - Filenames
   - User-added annotations
   - Tags, collections, and AI summaries (if present)
 
-### 9.2 Quality requirements
+### Quality
 - Relevance ranking with field weighting (title > tags > content).
-- Typo tolerance, diacritic-insensitive matching, and stemming.
+- Diacritic-insensitive matching.
 - Phrase search with quotes and prefix matching.
-- Protected items are searchable by title/tags only until unlocked.
 
-### 9.3 Query features
+### Query features
 - Filters: `type:`, `tag:`, `collection:`, `source:`.
 - Sort by relevance or recency.
-- Highlighted snippets and quick preview for matches.
 
-### 9.4 Indexing
+### Indexing
 - Incremental indexing as items change.
 - Seed/rebuild the index on app launch to reconcile deletes while the app was closed.
 - Background reindex if HTML snapshots or files update.
 - Index remains local and is rebuilt if corrupted.
 
-### 9.5 Performance
+### Performance
 - Typical queries return in <200ms on device.
 - Large archives remain responsive with streaming results.
 
-### 9.6 Spotlight (optional v1.1)
-- Index content and titles for system-wide search.
+## 12. Safari Bookmarks import (macOS only)
 
-## 13. Safari Bookmarks import & sync (new, macOS only)
-
-### 10.1 Import behavior
+### Import behavior
 - Bulk import creates Link items with `source = safari_bookmarks`.
 - Preserve bookmark titles and URLs; store Safari folder path in `sourceFolderPath`.
 - Optional "Archive on import" to fetch HTML in the background.
 - For HTML export imports, retain a synthetic `sourceExternalID` derived from URL + path.
 
-### 10.2 Sync model
-- Keep StuffBucket in sync with Safari bookmark changes:
-  - Added bookmark => new Link item.
-  - Renamed/moved bookmark => update title and folder path.
-  - Removed bookmark => mark as removed or delete (user-configurable).
-- Sync should not overwrite user edits (notes, tags, custom titles).
-- On macOS, prefer file watching when allowed; otherwise use scheduled re-import.
-
-### 10.3 Conflict and duplicate handling
+### Duplicate handling
 - De-dup by `sourceExternalID` when present; fall back to URL + folder path.
 - If a URL already exists, merge metadata and keep the earliest Item ID.
 
-## 14. AI Integration (Claude & OpenAI)
+## 13. AI Integration (Claude & OpenAI)
 
-### 14.1 Capabilities
+### Capabilities
 - **Tag suggestions** for items based on content analysis.
 - AI analyzes item title, snippet, URL, and archived article text.
 - Suggestions prefer existing library tags over creating new ones.
 - Actions are always user-initiated (manual "Suggest Tags" button).
 
-### 14.2 Supported Providers
+### Supported Providers
 - **Anthropic Claude** (claude-sonnet-4, claude-opus-4, claude-3.5-sonnet, claude-3.5-haiku)
 - **OpenAI GPT** (gpt-4o, gpt-4o-mini, gpt-4-turbo, gpt-3.5-turbo)
 - User selects provider and model in AI Settings.
 - Default models: `claude-sonnet-4-20250514` (Anthropic), `gpt-4o` (OpenAI).
 
-### 14.3 Authentication and Storage
+### Authentication and Storage
 - BYOK (bring your own key) - user provides their own API keys.
 - Keys stored in both iCloud Key-Value Store (cross-device sync) and UserDefaults (local fallback).
 - Keys are never logged or exported.
 - API key validation on save (test request to verify key works).
 
-### 14.4 Tag Suggestion Flow
+### Tag Suggestion Flow
 1. User opens item detail view.
 2. User taps "Suggest Tags" button (visible when API key is configured).
 3. Sheet displays with loading state while AI analyzes content.
@@ -422,7 +384,7 @@ If a link is marked protected:
 5. Tags already in library marked with "existing" badge.
 6. User reviews, adjusts selection, and taps "Apply" to add tags.
 
-### 14.5 Privacy
+### Privacy
 - Content sent to AI includes: title, snippet (truncated), URL, article text (truncated).
 - No automatic/background AI calls - always user-initiated.
 - AI outputs (suggested tags) are applied directly to items, not stored separately.
@@ -430,17 +392,16 @@ If a link is marked protected:
 
 ---
 
-## 15. UX expectations for links
+## 14. UX expectations for links
 
 - Badge showing:
   - "Archived" / "Partial" / "Live only"
 - Clear disclosure:
-  - “This page is saved locally”
-- One-click export/share
+  - "This page is saved locally"
 
 ---
 
-## 16. Edge cases
+## 15. Edge cases
 
 - Paywalled content (e.g. NYTimes):
   - Capture occurs using user’s authenticated session when possible (WKWebView-based fetch).
@@ -458,25 +419,23 @@ If a link is marked protected:
 
 ---
 
-## 17. Acceptance criteria
+## 16. Acceptance criteria
 
 - Saved NYTimes article remains readable offline after original URL changes.
 - HTML file visible in iCloud Drive.
-- Search finds words inside archived articles, including with minor typos.
-- Protected links are unreadable without unlock.
-- Safari import can ingest 500+ bookmarks and keep changes in sync on macOS.
-- User can generate an AI summary using their API key and see it saved on the item.
+- Search finds words inside archived articles.
+- Safari import can ingest 500+ bookmarks on macOS.
+- User can generate AI tag suggestions using their API key and apply them to items.
 
 ---
 
-## 18. Versioning
+## 17. Versioning
 - v0.2: HTML-backed link persistence
-- v0.3: high-quality search, Safari bookmarks import & sync, ChatGPT integration
-- v0.4 (future): reader cleanup, PDF export, OCR
+- v0.3: Full-text search, Safari bookmarks import, AI tag suggestions (Claude & OpenAI)
 
 ---
 
-## 19. Quality checks (engineering)
+## 18. Quality checks (engineering)
 - Unit tests cover search query parsing/builder output, tag list encoding/decoding, and link metadata parsing with HTML entity decoding on both iOS and macOS targets.
 - macOS unit tests run with an app host configuration so Xcodegen builds execute them reliably.
 - Core Data item creation in tests uses context-scoped entity lookup to avoid entity ambiguity warnings when multiple models load.
