@@ -215,6 +215,7 @@
 - Implement tag-based collections (collection: prefix) with separate UI display. completed [x]
 - Add collection assignment UI in item detail view. completed [x]
 - Remove placeholder text from tag/collection inputs on macOS. completed [x]
+- Force left-aligned tag/collection text on macOS using a native text field wrapper. completed [x]
 - Left-align item content editor text on macOS. completed [x]
 - Filter collection: tags from regular tags display. completed [x]
 - Add quick-add menu for new snippets and document import. completed [x]

@@ -305,7 +305,7 @@ When opening an archive:
 - macOS tag input is left-aligned (no right-justified value column).
 - Collection assignment is available separately from tag editing.
 - macOS collection input is left-aligned (no right-justified value column).
-- macOS tag/collection inputs omit placeholder text and remain left-aligned.
+- macOS tag/collection inputs omit placeholder text and are explicitly left-aligned.
 - macOS content editor text is left-aligned.
 - Tags display excludes `collection:` prefixed tags (shown in collections section).
 - De-duplication based on URL + title + folder path; keep a sync link when possible.

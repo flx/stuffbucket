@@ -34,6 +34,50 @@ struct ArchiveError: Identifiable {
     let message: String
 }
 
+#if os(macOS)
+private struct LeftAlignedTextField: NSViewRepresentable {
+    @Binding var text: String
+
+    func makeNSView(context: Context) -> NSTextField {
+        let field = NSTextField(string: text)
+        field.isBordered = false
+        field.drawsBackground = false
+        field.isEditable = true
+        field.isSelectable = true
+        field.alignment = .left
+        field.lineBreakMode = .byTruncatingTail
+        field.delegate = context.coordinator
+        return field
+    }
+
+    func updateNSView(_ nsView: NSTextField, context: Context) {
+        if nsView.stringValue != text {
+            nsView.stringValue = text
+        }
+        if nsView.alignment != .left {
+            nsView.alignment = .left
+        }
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+
+    final class Coordinator: NSObject, NSTextFieldDelegate {
+        private let parent: LeftAlignedTextField
+
+        init(_ parent: LeftAlignedTextField) {
+            self.parent = parent
+        }
+
+        func controlTextDidChange(_ notification: Notification) {
+            guard let field = notification.object as? NSTextField else { return }
+            parent.text = field.stringValue
+        }
+    }
+}
+#endif
+
 struct ItemDetailView: View {
     let itemID: UUID
 
@@ -290,9 +334,7 @@ struct ItemDetailView: View {
             .textInputAutocapitalization(.never)
             .disableAutocorrection(true)
 #else
-        TextField("", text: $tagsText)
-            .textFieldStyle(.plain)
-            .multilineTextAlignment(.leading)
+        LeftAlignedTextField(text: $tagsText)
             .frame(maxWidth: .infinity, alignment: .leading)
 #endif
     }
@@ -304,9 +346,7 @@ struct ItemDetailView: View {
             .textInputAutocapitalization(.never)
             .disableAutocorrection(true)
 #else
-        TextField("", text: $collectionsText)
-            .textFieldStyle(.plain)
-            .multilineTextAlignment(.leading)
+        LeftAlignedTextField(text: $collectionsText)
             .frame(maxWidth: .infinity, alignment: .leading)
 #endif
     }
