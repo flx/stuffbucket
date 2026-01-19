@@ -559,12 +559,15 @@ struct ItemDetailView: View {
             Button("Open Document") {
                 openDocument(at: documentURL)
             }
+        }
+
 #if os(macOS)
+        if let documentURL = item.documentURL {
             Button("Show in Finder") {
                 NSWorkspace.shared.activateFileViewerSelecting([documentURL])
             }
-#endif
         }
+#endif
 
         Button(item.hasDocument ? "Replace Document..." : "Attach Document...") {
             isImportingDocument = true
