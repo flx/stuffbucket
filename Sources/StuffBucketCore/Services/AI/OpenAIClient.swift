@@ -68,6 +68,47 @@ public struct OpenAIClient {
         return content
     }
 
+    public func suggestTagsWithImage(
+        systemPrompt: String,
+        userPrompt: String,
+        imageData: Data,
+        mediaType: String,
+        model: String,
+        maxTokens: Int = 500
+    ) async throws -> String {
+        let base64Image = imageData.base64EncodedString()
+        let dataURL = "data:\(mediaType);base64,\(base64Image)"
+
+        let userContent: [[String: Any]] = [
+            [
+                "type": "image_url",
+                "image_url": ["url": dataURL]
+            ],
+            [
+                "type": "text",
+                "text": userPrompt
+            ]
+        ]
+
+        let request = makeChatRequestWithContent(
+            model: model,
+            systemPrompt: systemPrompt,
+            userContent: userContent,
+            maxTokens: maxTokens
+        )
+
+        let (data, response) = try await session.data(for: request)
+        try validate(response: response, data: data)
+
+        let decoded = try JSONDecoder().decode(ChatCompletionResponse.self, from: data)
+        guard let content = decoded.choices.first?.message.content,
+              !content.isEmpty else {
+            throw OpenAIClientError.emptyResponse
+        }
+
+        return content
+    }
+
     private func makeRequest(path: String, method: String) -> URLRequest {
         let url = URL(string: "https://api.openai.com\(path)")!
         var request = URLRequest(url: url)
@@ -83,6 +124,29 @@ public struct OpenAIClient {
         maxTokens: Int
     ) -> URLRequest {
         var request = makeRequest(path: "/v1/chat/completions", method: "POST")
+
+        let body: [String: Any] = [
+            "model": model,
+            "max_tokens": maxTokens,
+            "messages": messages
+        ]
+
+        request.httpBody = try? JSONSerialization.data(withJSONObject: body)
+        return request
+    }
+
+    private func makeChatRequestWithContent(
+        model: String,
+        systemPrompt: String,
+        userContent: [[String: Any]],
+        maxTokens: Int
+    ) -> URLRequest {
+        var request = makeRequest(path: "/v1/chat/completions", method: "POST")
+
+        let messages: [[String: Any]] = [
+            ["role": "system", "content": systemPrompt],
+            ["role": "user", "content": userContent]
+        ]
 
         let body: [String: Any] = [
             "model": model,

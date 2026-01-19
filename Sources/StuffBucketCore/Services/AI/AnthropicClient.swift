@@ -75,6 +75,50 @@ public struct AnthropicClient {
         return textContent.text
     }
 
+    public func suggestTagsWithImage(
+        systemPrompt: String,
+        userPrompt: String,
+        imageData: Data,
+        mediaType: String,
+        model: String,
+        maxTokens: Int = 500
+    ) async throws -> String {
+        let base64Image = imageData.base64EncodedString()
+
+        let content: [[String: Any]] = [
+            [
+                "type": "image",
+                "source": [
+                    "type": "base64",
+                    "media_type": mediaType,
+                    "data": base64Image
+                ]
+            ],
+            [
+                "type": "text",
+                "text": userPrompt
+            ]
+        ]
+
+        let request = makeMessagesRequestWithContent(
+            model: model,
+            content: content,
+            maxTokens: maxTokens,
+            system: systemPrompt
+        )
+
+        let (data, response) = try await session.data(for: request)
+        try validate(response: response)
+
+        let decoded = try JSONDecoder().decode(MessagesResponse.self, from: data)
+        guard let textContent = decoded.content.first(where: { $0.type == "text" }),
+              !textContent.text.isEmpty else {
+            throw AnthropicClientError.emptyResponse
+        }
+
+        return textContent.text
+    }
+
     private func makeMessagesRequest(
         model: String,
         messages: [[String: String]],
@@ -87,6 +131,37 @@ public struct AnthropicClient {
         request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
         request.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        var body: [String: Any] = [
+            "model": model,
+            "max_tokens": maxTokens,
+            "messages": messages
+        ]
+
+        if let system {
+            body["system"] = system
+        }
+
+        request.httpBody = try? JSONSerialization.data(withJSONObject: body)
+        return request
+    }
+
+    private func makeMessagesRequestWithContent(
+        model: String,
+        content: [[String: Any]],
+        maxTokens: Int,
+        system: String? = nil
+    ) -> URLRequest {
+        let url = URL(string: "https://api.anthropic.com/v1/messages")!
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
+        request.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        let messages: [[String: Any]] = [
+            ["role": "user", "content": content]
+        ]
 
         var body: [String: Any] = [
             "model": model,
