@@ -333,7 +333,7 @@ When opening an archive:
 - Filters: `type:`, `tag:`, `collection:`, `source:`.
 - Tag/collection filters quote values with punctuation so hyphenated tags match (e.g. `tag:customer-service`).
 - Sort by relevance or recency.
-- macOS tag list supports command-click to accumulate multiple tag filters in the search bar.
+- macOS tag and collection lists support command-click to accumulate multiple filters in the search bar.
 
 ### Indexing
 - Incremental indexing as items change.

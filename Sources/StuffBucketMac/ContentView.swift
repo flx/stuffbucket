@@ -124,7 +124,9 @@ struct ContentView: View {
                                 .buttonStyle(.plain)
                             } else {
                                 Button {
-                                    searchText = filterToken(prefix: "collection", value: summary.name)
+                                    let isAdditive = NSApp.currentEvent?.modifierFlags.contains(.command)
+                                        ?? NSEvent.modifierFlags.contains(.command)
+                                    applyCollectionFilter(summary.name, additive: isAdditive)
                                 } label: {
                                     HStack {
                                         Label(summary.name, systemImage: "folder")
@@ -519,15 +521,29 @@ struct ContentView: View {
     }
 
     private func applyTagFilter(_ tag: String, additive: Bool) {
-        let token = filterToken(prefix: "tag", value: tag)
+        applyFilter(prefix: "tag", value: tag, key: .tag, additive: additive, resetOn: ["tag:none"])
+    }
+
+    private func applyCollectionFilter(_ collection: String, additive: Bool) {
+        applyFilter(prefix: "collection", value: collection, key: .collection, additive: additive)
+    }
+
+    private func applyFilter(
+        prefix: String,
+        value: String,
+        key: SearchFilterKey,
+        additive: Bool,
+        resetOn: Set<String> = []
+    ) {
+        let token = filterToken(prefix: prefix, value: value)
         let trimmedSearch = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !additive || trimmedSearch.isEmpty || trimmedSearch.lowercased() == "tag:none" {
+        if !additive || trimmedSearch.isEmpty || resetOn.contains(trimmedSearch.lowercased()) {
             searchText = token
             return
         }
 
         let query = SearchQueryParser().parse(trimmedSearch)
-        if query.filters.contains(where: { $0.key == .tag && $0.value.caseInsensitiveCompare(tag) == .orderedSame }) {
+        if query.filters.contains(where: { $0.key == key && $0.value.caseInsensitiveCompare(value) == .orderedSame }) {
             return
         }
 
