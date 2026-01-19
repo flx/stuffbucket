@@ -186,6 +186,7 @@
 - Ensure tag input modifiers are platform-appropriate. completed [x]
 - Implement tag-based collections (collection: prefix) with separate UI display. completed [x]
 - Add collection assignment UI in item detail view. completed [x]
+- Left-align collection input field in item detail view (macOS). completed [x]
 - Filter collection: tags from regular tags display. completed [x]
 - Add quick-add menu for new snippets and document import. completed [x]
 - Add in-app prompt to save a link by pasting a URL. completed [x]

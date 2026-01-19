@@ -304,14 +304,10 @@ struct ItemDetailView: View {
             .textInputAutocapitalization(.never)
             .disableAutocorrection(true)
 #else
-        LabeledContent {
-            TextField("", text: $collectionsText)
-                .textFieldStyle(.plain)
-                .frame(maxWidth: .infinity, alignment: .leading)
-        } label: {
-            EmptyView()
-        }
-        .labelsHidden()
+        TextField("Add collections", text: $collectionsText)
+            .textFieldStyle(.plain)
+            .multilineTextAlignment(.leading)
+            .frame(maxWidth: .infinity, alignment: .leading)
 #endif
     }
 
