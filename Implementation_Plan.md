@@ -29,6 +29,7 @@
   - `textContent`
   - `documentRelativePath`
 - Add `tags` to the Core Data model. completed [x]
+- Normalize tags case-insensitively (dedupe by lowercase key, preserve original casing for display, including `collection:` tags). completed [x]
 - Add lightweight migration support for existing stores. completed [x]
 - Ensure CloudKit schema updates and resolve any merge policies for new fields.
 - Make Core Data attributes CloudKit-compatible (optional or default values for non-optional fields). completed [x]

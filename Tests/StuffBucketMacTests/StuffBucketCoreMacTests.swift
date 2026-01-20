@@ -63,6 +63,12 @@ final class TagCodecMacTests: XCTestCase {
         item.setTagList([" swift ", "", "ui"])
         XCTAssertEqual(item.tagList, ["swift", "ui"])
 
+        item.setTagList(["NATO", "nato", "NaTo"])
+        XCTAssertEqual(item.tagList, ["NATO"])
+
+        item.setTagList(["collection:Work", "Collection:work", "collection:WORK"])
+        XCTAssertEqual(item.tagList, ["collection:Work"])
+
         item.tags = "alpha, beta\ngamma"
         XCTAssertEqual(item.tagList, ["alpha", "beta", "gamma"])
     }

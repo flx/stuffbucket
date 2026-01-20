@@ -607,10 +607,11 @@ struct ContentView: View {
         }
         // Remove selected tags from all items
         if !selectedTags.isEmpty {
+            let lowercasedSelected = Set(selectedTags.map { $0.lowercased() })
             for item in activeItems {
                 var tags = item.displayTagList
                 let originalCount = tags.count
-                tags.removeAll { selectedTags.contains($0) }
+                tags.removeAll { lowercasedSelected.contains($0.lowercased()) }
                 if tags.count != originalCount {
                     item.setDisplayTagList(tags)
                     item.updatedAt = Date()

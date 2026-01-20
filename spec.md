@@ -33,6 +33,7 @@ Every captured object is an **Item**:
 
 All item types support:
 - Tags
+- Tags are case-insensitive; duplicates collapse to the first-seen casing.
 - Collections (via tag-based pseudo-collections)
 - Optional attachments: **text**, **link**, and **document** can co-exist on any item.
 - Attachments can be added/edited after creation in the item detail view.

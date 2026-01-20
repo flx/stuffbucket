@@ -194,24 +194,71 @@ private enum TagCodec {
         guard let raw else { return [] }
         let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return [] }
+        var parsed: [String] = []
         if trimmed.first == "[" {
             if let data = trimmed.data(using: .utf8),
                let tags = try? JSONDecoder().decode([String].self, from: data) {
-                return tags.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+                parsed = tags
             }
         }
-        let parts = trimmed.split(whereSeparator: { $0 == "," || $0 == "\n" })
-        return parts.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+        if parsed.isEmpty {
+            let parts = trimmed.split(whereSeparator: { $0 == "," || $0 == "\n" })
+            parsed = parts.map(String.init)
+        }
+        return normalize(parsed)
     }
 
     static func encode(_ tags: [String]) -> String? {
-        let cleaned = tags.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+        let cleaned = normalize(tags)
         guard !cleaned.isEmpty else { return nil }
         if let data = try? JSONEncoder().encode(cleaned),
            let encoded = String(data: data, encoding: .utf8) {
             return encoded
         }
         return cleaned.joined(separator: ",")
+    }
+
+    private static func normalize(_ tags: [String]) -> [String] {
+        var seen = Set<String>()
+        var results: [String] = []
+
+        for raw in tags {
+            guard let canonical = canonicalTag(raw) else { continue }
+            let key = dedupeKey(for: canonical)
+            guard !seen.contains(key) else { continue }
+            seen.insert(key)
+            results.append(canonical)
+        }
+
+        return results
+    }
+
+    private static func canonicalTag(_ raw: String) -> String? {
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        let lowercased = trimmed.lowercased()
+        if lowercased == Item.trashTag {
+            return Item.trashTag
+        }
+        if CollectionTagParser.isCollectionTag(trimmed) {
+            guard let name = CollectionTagParser.collectionName(from: trimmed), !name.isEmpty else { return nil }
+            return CollectionTagParser.tag(forCollection: name)
+        }
+        return trimmed
+    }
+
+    private static func dedupeKey(for tag: String) -> String {
+        let trimmed = tag.trimmingCharacters(in: .whitespacesAndNewlines)
+        let lowercased = trimmed.lowercased()
+        if lowercased == Item.trashTag {
+            return Item.trashTag
+        }
+        if lowercased.hasPrefix(CollectionTagParser.prefix) {
+            let name = String(lowercased.dropFirst(CollectionTagParser.prefix.count))
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            return "\(CollectionTagParser.prefix)\(name)"
+        }
+        return lowercased
     }
 }
 

@@ -44,44 +44,43 @@ public enum LibrarySummaryBuilder {
     /// Returns tag summaries excluding collection: prefixed tags
     public static func tags(from items: [Item]) -> [TagSummary] {
         var counts: [String: Int] = [:]
+        var displayNames: [String: String] = [:]
         for item in items {
             for tag in item.tagList {
                 // Skip collection tags and trashcan tag
                 if CollectionTagParser.isCollectionTag(tag) || tag == Item.trashTag {
                     continue
                 }
-                counts[tag, default: 0] += 1
+                let key = tag.lowercased()
+                if displayNames[key] == nil {
+                    displayNames[key] = tag
+                }
+                counts[key, default: 0] += 1
             }
         }
         return counts
-            .map { TagSummary(name: $0.key, count: $0.value) }
+            .map { TagSummary(name: displayNames[$0.key] ?? $0.key, count: $0.value) }
             .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
     }
 
     /// Returns collection summaries extracted from collection: prefixed tags
     public static func collections(from items: [Item]) -> [CollectionSummary] {
         var counts: [String: Int] = [:]
+        var displayNames: [String: String] = [:]
         for item in items {
             for collectionName in item.collectionList {
                 // Use lowercased name for case-insensitive grouping, but preserve first seen casing
-                let key = collectionName.lowercased()
-                if counts[key] == nil {
-                    counts[key] = 0
+                let trimmed = collectionName.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !trimmed.isEmpty else { continue }
+                let key = trimmed.lowercased()
+                if displayNames[key] == nil {
+                    displayNames[key] = trimmed
                 }
-                counts[key]! += 1
+                counts[key, default: 0] += 1
             }
         }
-        // Convert back to display names (use the key which is lowercased, but we could track original)
-        // For simplicity, capitalize the first letter
         return counts
-            .map { CollectionSummary(name: $0.key.capitalizingFirstLetter(), count: $0.value) }
+            .map { CollectionSummary(name: displayNames[$0.key] ?? $0.key, count: $0.value) }
             .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
-    }
-}
-
-private extension String {
-    func capitalizingFirstLetter() -> String {
-        guard let first = first else { return self }
-        return String(first).uppercased() + dropFirst()
     }
 }
