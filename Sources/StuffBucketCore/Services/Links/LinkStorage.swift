@@ -134,7 +134,19 @@ public enum StorageMigration {
 
 public enum LinkStorage {
     public static func url(forRelativePath relativePath: String) -> URL {
-        rootDirectory().appendingPathComponent(relativePath)
+        let fileManager = FileManager.default
+        if let iCloudRoot = StoragePaths.iCloudRootURL(fileManager: fileManager) {
+            let iCloudURL = iCloudRoot.appendingPathComponent(relativePath)
+            if fileManager.fileExists(atPath: iCloudURL.path) {
+                return iCloudURL
+            }
+            let localURL = StoragePaths.localRootURL(fileManager: fileManager).appendingPathComponent(relativePath)
+            if fileManager.fileExists(atPath: localURL.path) {
+                return localURL
+            }
+            return iCloudURL
+        }
+        return StoragePaths.localRootURL(fileManager: fileManager).appendingPathComponent(relativePath)
     }
 
     static func writeHTML(data: Data, itemID: UUID) throws -> String {
