@@ -313,6 +313,7 @@ When opening an archive:
 - De-duplication based on URL + title + folder path; keep a sync link when possible.
 - Document items show the filename and a "Show in Finder" action on macOS.
 - macOS list rows expose "Show in Finder" for documents via context menu.
+- iOS "Open Document" previews via QuickLook after ensuring iCloud files are downloaded (shows a brief preparing state and a document-unavailable alert if needed).
 
 ---
 

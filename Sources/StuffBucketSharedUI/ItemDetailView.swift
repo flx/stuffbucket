@@ -34,6 +34,11 @@ struct ArchiveError: Identifiable {
     let message: String
 }
 
+struct DocumentError: Identifiable {
+    let id = UUID()
+    let message: String
+}
+
 #if os(macOS)
 private struct LeftAlignedTextField: NSViewRepresentable {
     @Binding var text: String
@@ -96,7 +101,9 @@ struct ItemDetailView: View {
     @State private var isImportingDocument = false
     @State private var quickLookURL: URL?
     @State private var archiveError: ArchiveError?
+    @State private var documentError: DocumentError?
     @State private var isPreparingArchive = false
+    @State private var isPreparingDocument = false
     @State private var useReaderMode = false
     @State private var isEditingLink = false
     @State private var isEditingSnippet = false
@@ -139,6 +146,23 @@ struct ItemDetailView: View {
             }
         } message: {
             Text(archiveError?.message ?? "")
+        }
+        .alert(
+            "Document Unavailable",
+            isPresented: Binding(
+                get: { documentError != nil },
+                set: { isPresented in
+                    if !isPresented {
+                        documentError = nil
+                    }
+                }
+            )
+        ) {
+            Button("OK") {
+                documentError = nil
+            }
+        } message: {
+            Text(documentError?.message ?? "")
         }
     }
 
@@ -623,8 +647,19 @@ struct ItemDetailView: View {
                 }
             }
 #else
-            Button("Open Document") {
+            Button {
                 openDocument(at: documentURL)
+            } label: {
+                Label(isPreparingDocument ? "Preparing..." : "Open Document", systemImage: "doc.text")
+            }
+            .disabled(isPreparingDocument)
+            if isPreparingDocument {
+                HStack(spacing: 8) {
+                    ProgressView()
+                    Text("Preparing document...")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
             }
 #endif
         }
@@ -638,9 +673,98 @@ struct ItemDetailView: View {
 #if os(macOS)
         NSWorkspace.shared.open(url)
 #else
-        quickLookURL = url
+        Task {
+            await openDocumentOnIOS(url)
+        }
 #endif
     }
+
+#if os(iOS)
+    private func openDocumentOnIOS(_ url: URL) async {
+        if isPreparingDocument {
+            return
+        }
+        await MainActor.run {
+            isPreparingDocument = true
+        }
+        defer {
+            Task { @MainActor in
+                isPreparingDocument = false
+            }
+        }
+
+        guard let previewURL = await prepareDocumentPreviewURL(url) else { return }
+        await MainActor.run {
+            quickLookURL = previewURL
+        }
+    }
+
+    private func prepareDocumentPreviewURL(_ url: URL) async -> URL? {
+        let fileManager = FileManager.default
+
+        if fileManager.isUbiquitousItem(at: url) {
+            try? fileManager.startDownloadingUbiquitousItem(at: url)
+            let ready = await waitForFile(url, timeoutSeconds: 10)
+            if !ready {
+                await MainActor.run {
+                    documentError = DocumentError(
+                        message: "Document is still downloading from iCloud. Try again in a moment."
+                    )
+                }
+                return nil
+            }
+        }
+
+        guard fileManager.fileExists(atPath: url.path) else {
+            await MainActor.run {
+                documentError = DocumentError(message: "Document file is missing.")
+            }
+            return nil
+        }
+
+        return makePreviewCopy(of: url) ?? url
+    }
+
+    private func waitForFile(_ url: URL, timeoutSeconds: Double) async -> Bool {
+        let timeoutNanos = UInt64(timeoutSeconds * 1_000_000_000)
+        let step: UInt64 = 200_000_000
+        var waited: UInt64 = 0
+
+        while waited < timeoutNanos {
+            if Task.isCancelled { return false }
+            if ArchiveResolver.isFileReady(url) {
+                return true
+            }
+            try? await Task.sleep(nanoseconds: step)
+            waited += step
+        }
+        return ArchiveResolver.isFileReady(url)
+    }
+
+    private func makePreviewCopy(of url: URL) -> URL? {
+        let fileManager = FileManager.default
+        let previewRoot = fileManager.temporaryDirectory.appendingPathComponent(
+            "StuffBucketPreview",
+            isDirectory: true
+        )
+        try? fileManager.createDirectory(at: previewRoot, withIntermediateDirectories: true)
+
+        let ext = url.pathExtension
+        let fileName = ext.isEmpty ? UUID().uuidString : "\(UUID().uuidString).\(ext)"
+        let destination = previewRoot.appendingPathComponent(fileName)
+
+        if fileManager.fileExists(atPath: destination.path) {
+            try? fileManager.removeItem(at: destination)
+        }
+
+        do {
+            try fileManager.copyItem(at: url, to: destination)
+            return destination
+        } catch {
+            return nil
+        }
+    }
+#endif
 
     private func attachDocument(_ url: URL, to item: Item) {
         let accessGranted = url.startAccessingSecurityScopedResource()
