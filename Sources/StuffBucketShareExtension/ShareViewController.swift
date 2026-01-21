@@ -132,15 +132,22 @@ final class ShareViewController: UIViewController, UITextViewDelegate {
     }
 
     private func processShare() {
-        extractURL { [weak self] url in
+        extractImage { [weak self] staging in
             guard let self else { return }
-            if let url {
-                updateSharedPayload(.link(url))
+            if let staging {
+                self.updateSharedPayload(.document(staging))
                 return
             }
-            self.extractImage { staging in
-                if let staging {
-                    self.updateSharedPayload(.document(staging))
+            self.extractURL { url in
+                if let url {
+                    if url.isFileURL,
+                       let staging = SharedCaptureStore.stageDocumentCopy(from: url, preferredFileName: url.lastPathComponent) {
+                        self.updateSharedPayload(.document(staging))
+                    } else if !url.isFileURL {
+                        self.updateSharedPayload(.link(url))
+                    } else {
+                        self.updateSharedPayload(nil)
+                    }
                 } else {
                     self.updateSharedPayload(nil)
                 }

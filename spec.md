@@ -253,6 +253,8 @@ When opening an archive:
 - Share extension captures URLs from Safari and queues them for the main app to import on launch.
 - Share extension accepts URL attachments or plain-text URL payloads.
 - Share extension accepts image attachments (e.g. Photos) and imports them as Document items.
+- Share extension treats file:// URLs as Document items and prefers image attachments over file URLs.
+- Document titles default to the shared filename (not the full file path).
 - iOS share sheet includes a comment field for optional snippets/tags.
 - Share sheet comment text supports quotes for snippets: double quotes (straight/smart) and single quotes used as quote boundaries become `textContent` joined by newlines; apostrophes inside words and quotes inside quoted segments are ignored; unquoted tokens become tags (#tag supported).
 - Share extension opens StuffBucket after capture to surface new items immediately.
@@ -276,6 +278,8 @@ When opening an archive:
 - Share extension captures URLs from Safari and queues them for the main app to import on launch.
 - Share extension accepts URL attachments or plain-text URL payloads.
 - Share extension accepts image attachments (e.g. Photos) and imports them as Document items.
+- Share extension treats file:// URLs as Document items and prefers image attachments over file URLs.
+- Document titles default to the shared filename (not the full file path).
 - Share extension opens StuffBucket after capture to surface new items immediately.
 - Share sheet comment text supports quotes for snippets: double quotes (straight/smart) and single quotes used as quote boundaries become `textContent` joined by newlines; apostrophes inside words and quotes inside quoted segments are ignored; unquoted tokens become tags (#tag supported).
 - The macOS app activates when opened via the share URL to bring new items into view.
@@ -309,6 +313,7 @@ When opening an archive:
 
 ### Item detail
 - Tag editing is available on the item detail view (comma-separated input).
+- Title is editable in the item detail view (empty title falls back to derived display title).
 - macOS tag input is left-aligned (no right-justified value column).
 - Collection assignment is available separately from tag editing.
 - macOS collection input is left-aligned (no right-justified value column).

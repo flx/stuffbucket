@@ -42,6 +42,8 @@ struct DocumentError: Identifiable {
 #if os(macOS)
 private struct LeftAlignedTextField: NSViewRepresentable {
     @Binding var text: String
+    var placeholder: String? = nil
+    var font: NSFont? = nil
 
     func makeNSView(context: Context) -> NSTextField {
         let field = NSTextField(string: text)
@@ -51,6 +53,10 @@ private struct LeftAlignedTextField: NSViewRepresentable {
         field.isSelectable = true
         field.alignment = .left
         field.lineBreakMode = .byTruncatingTail
+        field.placeholderString = placeholder
+        if let font {
+            field.font = font
+        }
         field.delegate = context.coordinator
         return field
     }
@@ -61,6 +67,12 @@ private struct LeftAlignedTextField: NSViewRepresentable {
         }
         if nsView.alignment != .left {
             nsView.alignment = .left
+        }
+        if nsView.placeholderString != placeholder {
+            nsView.placeholderString = placeholder
+        }
+        if let font, nsView.font != font {
+            nsView.font = font
         }
     }
 
@@ -96,6 +108,7 @@ struct ItemDetailView: View {
     @State private var collectionsText = ""
     @State private var contentText = ""
     @State private var linkText = ""
+    @State private var titleText = ""
     @State private var linkUpdateTask: Task<Void, Never>?
     @State private var archivePresentation: ArchivePresentation?
     @State private var isImportingDocument = false
@@ -167,144 +180,7 @@ struct ItemDetailView: View {
     }
 
     private func detailView(for item: Item) -> some View {
-        let hasSnippet = item.hasText
-        let base = Form {
-            Section("Details") {
-                Text(displayTitle(for: item))
-                    .font(.headline)
-                if let type = item.itemType?.rawValue {
-                    Text(type.capitalized)
-                        .foregroundStyle(.secondary)
-                }
-            }
-
-            // Snippet at top if it has content (not when editing from empty)
-            if hasSnippet && !isEditingSnippet {
-                Section("Snippet") {
-                    contentEditor
-                }
-            }
-
-            Section("Link") {
-                linkSection(for: item)
-            }
-
-            if item.hasLink {
-                Section("Archive") {
-                    archiveSection(for: item)
-                }
-            }
-
-            Section("Document") {
-                documentSection(for: item)
-            }
-
-            Section("Collections") {
-                collectionsField
-            }
-
-            Section("Tags") {
-                tagsField
-                if aiKeyStorage.hasValidKey {
-                    Button {
-                        isShowingTagSuggestions = true
-                    } label: {
-                        Label("Suggest Tags", systemImage: "sparkles")
-                    }
-                }
-            }
-
-            // Snippet at bottom if empty or editing from empty state
-            if !hasSnippet || isEditingSnippet {
-                Section("Snippet") {
-                    snippetSection(for: item, hasContent: hasSnippet)
-                }
-            }
-
-            Section {
-                if item.isTrashed {
-                    Button("Restore from Trash") {
-                        restoreItem(item)
-                    }
-                    Button("Delete Permanently", role: .destructive) {
-                        permanentlyDeleteItem(item)
-                    }
-                    if let trashedAt = item.trashedAt {
-                        Text("Will be permanently deleted \(deletionDateText(from: trashedAt))")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                    }
-                } else {
-                    Button("Move to Trash", role: .destructive) {
-                        trashItem(item)
-                    }
-                }
-            }
-        }
-        .navigationTitle(displayTitle(for: item))
-        .onAppear {
-            syncFromItem(item)
-        }
-        .onChange(of: item.tags ?? "") { _, _ in
-            syncFromItem(item)
-        }
-        .onChange(of: item.textContent ?? "") { _, _ in
-            syncFromItem(item)
-        }
-        .onChange(of: item.linkURL ?? "") { _, _ in
-            syncFromItem(item)
-        }
-        .onChange(of: linkText) { _, newValue in
-            // Only auto-apply link changes when NOT in edit mode
-            // In edit mode, changes are applied when user taps Done
-            guard !isEditingLink else { return }
-            linkUpdateTask?.cancel()
-            linkUpdateTask = Task {
-                try? await Task.sleep(nanoseconds: 500_000_000)
-                _ = await MainActor.run {
-                    applyLink(newValue, to: item)
-                }
-            }
-        }
-        .onChange(of: isEditingLink) { _, isEditing in
-            // When exiting edit mode, apply the link
-            if !isEditing {
-                linkUpdateTask?.cancel()
-                applyLink(linkText, to: item)
-            }
-        }
-        .onChange(of: tagsText) { _, newValue in
-            applyTags(newValue, to: item)
-        }
-        .onChange(of: collectionsText) { _, newValue in
-            applyCollections(newValue, to: item)
-        }
-        .onChange(of: contentText) { _, newValue in
-            // Only auto-apply content changes when NOT in edit mode
-            // In edit mode, changes are applied when user taps Done
-            guard !isEditingSnippet else { return }
-            applyContent(newValue, to: item)
-        }
-        .onChange(of: isEditingSnippet) { _, isEditing in
-            // When exiting snippet edit mode, apply the content
-            if !isEditing {
-                applyContent(contentText, to: item)
-            }
-        }
-        .fileImporter(
-            isPresented: $isImportingDocument,
-            allowedContentTypes: [.item],
-            allowsMultipleSelection: false
-        ) { result in
-            switch result {
-            case .success(let urls):
-                if let url = urls.first {
-                    attachDocument(url, to: item)
-                }
-            case .failure:
-                break
-            }
-        }
+        let base = baseDetailView(for: item)
 
 #if os(iOS)
         return base
@@ -337,6 +213,152 @@ struct ItemDetailView: View {
 #endif
     }
 
+    private func baseDetailView(for item: Item) -> some View {
+        var base = AnyView(detailForm(for: item))
+        base = AnyView(base.navigationTitle(displayTitle(for: item)))
+        base = AnyView(base.onAppear { syncFromItem(item) })
+        base = AnyView(base.onChange(of: item.title ?? "") { _, _ in syncFromItem(item) })
+        base = AnyView(base.onChange(of: item.tags ?? "") { _, _ in syncFromItem(item) })
+        base = AnyView(base.onChange(of: item.textContent ?? "") { _, _ in syncFromItem(item) })
+        base = AnyView(base.onChange(of: item.linkURL ?? "") { _, _ in syncFromItem(item) })
+        base = AnyView(base.onChange(of: linkText) { _, newValue in
+            // Only auto-apply link changes when NOT in edit mode
+            // In edit mode, changes are applied when user taps Done
+            guard !isEditingLink else { return }
+            linkUpdateTask?.cancel()
+            linkUpdateTask = Task {
+                try? await Task.sleep(nanoseconds: 500_000_000)
+                _ = await MainActor.run {
+                    applyLink(newValue, to: item)
+                }
+            }
+        })
+        base = AnyView(base.onChange(of: titleText) { _, newValue in
+            applyTitle(newValue, to: item)
+        })
+        base = AnyView(base.onChange(of: isEditingLink) { _, isEditing in
+            // When exiting edit mode, apply the link
+            if !isEditing {
+                linkUpdateTask?.cancel()
+                applyLink(linkText, to: item)
+            }
+        })
+        base = AnyView(base.onChange(of: tagsText) { _, newValue in
+            applyTags(newValue, to: item)
+        })
+        base = AnyView(base.onChange(of: collectionsText) { _, newValue in
+            applyCollections(newValue, to: item)
+        })
+        base = AnyView(base.onChange(of: contentText) { _, newValue in
+            // Only auto-apply content changes when NOT in edit mode
+            // In edit mode, changes are applied when user taps Done
+            guard !isEditingSnippet else { return }
+            applyContent(newValue, to: item)
+        })
+        base = AnyView(base.onChange(of: isEditingSnippet) { _, isEditing in
+            // When exiting snippet edit mode, apply the content
+            if !isEditing {
+                applyContent(contentText, to: item)
+            }
+        })
+        base = AnyView(base.fileImporter(
+            isPresented: $isImportingDocument,
+            allowedContentTypes: [.item],
+            allowsMultipleSelection: false
+        ) { result in
+            switch result {
+            case .success(let urls):
+                if let url = urls.first {
+                    attachDocument(url, to: item)
+                }
+            case .failure:
+                break
+            }
+        })
+        return base
+    }
+
+    private func detailForm(for item: Item) -> some View {
+        Form {
+            detailFormContent(for: item)
+        }
+    }
+
+    @ViewBuilder
+    private func detailFormContent(for item: Item) -> some View {
+        let hasSnippet = item.hasText
+        Section("Details") {
+            titleField(for: item)
+            if let type = item.itemType?.rawValue {
+                Text(type.capitalized)
+                    .foregroundStyle(.secondary)
+            }
+        }
+
+        // Snippet at top if it has content (not when editing from empty)
+        if hasSnippet && !isEditingSnippet {
+            Section("Snippet") {
+                contentEditor
+            }
+        }
+
+        Section("Link") {
+            linkSection(for: item)
+        }
+
+        if item.hasLink {
+            Section("Archive") {
+                archiveSection(for: item)
+            }
+        }
+
+        Section("Document") {
+            documentSection(for: item)
+        }
+
+        Section("Collections") {
+            collectionsField
+        }
+
+        Section("Tags") {
+            tagsField
+            if aiKeyStorage.hasValidKey {
+                Button {
+                    isShowingTagSuggestions = true
+                } label: {
+                    Label("Suggest Tags", systemImage: "sparkles")
+                }
+            }
+        }
+
+        // Snippet at bottom if empty or editing from empty state
+        if !hasSnippet || isEditingSnippet {
+            Section("Snippet") {
+                snippetSection(for: item, hasContent: hasSnippet)
+            }
+        }
+
+        Section {
+            if item.isTrashed {
+                Button("Restore from Trash") {
+                    restoreItem(item)
+                }
+                Button("Delete Permanently", role: .destructive) {
+                    permanentlyDeleteItem(item)
+                }
+                if let trashedAt = item.trashedAt {
+                    Text("Will be permanently deleted \(deletionDateText(from: trashedAt))")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                }
+            } else {
+                Button("Move to Trash", role: .destructive) {
+                    trashItem(item)
+                }
+            }
+        }
+    }
+
     private var missingView: some View {
         VStack(spacing: 8) {
             Text("Item not found")
@@ -349,6 +371,21 @@ struct ItemDetailView: View {
 
     private func displayTitle(for item: Item) -> String {
         item.displayTitle
+    }
+
+    @ViewBuilder
+    private func titleField(for item: Item) -> some View {
+#if os(iOS)
+        TextField("Title", text: $titleText, prompt: Text(displayTitle(for: item)))
+            .font(.headline)
+#else
+        LeftAlignedTextField(
+            text: $titleText,
+            placeholder: displayTitle(for: item),
+            font: NSFont.preferredFont(forTextStyle: .headline)
+        )
+        .frame(maxWidth: .infinity, alignment: .leading)
+#endif
     }
 
     @ViewBuilder
@@ -506,6 +543,10 @@ struct ItemDetailView: View {
     }
 
     private func syncFromItem(_ item: Item) {
+        let currentTitle = item.title ?? ""
+        if currentTitle != titleText {
+            titleText = currentTitle
+        }
         let currentTags = item.displayTagList.joined(separator: ", ")
         if currentTags != tagsText {
             tagsText = currentTags
@@ -552,6 +593,21 @@ struct ItemDetailView: View {
         let current = item.textContent ?? ""
         guard text != current else { return }
         item.textContent = text
+        item.updatedAt = Date()
+        do {
+            try context.save()
+        } catch {
+            context.rollback()
+        }
+    }
+
+    private func applyTitle(_ text: String, to item: Item) {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        let newValue = trimmed.isEmpty ? nil : trimmed
+        let currentRaw = item.title?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let currentValue = (currentRaw?.isEmpty == false) ? currentRaw : nil
+        guard newValue != currentValue else { return }
+        item.title = newValue
         item.updatedAt = Date()
         do {
             try context.save()

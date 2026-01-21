@@ -8,21 +8,29 @@ final class ShareViewController: NSViewController {
 
     override func beginRequest(with context: NSExtensionContext) {
         let tagsText = extractTagsText(from: context)
-        extractURL(from: context) { url in
-            if let url {
-                SharedCaptureStore.enqueue(url: url, tagsText: tagsText)
+        extractImage(from: context) { fileURL in
+            if let fileURL {
+                SharedCaptureStore.enqueueDocumentCopy(
+                    from: fileURL,
+                    preferredFileName: fileURL.lastPathComponent,
+                    tagsText: tagsText
+                )
                 Self.openContainingApp(from: context) {
                     context.completeRequest(returningItems: nil)
                 }
                 return
             }
-            self.extractImage(from: context) { fileURL in
-                if let fileURL {
-                    SharedCaptureStore.enqueueDocumentCopy(
-                        from: fileURL,
-                        preferredFileName: fileURL.lastPathComponent,
-                        tagsText: tagsText
-                    )
+            self.extractURL(from: context) { url in
+                if let url {
+                    if url.isFileURL {
+                        SharedCaptureStore.enqueueDocumentCopy(
+                            from: url,
+                            preferredFileName: url.lastPathComponent,
+                            tagsText: tagsText
+                        )
+                    } else {
+                        SharedCaptureStore.enqueue(url: url, tagsText: tagsText)
+                    }
                     Self.openContainingApp(from: context) {
                         context.completeRequest(returningItems: nil)
                     }
