@@ -109,6 +109,8 @@ public enum ItemImportService {
     public static func importDocument(
         fileURL: URL,
         source: ItemSource = .import,
+        tags: [String]? = nil,
+        textContent: String? = nil,
         in context: NSManagedObjectContext
     ) throws -> UUID? {
         let fileName = fileURL.lastPathComponent
@@ -118,6 +120,15 @@ public enum ItemImportService {
         let storedName = item.title ?? "Document"
         item.documentRelativePath = try DocumentStorage.copyDocument(from: fileURL, itemID: itemID, fileName: storedName)
         item.source = source.rawValue
+        if let tags, !tags.isEmpty {
+            item.setTagList(tags)
+        }
+        if let textContent {
+            let trimmed = textContent.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !trimmed.isEmpty {
+                item.textContent = trimmed
+            }
+        }
         return itemID
     }
 

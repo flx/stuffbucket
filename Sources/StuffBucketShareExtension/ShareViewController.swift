@@ -79,7 +79,12 @@ final class ShareViewController: UIViewController, UITextViewDelegate {
         return stack
     }()
 
-    private var sharedURL: URL?
+    private enum SharedPayload {
+        case link(URL)
+        case document(SharedCaptureStaging)
+    }
+
+    private var sharedPayload: SharedPayload?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -129,31 +134,39 @@ final class ShareViewController: UIViewController, UITextViewDelegate {
     private func processShare() {
         extractURL { [weak self] url in
             guard let self else { return }
-            sharedURL = url
             if let url {
-                saveButton.isEnabled = true
-                saveButton.alpha = 1
-                subtitleLabel.text = url.host ?? "Add notes or tags before saving"
-            } else {
-                subtitleLabel.text = "No URL found in this share."
-                saveButton.isEnabled = false
-                saveButton.alpha = 0.5
+                updateSharedPayload(.link(url))
+                return
+            }
+            self.extractImage { staging in
+                if let staging {
+                    self.updateSharedPayload(.document(staging))
+                } else {
+                    self.updateSharedPayload(nil)
+                }
             }
         }
     }
 
     @objc private func saveTapped() {
-        guard let url = sharedURL else {
-            extensionContext?.completeRequest(returningItems: nil)
-            return
-        }
         let trimmed = textView.text.trimmingCharacters(in: .whitespacesAndNewlines)
         let tagsText = trimmed.isEmpty ? nil : trimmed
-        SharedCaptureStore.enqueue(url: url, tagsText: tagsText)
-        openContainingAppAndDismiss()
+        switch sharedPayload {
+        case .link(let url):
+            SharedCaptureStore.enqueue(url: url, tagsText: tagsText)
+            openContainingAppAndDismiss()
+        case .document(let staging):
+            SharedCaptureStore.enqueueStagedDocument(staging, tagsText: tagsText)
+            openContainingAppAndDismiss()
+        case .none:
+            extensionContext?.completeRequest(returningItems: nil)
+        }
     }
 
     @objc private func cancelTapped() {
+        if case .document(let staging) = sharedPayload {
+            SharedCaptureStore.removeSharedFile(relativePath: staging.relativePath)
+        }
         extensionContext?.completeRequest(returningItems: nil)
     }
 
@@ -206,6 +219,42 @@ final class ShareViewController: UIViewController, UITextViewDelegate {
         completion(nil)
     }
 
+    private func extractImage(completion: @escaping (SharedCaptureStaging?) -> Void) {
+        let items = extensionContext?.inputItems as? [NSExtensionItem] ?? []
+        let providers = items.compactMap { $0.attachments }.flatMap { $0 }
+        guard let provider = providers.first(where: { $0.hasItemConformingToTypeIdentifier(UTType.image.identifier) }) else {
+            completion(nil)
+            return
+        }
+        let typeIdentifier = provider.registeredTypeIdentifiers.first(where: { identifier in
+            UTType(identifier)?.conforms(to: .image) == true
+        }) ?? UTType.image.identifier
+        provider.loadFileRepresentation(forTypeIdentifier: typeIdentifier) { url, _ in
+            if let url {
+                let staging = SharedCaptureStore.stageDocumentCopy(from: url, preferredFileName: url.lastPathComponent)
+                DispatchQueue.main.async {
+                    completion(staging)
+                }
+                return
+            }
+            provider.loadDataRepresentation(forTypeIdentifier: typeIdentifier) { data, _ in
+                guard let data else {
+                    DispatchQueue.main.async { completion(nil) }
+                    return
+                }
+                let fileName = Self.buildImageFileName(provider: provider, typeIdentifier: typeIdentifier)
+                let tempURL = Self.writeTemporaryFile(data: data, fileName: fileName)
+                let staging = tempURL.flatMap { SharedCaptureStore.stageDocumentCopy(from: $0, preferredFileName: fileName) }
+                if let tempURL {
+                    try? FileManager.default.removeItem(at: tempURL)
+                }
+                DispatchQueue.main.async {
+                    completion(staging)
+                }
+            }
+        }
+    }
+
     private func loadURL(from provider: NSItemProvider, typeIdentifier: String, completion: @escaping (URL?) -> Void) {
         provider.loadItem(forTypeIdentifier: typeIdentifier, options: nil) { item, _ in
             let url = Self.coerceURL(from: item)
@@ -226,5 +275,59 @@ final class ShareViewController: UIViewController, UITextViewDelegate {
             return URL(string: string)
         }
         return nil
+    }
+
+    private static func buildImageFileName(provider: NSItemProvider, typeIdentifier: String) -> String {
+        let base = provider.suggestedName?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let type = UTType(typeIdentifier)
+        let ext = type?.preferredFilenameExtension ?? "png"
+        let name = (base?.isEmpty == false ? base! : "Image")
+        if name.lowercased().hasSuffix(".\(ext)") {
+            return name
+        }
+        return "\(name).\(ext)"
+    }
+
+    private static func writeTemporaryFile(data: Data, fileName: String) -> URL? {
+        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let directoryURL = tempURL.appendingPathComponent("images", isDirectory: true)
+        let fileURL = directoryURL.appendingPathComponent(fileName)
+        do {
+            try FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
+            try data.write(to: fileURL, options: [.atomic])
+            return fileURL
+        } catch {
+            return nil
+        }
+    }
+
+    private func updateSharedPayload(_ payload: SharedPayload?) {
+        if case .document(let existing) = sharedPayload {
+            let shouldRemove: Bool
+            switch payload {
+            case .document(let next):
+                shouldRemove = next.relativePath != existing.relativePath
+            case .link, .none:
+                shouldRemove = true
+            }
+            if shouldRemove {
+                SharedCaptureStore.removeSharedFile(relativePath: existing.relativePath)
+            }
+        }
+        sharedPayload = payload
+        switch payload {
+        case .link(let url):
+            saveButton.isEnabled = true
+            saveButton.alpha = 1
+            subtitleLabel.text = url.host ?? "Add notes or tags before saving"
+        case .document(let staging):
+            saveButton.isEnabled = true
+            saveButton.alpha = 1
+            subtitleLabel.text = staging.fileName
+        case .none:
+            subtitleLabel.text = "No URL or image found in this share."
+            saveButton.isEnabled = false
+            saveButton.alpha = 0.5
+        }
     }
 }

@@ -35,36 +35,60 @@ struct StuffBucketApp: App {
 private func refreshPendingData(using persistenceController: PersistenceController) {
     StorageMigration.migrateLocalStorageIfNeeded()
     SearchIndexer.shared.seedIndexIfNeeded(context: persistenceController.viewContext)
-    importPendingSharedLinks(using: persistenceController)
+    importPendingSharedItems(using: persistenceController)
     archivePendingLinks(using: persistenceController)
     let backgroundContext = persistenceController.container.newBackgroundContext()
     TrashCleanupService.cleanupExpiredTrashItems(context: backgroundContext)
 }
 
-private func importPendingSharedLinks(using persistenceController: PersistenceController) {
+private func importPendingSharedItems(using persistenceController: PersistenceController) {
     let items = SharedCaptureStore.dequeueAll()
     guard !items.isEmpty else { return }
     let context = persistenceController.viewContext
     let backgroundContext = persistenceController.container.newBackgroundContext()
     var newItemIDs: [UUID] = []
+    var importedSharedPaths: [String] = []
     context.performAndWait {
         for item in items {
             let parsed = ShareCommentParser.parse(item.tagsText)
-            if let id = ItemImportService.createLinkItem(
-                url: item.url,
-                source: .shareSheet,
-                tags: parsed.tags,
-                textContent: parsed.snippet,
-                in: context
-            ) {
-                newItemIDs.append(id)
+            switch item.kind {
+            case .link:
+                guard let url = item.url else { continue }
+                if let id = ItemImportService.createLinkItem(
+                    url: url,
+                    source: .shareSheet,
+                    tags: parsed.tags,
+                    textContent: parsed.snippet,
+                    in: context
+                ) {
+                    newItemIDs.append(id)
+                }
+            case .document:
+                guard let fileURL = SharedCaptureStore.resolveSharedFileURL(for: item) else { continue }
+                do {
+                    _ = try ItemImportService.importDocument(
+                        fileURL: fileURL,
+                        source: .shareSheet,
+                        tags: parsed.tags,
+                        textContent: parsed.snippet,
+                        in: context
+                    )
+                    if let relativePath = item.sharedRelativePath {
+                        importedSharedPaths.append(relativePath)
+                    }
+                } catch {
+                    continue
+                }
             }
         }
         if context.hasChanges {
             do {
                 try context.save()
+                for relativePath in importedSharedPaths {
+                    SharedCaptureStore.removeSharedFile(relativePath: relativePath)
+                }
             } catch {
-                NSLog("Failed to import shared links: \(error)")
+                NSLog("Failed to import shared items: \(error)")
             }
         }
     }

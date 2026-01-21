@@ -50,12 +50,56 @@ final class SharedCaptureObserver {
 }
 
 struct SharedCaptureItem: Codable, Hashable {
-    let url: URL
+    enum Kind: String, Codable {
+        case link
+        case document
+    }
+
+    let kind: Kind
+    let url: URL?
     let tagsText: String?
+    let sharedRelativePath: String?
+    let fileName: String?
+
+    init(
+        kind: Kind,
+        url: URL? = nil,
+        tagsText: String? = nil,
+        sharedRelativePath: String? = nil,
+        fileName: String? = nil
+    ) {
+        self.kind = kind
+        self.url = url
+        self.tagsText = tagsText
+        self.sharedRelativePath = sharedRelativePath
+        self.fileName = fileName
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let kind = try container.decodeIfPresent(Kind.self, forKey: .kind) ?? .link
+        let url = try container.decodeIfPresent(URL.self, forKey: .url)
+        let tagsText = try container.decodeIfPresent(String.self, forKey: .tagsText)
+        let sharedRelativePath = try container.decodeIfPresent(String.self, forKey: .sharedRelativePath)
+        let fileName = try container.decodeIfPresent(String.self, forKey: .fileName)
+        self.init(
+            kind: kind,
+            url: url,
+            tagsText: tagsText,
+            sharedRelativePath: sharedRelativePath,
+            fileName: fileName
+        )
+    }
+}
+
+struct SharedCaptureStaging: Hashable {
+    let relativePath: String
+    let fileName: String
 }
 
 enum SharedCaptureStore {
     static let appGroupID = "group.com.digitalhandstand.stuffbucket.app"
+    private static let stagingFolderName = "SharedImports"
     private static let pendingItemsKey = "pendingSharedItems"
     private static let pendingURLsKey = "pendingSharedURLs"
 
@@ -64,8 +108,54 @@ enum SharedCaptureStore {
         var items = loadItems(from: defaults)
         let trimmedTags = tagsText?.trimmingCharacters(in: .whitespacesAndNewlines)
         let storedTags = trimmedTags?.isEmpty == false ? trimmedTags : nil
-        items.append(SharedCaptureItem(url: url, tagsText: storedTags))
+        items.append(SharedCaptureItem(kind: .link, url: url, tagsText: storedTags))
         saveItems(items, to: defaults)
+    }
+
+    static func stageDocumentCopy(from sourceURL: URL, preferredFileName: String? = nil) -> SharedCaptureStaging? {
+        let fileManager = FileManager.default
+        guard let containerURL = fileManager.containerURL(forSecurityApplicationGroupIdentifier: appGroupID) else {
+            return nil
+        }
+        let stagingRoot = containerURL.appendingPathComponent(stagingFolderName, isDirectory: true)
+        let itemID = UUID().uuidString
+        let itemDirectory = stagingRoot.appendingPathComponent(itemID, isDirectory: true)
+        let fileName = sanitizedFileName(preferredFileName ?? sourceURL.lastPathComponent)
+        let destinationURL = itemDirectory.appendingPathComponent(fileName)
+        do {
+            try fileManager.createDirectory(at: itemDirectory, withIntermediateDirectories: true)
+            if fileManager.fileExists(atPath: destinationURL.path) {
+                try fileManager.removeItem(at: destinationURL)
+            }
+            try fileManager.copyItem(at: sourceURL, to: destinationURL)
+            return SharedCaptureStaging(
+                relativePath: "\(stagingFolderName)/\(itemID)/\(fileName)",
+                fileName: fileName
+            )
+        } catch {
+            return nil
+        }
+    }
+
+    static func enqueueStagedDocument(_ staging: SharedCaptureStaging, tagsText: String? = nil) {
+        guard let defaults = UserDefaults(suiteName: appGroupID) else { return }
+        var items = loadItems(from: defaults)
+        let trimmedTags = tagsText?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let storedTags = trimmedTags?.isEmpty == false ? trimmedTags : nil
+        items.append(
+            SharedCaptureItem(
+                kind: .document,
+                tagsText: storedTags,
+                sharedRelativePath: staging.relativePath,
+                fileName: staging.fileName
+            )
+        )
+        saveItems(items, to: defaults)
+    }
+
+    static func enqueueDocumentCopy(from sourceURL: URL, preferredFileName: String? = nil, tagsText: String? = nil) {
+        guard let staging = stageDocumentCopy(from: sourceURL, preferredFileName: preferredFileName) else { return }
+        enqueueStagedDocument(staging, tagsText: tagsText)
     }
 
     static func dequeueAll() -> [SharedCaptureItem] {
@@ -76,12 +166,30 @@ enum SharedCaptureStore {
         let legacyURLs = defaults.stringArray(forKey: pendingURLsKey) ?? []
         for urlString in legacyURLs {
             if let url = URL(string: urlString) {
-                items.append(SharedCaptureItem(url: url, tagsText: nil))
+                items.append(SharedCaptureItem(kind: .link, url: url, tagsText: nil))
             }
         }
         defaults.removeObject(forKey: pendingURLsKey)
         defaults.removeObject(forKey: pendingItemsKey)
         return items
+    }
+
+    static func resolveSharedFileURL(for item: SharedCaptureItem) -> URL? {
+        guard let relativePath = item.sharedRelativePath else { return nil }
+        guard let containerURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupID) else {
+            return nil
+        }
+        return containerURL.appendingPathComponent(relativePath)
+    }
+
+    static func removeSharedFile(relativePath: String) {
+        guard let containerURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroupID) else {
+            return
+        }
+        let url = containerURL.appendingPathComponent(relativePath)
+        let directory = url.deletingLastPathComponent()
+        try? FileManager.default.removeItem(at: url)
+        try? FileManager.default.removeItem(at: directory)
     }
 
     private static func loadItems(from defaults: UserDefaults) -> [SharedCaptureItem] {
@@ -94,5 +202,13 @@ enum SharedCaptureStore {
         defaults.set(data, forKey: pendingItemsKey)
         defaults.synchronize()
         SharedCaptureNotifier.post()
+    }
+
+    private static func sanitizedFileName(_ name: String) -> String {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.isEmpty {
+            return "Document"
+        }
+        return trimmed
     }
 }

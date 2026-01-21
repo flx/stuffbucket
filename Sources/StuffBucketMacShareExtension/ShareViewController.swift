@@ -16,7 +16,20 @@ final class ShareViewController: NSViewController {
                 }
                 return
             }
-            context.completeRequest(returningItems: nil)
+            self.extractImage(from: context) { fileURL in
+                if let fileURL {
+                    SharedCaptureStore.enqueueDocumentCopy(
+                        from: fileURL,
+                        preferredFileName: fileURL.lastPathComponent,
+                        tagsText: tagsText
+                    )
+                    Self.openContainingApp(from: context) {
+                        context.completeRequest(returningItems: nil)
+                    }
+                    return
+                }
+                context.completeRequest(returningItems: nil)
+            }
         }
     }
 
@@ -32,6 +45,20 @@ final class ShareViewController: NSViewController {
             return
         }
         completion(nil)
+    }
+
+    private func extractImage(from context: NSExtensionContext, completion: @escaping (URL?) -> Void) {
+        let items = context.inputItems as? [NSExtensionItem] ?? []
+        let providers = items.compactMap { $0.attachments }.flatMap { $0 }
+        guard let provider = providers.first(where: { $0.hasItemConformingToTypeIdentifier(UTType.image.identifier) }) else {
+            completion(nil)
+            return
+        }
+        provider.loadFileRepresentation(forTypeIdentifier: UTType.image.identifier) { url, _ in
+            DispatchQueue.main.async {
+                completion(url)
+            }
+        }
     }
 
     private func extractTagsText(from context: NSExtensionContext) -> String? {

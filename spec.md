@@ -22,6 +22,9 @@ Non-goals (initial versions): collaboration, web client.
 - Use context-scoped Core Data fetches in UI to avoid multi-bundle entity ambiguity.
 - Item detail fetches include sort descriptors (required by NSFetchedResultsController).
 
+## Appendix: Release readiness
+- Disable verbose Core Data debug logging (WAL checkpoint spam).
+
 ## 2. Core concepts
 
 ### 2.1 Item types
@@ -230,9 +233,9 @@ When opening an archive:
 
 ---
 
-## 8. Debug tooling (temporary)
-- Provide a temporary "Delete All Data" toolbar button to wipe Core Data items and stored files during development.
-- This control is debug-only and should be removed before release.
+## 8. Release readiness
+- Debug-only destructive controls are removed from the UI before release.
+- Core Data verbose debug logging is disabled to avoid WAL checkpoint spam in output.
 
 ---
 
@@ -249,6 +252,7 @@ When opening an archive:
   3. Archive status indicator
 - Share extension captures URLs from Safari and queues them for the main app to import on launch.
 - Share extension accepts URL attachments or plain-text URL payloads.
+- Share extension accepts image attachments (e.g. Photos) and imports them as Document items.
 - iOS share sheet includes a comment field for optional snippets/tags.
 - Share sheet comment text supports quotes for snippets: double quotes (straight/smart) and single quotes used as quote boundaries become `textContent` joined by newlines; apostrophes inside words and quotes inside quoted segments are ignored; unquoted tokens become tags (#tag supported).
 - Share extension opens StuffBucket after capture to surface new items immediately.
@@ -267,10 +271,11 @@ When opening an archive:
   - Import Document uses a file picker and copies the file into StuffBucket/Documents.
 - Paste URL
 - Drag URL from browser
-- Drag files from Finder to import documents.
+- Drag files from Finder anywhere in the window to import documents.
 - Services / Share menu
 - Share extension captures URLs from Safari and queues them for the main app to import on launch.
 - Share extension accepts URL attachments or plain-text URL payloads.
+- Share extension accepts image attachments (e.g. Photos) and imports them as Document items.
 - Share extension opens StuffBucket after capture to surface new items immediately.
 - Share sheet comment text supports quotes for snippets: double quotes (straight/smart) and single quotes used as quote boundaries become `textContent` joined by newlines; apostrophes inside words and quotes inside quoted segments are ignored; unquoted tokens become tags (#tag supported).
 - The macOS app activates when opened via the share URL to bring new items into view.

@@ -182,6 +182,8 @@
 - For protected items, require unlock and an extra confirmation.
 - Handle rate limits and failures with clear retry UI.
 - Allow users to delete or regenerate AI outputs.
+- Disable Core Data verbose debug logging (WAL checkpoint spam). completed [x]
+- Remove debug-only cleanup logging. completed [x]
 
 ## 5. App-specific UI work
 
@@ -200,9 +202,10 @@
 - Show an empty-state Import Document button. completed [x]
 - Show an empty-state Add Link button. completed [x]
 - Use a custom iOS share sheet UI with a comment field; parse quotes into snippet + tags and open the app after capture. completed [x]
+- Accept image shares in the iOS share extension and import them as Document items. completed [x]
 - Add link archive viewer actions (open page/reader HTML in-app). completed [x]
 - Show a loading state while archived HTML downloads from iCloud before rendering. completed [x]
-- Add a temporary Delete All Data toolbar button for debugging (remove before release). completed [x]
+- Remove the temporary Delete All Data toolbar button before release. completed [x]
 - Allow link and text editing on all item types in detail view. completed [x]
 - Allow document attach/replace on all item types in detail view. completed [x]
 - Ensure iOS document preview downloads iCloud files and opens via QuickLook with a local preview copy. completed [x]
@@ -229,7 +232,7 @@
 - Add quick-add menu for new snippets and document import. completed [x]
 - Add in-app prompt to save a link by pasting a URL. completed [x]
 - Support paste/drag URL capture in the main view. completed [x]
-- Allow drag-and-drop document import in the main view. completed [x]
+- Allow drag-and-drop document import anywhere in the window. completed [x]
 - Add user-selected file read entitlement for macOS document import. completed [x]
 - Add “Show in Finder” for document items. completed [x]
 - Show an empty-state Import Document button. completed [x]
@@ -237,11 +240,12 @@
 - Open the app and notify running instances after share sheet capture to surface new items. completed [x]
 - Activate the macOS app when share capture is triggered to bring it to the foreground. completed [x]
 - Parse share sheet comment text into snippet + tags with quote-boundary rules (ignore apostrophes, ignore nested quotes). completed [x]
+- Accept image shares in the macOS share extension and import them as Document items. completed [x]
 - Add link archive viewer actions (open archived HTML in default browser). completed [x]
 - Enable page archive open while syncing from iCloud; show sync-pending status and alert when not yet local. completed [x]
 - Trigger iCloud download before opening archived HTML. completed [x]
 - Download archive assets from iCloud before opening on macOS; show a brief syncing state and an unavailable alert when assets are not yet local. completed [x]
-- Add a temporary Delete All Data toolbar button for debugging (remove before release). completed [x]
+- Remove the temporary Delete All Data toolbar button before release. completed [x]
 - Allow link and text editing on all item types in detail view. completed [x]
 - Allow document attach/replace on all item types in detail view. completed [x]
 - Add soft-delete with trashcan tag and trashedAt timestamp. completed [x]

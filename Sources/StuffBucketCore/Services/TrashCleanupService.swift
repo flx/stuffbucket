@@ -32,7 +32,6 @@ public enum TrashCleanupService {
 
                     if context.hasChanges {
                         try context.save()
-                        NSLog("TrashCleanupService: Permanently deleted \(deletedCount) expired items")
                     }
                 } catch {
                     NSLog("TrashCleanupService: Failed to cleanup expired trash items: \(error)")
