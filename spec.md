@@ -315,6 +315,7 @@ When opening an archive:
 - macOS list rows expose "Show in Finder" for documents via context menu.
 - iOS "Open Document" previews via QuickLook after ensuring iCloud files are downloaded (shows a brief preparing state and a document-unavailable alert if needed).
 - Document URL resolution falls back to local app storage if the iCloud copy is not yet present.
+- iOS attempts to trigger an iCloud download for missing document paths before reporting the file unavailable.
 
 ---
 

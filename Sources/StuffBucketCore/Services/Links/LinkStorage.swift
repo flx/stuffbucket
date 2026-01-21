@@ -244,6 +244,14 @@ public enum LinkStorage {
 }
 
 public enum DocumentStorage {
+    public static func ensureICloudDownload(forRelativePath relativePath: String) {
+        let fileManager = FileManager.default
+        guard let iCloudRoot = StoragePaths.iCloudRootURL(fileManager: fileManager) else { return }
+        let destinationURL = iCloudRoot.appendingPathComponent(relativePath)
+        try? fileManager.createDirectory(at: destinationURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try? fileManager.startDownloadingUbiquitousItem(at: destinationURL)
+    }
+
     static func copyDocument(from sourceURL: URL, itemID: UUID, fileName: String) throws -> String {
         let name = fileName.isEmpty ? "Document" : fileName
         let destinationURL = documentURL(for: itemID, fileName: name)

@@ -634,7 +634,7 @@ struct ItemDetailView: View {
 #if os(macOS)
             HStack(spacing: 12) {
                 Button {
-                    openDocument(at: documentURL)
+                    openDocument(at: documentURL, relativePath: item.documentRelativePath)
                 } label: {
                     Label("Open", systemImage: "arrow.up.forward.app")
                 }
@@ -648,7 +648,7 @@ struct ItemDetailView: View {
             }
 #else
             Button {
-                openDocument(at: documentURL)
+                openDocument(at: documentURL, relativePath: item.documentRelativePath)
             } label: {
                 Label(isPreparingDocument ? "Preparing..." : "Open Document", systemImage: "doc.text")
             }
@@ -669,18 +669,18 @@ struct ItemDetailView: View {
         }
     }
 
-    private func openDocument(at url: URL) {
+    private func openDocument(at url: URL, relativePath: String?) {
 #if os(macOS)
         NSWorkspace.shared.open(url)
 #else
         Task {
-            await openDocumentOnIOS(url)
+            await openDocumentOnIOS(url, relativePath: relativePath)
         }
 #endif
     }
 
 #if os(iOS)
-    private func openDocumentOnIOS(_ url: URL) async {
+    private func openDocumentOnIOS(_ url: URL, relativePath: String?) async {
         if isPreparingDocument {
             return
         }
@@ -693,33 +693,33 @@ struct ItemDetailView: View {
             }
         }
 
-        guard let previewURL = await prepareDocumentPreviewURL(url) else { return }
+        guard let previewURL = await prepareDocumentPreviewURL(url, relativePath: relativePath) else { return }
         await MainActor.run {
             quickLookURL = previewURL
         }
     }
 
-    private func prepareDocumentPreviewURL(_ url: URL) async -> URL? {
+    private func prepareDocumentPreviewURL(_ url: URL, relativePath: String?) async -> URL? {
         let fileManager = FileManager.default
 
-        if fileManager.isUbiquitousItem(at: url) {
+        let isUbiquitous = fileManager.isUbiquitousItem(at: url)
+        if isUbiquitous {
             try? fileManager.startDownloadingUbiquitousItem(at: url)
-            let ready = await waitForFile(url, timeoutSeconds: 10)
+        }
+
+        if !fileManager.fileExists(atPath: url.path) {
+            if let relativePath {
+                DocumentStorage.ensureICloudDownload(forRelativePath: relativePath)
+            }
+            let ready = await waitForFile(url, timeoutSeconds: 12)
             if !ready {
                 await MainActor.run {
                     documentError = DocumentError(
-                        message: "Document is still downloading from iCloud. Try again in a moment."
+                        message: "Document isn't available yet. Check iCloud Drive and try again."
                     )
                 }
                 return nil
             }
-        }
-
-        guard fileManager.fileExists(atPath: url.path) else {
-            await MainActor.run {
-                documentError = DocumentError(message: "Document file is missing.")
-            }
-            return nil
         }
 
         return makePreviewCopy(of: url) ?? url

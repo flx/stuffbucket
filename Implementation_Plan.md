@@ -55,6 +55,7 @@
 - Decode common HTML entities in link metadata parsing without AppKit dependencies. completed [x]
 - Add document storage helper for iCloud Drive file copies. completed [x]
 - Resolve document URLs by checking iCloud storage and local fallback paths. completed [x]
+- Trigger iCloud document downloads when a document path is missing on iOS. completed [x]
 - Add import helper for links, snippets, and documents. completed [x]
 - Unify item attachments so link/text/document can co-exist on any item. completed [x]
   - Add attachment flags on Item (hasLink/hasText/hasDocument). completed [x]
