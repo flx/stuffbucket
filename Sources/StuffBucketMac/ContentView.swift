@@ -14,12 +14,10 @@ struct ContentView: View {
     @State private var isShowingAddLinkAlert = false
     @State private var addLinkText = ""
     @State private var isDropTargeted = false
-    @State private var showAllItems = false
     @State private var isSelectMode = false
     @State private var selectedItems: Set<UUID> = []
     @State private var selectedTags: Set<String> = []
     @State private var selectedCollections: Set<String> = []
-    @State private var isShowingAISettings = false
     private let searchService = SearchService()
     private let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -45,11 +43,7 @@ struct ContentView: View {
     }
 
     private var recentItems: [Item] {
-        showAllItems ? Array(activeItems) : Array(activeItems.prefix(12))
-    }
-
-    private var hasMoreItems: Bool {
-        activeItems.count > 12
+        Array(activeItems)
     }
 
     private var untaggedItemCount: Int {
@@ -212,8 +206,6 @@ struct ContentView: View {
                         ScrollView {
                             VStack(alignment: .leading, spacing: 24) {
                                 VStack(alignment: .leading, spacing: 12) {
-                                    Label("Stuff", systemImage: "tray.full")
-                                        .font(.title3.bold())
                                     if recentItems.isEmpty {
                                         VStack(alignment: .leading, spacing: 12) {
                                             Text("No items yet")
@@ -252,21 +244,6 @@ struct ContentView: View {
                                                     }
                                                 }
                                             }
-                                        }
-                                        if hasMoreItems {
-                                            Button {
-                                                withAnimation {
-                                                    showAllItems.toggle()
-                                                }
-                                            } label: {
-                                                HStack {
-                                                    Text(showAllItems ? "Show Less" : "Show All")
-                                                    Spacer()
-                                                    Image(systemName: showAllItems ? "chevron.up" : "chevron.down")
-                                                }
-                                                .foregroundStyle(.secondary)
-                                            }
-                                            .buttonStyle(.plain)
                                         }
                                     }
                                 }
@@ -419,16 +396,6 @@ struct ContentView: View {
                     }
                 }
             }
-            ToolbarItem(placement: .automatic) {
-                if !isSelectMode {
-                    Button {
-                        isShowingAISettings = true
-                    } label: {
-                        Image(systemName: "sparkles")
-                    }
-                    .accessibilityLabel("AI Settings")
-                }
-            }
             ToolbarItem(placement: .primaryAction) {
                 if !isSelectMode {
                     Menu {
@@ -452,9 +419,6 @@ struct ContentView: View {
         .sheet(isPresented: $isShowingSnippetSheet) {
             QuickAddSnippetView(onSave: nil)
                 .environment(\.managedObjectContext, context)
-        }
-        .sheet(isPresented: $isShowingAISettings) {
-            AISettingsView()
         }
         .fileImporter(
             isPresented: $isImportingDocument,

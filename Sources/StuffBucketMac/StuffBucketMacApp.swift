@@ -34,6 +34,10 @@ struct StuffBucketMacApp: App {
                     refreshPendingData(using: persistenceController)
                 }
         }
+
+        Settings {
+            AISettingsView()
+        }
     }
 }
 
