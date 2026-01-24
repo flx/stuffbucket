@@ -140,7 +140,14 @@ public struct AISettingsView: View {
                 : OpenAIModelDefaults.recommendedModels
 
             Picker("Model", selection: Binding(
-                get: { keyStorage.selectedModelID ?? defaultModelID },
+                get: {
+                    // Ensure the selected model exists in the current provider's list
+                    let currentSelection = keyStorage.selectedModelID ?? defaultModelID
+                    if models.contains(currentSelection) {
+                        return currentSelection
+                    }
+                    return defaultModelID
+                },
                 set: { keyStorage.setSelectedModelID($0) }
             )) {
                 ForEach(models, id: \.self) { model in
