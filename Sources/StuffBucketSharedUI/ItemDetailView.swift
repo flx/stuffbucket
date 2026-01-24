@@ -1302,12 +1302,11 @@ struct ArchivedLinkSheet: View {
     }
 
     private func resolveArchive() {
-        checkTask = Task {
-            // First, try to download from iCloud Drive (run on background)
-            let filesToDownload = await Task.detached(priority: .userInitiated) {
-                self.buildFilesToDownload()
-            }.value
+        // Capture values on main actor before entering async context
+        let filesToDownload = buildFilesToDownload()
 
+        checkTask = Task {
+            // Start downloads on background thread
             await Task.detached(priority: .userInitiated) {
                 ArchiveResolver.startDownloading(filesToDownload)
             }.value
