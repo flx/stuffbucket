@@ -1,6 +1,6 @@
 import CoreData
 import SwiftUI
-import StuffBucketCore
+@preconcurrency import StuffBucketCore
 import UniformTypeIdentifiers
 import WebKit
 #if os(macOS)
@@ -764,16 +764,20 @@ struct ItemDetailView: View {
             return url
         }.value
 
-        await MainActor.run {
+        _ = await MainActor.run {
             NSWorkspace.shared.open(resolvedURL)
         }
 
         // Trigger cleanup if iCloud is synced (fire and forget)
-        if let item = item {
+        if let item = item, let itemID = item.id {
             let ctx = context
             Task.detached(priority: .background) {
                 await ctx.perform {
-                    DocumentResolver.cleanupBundleIfSynced(item: item, context: ctx)
+                    let request = NSFetchRequest<Item>(entityName: "Item")
+                    request.predicate = NSPredicate(format: "id == %@", itemID as CVarArg)
+                    request.fetchLimit = 1
+                    guard let fetchedItem = try? ctx.fetch(request).first else { return }
+                    DocumentResolver.cleanupBundleIfSynced(item: fetchedItem, context: ctx)
                 }
             }
         }
@@ -1026,10 +1030,9 @@ struct ItemDetailView: View {
             }
         }
 
-        // Build list of files to download from iCloud (run on background)
-        let filesToDownload = await Task.detached(priority: .userInitiated) {
-            self.buildFilesToDownload(url: url, assetManifestJSON: item.assetManifestJSON)
-        }.value
+        // Capture values on main actor before background work
+        let assetManifest = item.assetManifestJSON
+        let filesToDownload = buildFilesToDownload(url: url, assetManifestJSON: assetManifest)
 
         // Start downloads on background thread
         await Task.detached(priority: .userInitiated) {
@@ -1041,7 +1044,7 @@ struct ItemDetailView: View {
 
         if iCloudReady {
             // iCloud files ready, open them and trigger cleanup
-            await MainActor.run {
+            _ = await MainActor.run {
                 NSWorkspace.shared.open(url)
             }
             triggerArchiveCleanupIfNeeded(item: item)
@@ -1066,7 +1069,7 @@ struct ItemDetailView: View {
             }.value
 
             if let cachePageURL = cachePageURL {
-                await MainActor.run {
+                _ = await MainActor.run {
                     NSWorkspace.shared.open(cachePageURL)
                 }
                 return
