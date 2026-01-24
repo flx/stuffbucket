@@ -118,7 +118,9 @@ public enum ItemImportService {
         item.title = fileName.isEmpty ? "Document" : fileName
         guard let itemID = item.id else { return nil }
         let storedName = item.title ?? "Document"
-        item.documentRelativePath = try DocumentStorage.copyDocument(from: fileURL, itemID: itemID, fileName: storedName)
+        let result = try DocumentStorage.copyDocumentWithBundle(from: fileURL, itemID: itemID, fileName: storedName)
+        item.documentRelativePath = result.relativePath
+        item.documentZipData = result.bundleData
         item.source = source.rawValue
         if let tags, !tags.isEmpty {
             item.setTagList(tags)
@@ -144,7 +146,11 @@ public enum ItemImportService {
             try? FileManager.default.removeItem(at: existingURL.deletingLastPathComponent())
         }
         guard let itemID = item.id else { return }
-        item.documentRelativePath = try DocumentStorage.copyDocument(from: fileURL, itemID: itemID, fileName: storedName)
+        // Clear old bundle data
+        item.documentZipData = nil
+        let result = try DocumentStorage.copyDocumentWithBundle(from: fileURL, itemID: itemID, fileName: storedName)
+        item.documentRelativePath = result.relativePath
+        item.documentZipData = result.bundleData
         if item.title == nil || item.title?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == true {
             item.title = storedName
         }

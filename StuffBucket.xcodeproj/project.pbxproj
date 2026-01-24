@@ -25,6 +25,7 @@
 		23CB31D0AFC51333762153AF /* LinkArchiver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AF01B94C0FF40F312225194 /* LinkArchiver.swift */; };
 		253EC276859FA1F651EE58E0 /* StuffBucketMacShareExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 93E12DDBAC061C565DA3D21B /* StuffBucketMacShareExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		2EF760054F3B6D1BDC9442D5 /* ItemDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59DCBC7B3D1435C4D3287924 /* ItemDetailView.swift */; };
+		339AECEA3768EBF2A66C4034 /* DocumentResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 374C72029F837563A2BD3F63 /* DocumentResolver.swift */; };
 		34961F9179850DA307BE167C /* StuffBucketCore.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 5AE0A3DE6401EC33AC94C171 /* StuffBucketCore.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		37B561B46F79E7E0FBE37F02 /* SearchBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CE026328EAC215EAEB06286 /* SearchBarView.swift */; };
 		38B9DEBA5B010F94ADFDC2DC /* RenderedPageCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E8092DFDAEA2EBCCCEC238 /* RenderedPageCapture.swift */; };
@@ -88,6 +89,7 @@
 		E4D4ED8F788E8233C962716B /* ArchiveBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5874E11BFA8C2C8DAA597092 /* ArchiveBundle.swift */; };
 		E5847FE8949A334E9C72AAD9 /* AISettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39F1D7ACF847D433B9562943 /* AISettingsView.swift */; };
 		E5A30EB1358147F2E89BA621 /* SearchIndexer.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA005B6C0E3259CDAE104D1C /* SearchIndexer.swift */; };
+		E9437CB5D32539AA1B69E1F3 /* DocumentResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 374C72029F837563A2BD3F63 /* DocumentResolver.swift */; };
 		EB096307CAE1A8CA130E0770 /* LinkArchiveAssets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48D00BC42AD400BFB7C6B154 /* LinkArchiveAssets.swift */; };
 		F2D713C24B245503BD6058C9 /* SearchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4768A08056EEFBD1E643C51 /* SearchService.swift */; };
 		F412DDA2BF0C87D53035C619 /* ArchiveResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17A07BF1D67735F33F4F6C02 /* ArchiveResolver.swift */; };
@@ -203,6 +205,7 @@
 		3229BC032C43225982B053D2 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		3519E626243FD84BBF5EDA7F /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceController.swift; sourceTree = "<group>"; };
 		362CA95B53A55DBC2BE406C0 /* StuffBucketMacShareExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = StuffBucketMacShareExtension.entitlements; sourceTree = "<group>"; };
+		374C72029F837563A2BD3F63 /* DocumentResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentResolver.swift; sourceTree = "<group>"; };
 		395F5C4997E19A6D5275D018 /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
 		3967E8E4395E7A531ABB2E62 /* OpenAIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAIClient.swift; sourceTree = "<group>"; };
 		39F1D7ACF847D433B9562943 /* AISettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AISettingsView.swift; sourceTree = "<group>"; };
@@ -303,6 +306,7 @@
 			children = (
 				82C20CAC8A2A042A62AA1254 /* TrashCleanupService.swift */,
 				C972833534812387DABC039E /* AI */,
+				0845AD03DAA50536282A1D4F /* Documents */,
 				E646CF6141C67CFB0AC039D5 /* Links */,
 				D2DD0AEF9214BCD114310B66 /* Search */,
 			);
@@ -325,6 +329,14 @@
 				362CA95B53A55DBC2BE406C0 /* StuffBucketMacShareExtension.entitlements */,
 			);
 			path = StuffBucketMacShareExtension;
+			sourceTree = "<group>";
+		};
+		0845AD03DAA50536282A1D4F /* Documents */ = {
+			isa = PBXGroup;
+			children = (
+				374C72029F837563A2BD3F63 /* DocumentResolver.swift */,
+			);
+			path = Documents;
 			sourceTree = "<group>";
 		};
 		0ABDE505EC565A23FBB00CC0 /* Frameworks */ = {
@@ -808,6 +820,7 @@
 				88E3605A6ADCC3B256A8A2CB /* AnthropicClient.swift in Sources */,
 				0774DCDB5A6918A200215BD3 /* ArchiveBundle.swift in Sources */,
 				57B967F8D64BABD4A795CB0B /* ArchiveResolver.swift in Sources */,
+				339AECEA3768EBF2A66C4034 /* DocumentResolver.swift in Sources */,
 				FAD37364B2C1689BEB758B8A /* HTMLTextExtractor.swift in Sources */,
 				7D265F05B8433408B87BEA95 /* Item.swift in Sources */,
 				1629127A33E68B72BE6B0797 /* ItemType.swift in Sources */,
@@ -883,6 +896,7 @@
 				4312679B4C3B96160947C27A /* AnthropicClient.swift in Sources */,
 				E4D4ED8F788E8233C962716B /* ArchiveBundle.swift in Sources */,
 				F412DDA2BF0C87D53035C619 /* ArchiveResolver.swift in Sources */,
+				E9437CB5D32539AA1B69E1F3 /* DocumentResolver.swift in Sources */,
 				3E0E3DA717778AE70E0926F0 /* HTMLTextExtractor.swift in Sources */,
 				71EACB034052AEA96271B70A /* Item.swift in Sources */,
 				91F3C3288D3140283B8352B4 /* ItemType.swift in Sources */,

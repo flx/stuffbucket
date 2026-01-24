@@ -23,6 +23,7 @@
         <attribute name="archiveStatus" attributeType="String" optional="YES"/>
         <attribute name="archiveZipData" attributeType="Binary" optional="YES" allowsExternalBinaryDataStorage="YES"/>
         <attribute name="assetManifestJSON" attributeType="String" optional="YES"/>
+        <attribute name="documentZipData" attributeType="Binary" optional="YES" allowsExternalBinaryDataStorage="YES"/>
         <attribute name="aiSummary" attributeType="String" optional="YES"/>
         <attribute name="aiArtifactsJSON" attributeType="String" optional="YES"/>
         <attribute name="aiModelID" attributeType="String" optional="YES"/>

@@ -1,4 +1,4 @@
-# Implementation Plan (v0.3)
+# Implementation Plan (v0.4)
 
 ## 0. Project structure (Xcode project, no Swift package)
 - Create `StuffBucket.xcodeproj` with app targets: completed [x]
@@ -52,6 +52,11 @@
 - Add ArchiveBundle helper for LZFSE compression/extraction. completed [x]
 - Add ArchiveResolver helper for fallback logic (iCloud Drive → CloudKit bundle → local cache). completed [x]
 - Add smart cleanup to delete CloudKit bundle once iCloud Drive sync completes. completed [x]
+- Add `documentZipData` field to Core Data model for document CloudKit sync fallback. completed [x]
+- Add DocumentResolver helper for document fallback logic (iCloud Drive → CloudKit bundle → local cache). completed [x]
+- Update DocumentStorage to create compressed bundles when saving documents. completed [x]
+- Update ItemImportService to save document bundles for CloudKit sync. completed [x]
+- Add smart cleanup to delete document CloudKit bundle once iCloud Drive sync completes. completed [x]
 - Decode common HTML entities in link metadata parsing without AppKit dependencies. completed [x]
 - Add document storage helper for iCloud Drive file copies. completed [x]
 - Resolve document URLs by checking iCloud storage and local fallback paths. completed [x]
@@ -211,6 +216,8 @@
 - Allow document attach/replace on all item types in detail view. completed [x]
 - Allow item title editing in detail view (macOS + iOS). completed [x]
 - Ensure iOS document preview downloads iCloud files and opens via QuickLook with a local preview copy. completed [x]
+- Run document preview file I/O on background threads to prevent UI hangs. completed [x]
+- Run document resolution and fallback logic on background threads. completed [x]
 - Add soft-delete with trashcan tag and trashedAt timestamp. completed [x]
 - Add Move to Trash / Restore / Delete Permanently actions in item detail view. completed [x]
 - Filter trashed items from main list (show only when searching for trashcan). completed [x]
@@ -248,6 +255,8 @@
 - Enable page archive open while syncing from iCloud; show sync-pending status and alert when not yet local. completed [x]
 - Trigger iCloud download before opening archived HTML. completed [x]
 - Download archive assets from iCloud before opening on macOS; show a brief syncing state and an unavailable alert when assets are not yet local. completed [x]
+- Run archive bundle extraction on background threads to prevent UI hangs. completed [x]
+- Run archive file waiting/polling on background threads. completed [x]
 - Remove the temporary Delete All Data toolbar button before release. completed [x]
 - Allow link and text editing on all item types in detail view. completed [x]
 - Allow document attach/replace on all item types in detail view. completed [x]
@@ -265,6 +274,7 @@
   - Search indexing
   - Safari sync re-import (macOS)
 - Auto-archive pending link items on app launch/activation to ensure HTML snapshots are captured. completed [x]
+- Fix LinkArchiver to dispatch archiving to background queue and use NSLock instead of DispatchQueue.sync to prevent main thread blocking. completed [x]
 - Throttle indexing on large imports and show progress.
 - Ensure on-device search remains responsive under heavy load.
 

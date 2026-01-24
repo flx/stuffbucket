@@ -5,22 +5,26 @@ public final class LinkArchiver {
     public static let shared = LinkArchiver()
     private let session: URLSession
     private var inFlight: Set<UUID> = []
-    private let inFlightQueue = DispatchQueue(label: "com.digitalhandstand.stuffbucket.linkarchiver.inflight")
+    private let inFlightLock = NSLock()
 
     public init(session: URLSession = .shared) {
         self.session = session
     }
 
     public func archive(itemID: UUID, context: NSManagedObjectContext) {
-        guard beginArchive(itemID) else { return }
-        context.perform {
-            guard let urlString = self.fetchLinkURL(itemID: itemID, context: context),
-                  let url = URL(string: urlString) else {
-                self.endArchive(itemID)
-                return
-            }
-            Task {
-                await self.archiveRendered(url: url, itemID: itemID, context: context)
+        // Dispatch immediately to background to avoid any main thread blocking
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            guard let self = self else { return }
+            guard self.beginArchive(itemID) else { return }
+            context.perform {
+                guard let urlString = self.fetchLinkURL(itemID: itemID, context: context),
+                      let url = URL(string: urlString) else {
+                    self.endArchive(itemID)
+                    return
+                }
+                Task {
+                    await self.archiveRendered(url: url, itemID: itemID, context: context)
+                }
             }
         }
     }
@@ -300,19 +304,19 @@ public final class LinkArchiver {
     }
 
     private func beginArchive(_ itemID: UUID) -> Bool {
-        inFlightQueue.sync {
-            if inFlight.contains(itemID) {
-                return false
-            }
-            inFlight.insert(itemID)
-            return true
+        inFlightLock.lock()
+        defer { inFlightLock.unlock() }
+        if inFlight.contains(itemID) {
+            return false
         }
+        inFlight.insert(itemID)
+        return true
     }
 
     private func endArchive(_ itemID: UUID) {
-        inFlightQueue.sync {
-            _ = inFlight.remove(itemID)
-        }
+        inFlightLock.lock()
+        defer { inFlightLock.unlock() }
+        _ = inFlight.remove(itemID)
     }
 }
 

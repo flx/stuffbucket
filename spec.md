@@ -1,4 +1,4 @@
-# StuffBucket — Product Specification (v0.3)
+# StuffBucket — Product Specification (v0.4)
 
 ## 1. Goal and positioning
 StuffBucket is a personal capture-and-retrieve app for **text**, **snippets**, **links**, and **documents**, organized by **tags** and **collections**, with a strong emphasis on **durability** and **user ownership**.
@@ -152,6 +152,18 @@ When opening an archive:
 - Preserves links and structure
 - Future-proof
 
+### 4.7 Document sync strategy (hybrid)
+Documents are synced using a hybrid approach combining iCloud Drive and CloudKit:
+
+1. **Primary: iCloud Drive** – Documents are stored as files in iCloud Drive for user accessibility and Finder visibility.
+2. **Fallback: CloudKit bundle** – A compressed document bundle (`documentZipData`) syncs via CloudKit as a fallback when iCloud Drive sync is slow or incomplete.
+
+When opening a document:
+- First attempt to load from iCloud Drive.
+- If unavailable, extract from CloudKit bundle to local cache.
+- Once iCloud Drive sync completes, clean up the CloudKit bundle to avoid storage duplication.
+- All file I/O operations run on background threads to prevent UI hangs.
+
 ---
 
 ## 5. Metadata & Core Data model (amended)
@@ -171,6 +183,7 @@ When opening an archive:
 - `sourceExternalID: String?`   // stable ID for external sync (e.g. Safari)
 - `sourceFolderPath: String?`   // external folder path (e.g. Safari bookmark folder)
 - `documentRelativePath: String?` // Documents/<uuid>/<filename> (optional on any item)
+- `documentZipData: Binary?`      // compressed document bundle for CloudKit sync fallback
 
 #### Link-specific
 - `linkURL: String?`           // optional on any item
@@ -324,8 +337,10 @@ When opening an archive:
 - Document items show the filename and a "Show in Finder" action on macOS.
 - macOS list rows expose "Show in Finder" for documents via context menu.
 - iOS "Open Document" previews via QuickLook after ensuring iCloud files are downloaded (shows a brief preparing state and a document-unavailable alert if needed).
-- Document URL resolution falls back to local app storage if the iCloud copy is not yet present.
+- Document URL resolution falls back to CloudKit bundle extraction if the iCloud copy is not yet present.
 - iOS attempts to trigger an iCloud download for missing document paths before reporting the file unavailable.
+- If iCloud Drive sync is incomplete, falls back to CloudKit bundle extraction (same as link archives).
+- Document file operations run on background threads to prevent UI hangs.
 
 ---
 
@@ -448,6 +463,7 @@ When opening an archive:
 ## 17. Versioning
 - v0.2: HTML-backed link persistence
 - v0.3: Full-text search, Safari bookmarks import, AI tag suggestions (Claude & OpenAI)
+- v0.4: CloudKit fallback sync for documents, background thread file operations
 
 ---
 

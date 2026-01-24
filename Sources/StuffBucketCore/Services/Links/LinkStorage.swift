@@ -252,6 +252,12 @@ public enum DocumentStorage {
         try? fileManager.startDownloadingUbiquitousItem(at: destinationURL)
     }
 
+    /// Result of copying a document, includes optional bundle data for CloudKit sync
+    public struct CopyResult {
+        public let relativePath: String
+        public let bundleData: Data?
+    }
+
     static func copyDocument(from sourceURL: URL, itemID: UUID, fileName: String) throws -> String {
         let name = fileName.isEmpty ? "Document" : fileName
         let destinationURL = documentURL(for: itemID, fileName: name)
@@ -262,6 +268,22 @@ public enum DocumentStorage {
         }
         try FileManager.default.copyItem(at: sourceURL, to: destinationURL)
         return relativePath(for: itemID, fileName: name)
+    }
+
+    /// Copies a document and creates a CloudKit sync bundle
+    static func copyDocumentWithBundle(from sourceURL: URL, itemID: UUID, fileName: String) throws -> CopyResult {
+        let path = try copyDocument(from: sourceURL, itemID: itemID, fileName: fileName)
+
+        // Create bundle for CloudKit sync
+        let directoryURL = documentDirectoryURL(for: itemID)
+        let bundleData = ArchiveBundle.create(from: directoryURL)
+
+        return CopyResult(relativePath: path, bundleData: bundleData)
+    }
+
+    /// Returns the document directory URL for an item
+    public static func documentDirectoryURL(for itemID: UUID) -> URL {
+        documentsDirectory().appendingPathComponent(itemID.uuidString, isDirectory: true)
     }
 
     public static func url(forRelativePath relativePath: String) -> URL {

@@ -690,7 +690,7 @@ struct ItemDetailView: View {
 #if os(macOS)
             HStack(spacing: 12) {
                 Button {
-                    openDocument(at: documentURL, relativePath: item.documentRelativePath)
+                    openDocument(at: documentURL, relativePath: item.documentRelativePath, item: item)
                 } label: {
                     Label("Open", systemImage: "arrow.up.forward.app")
                 }
@@ -704,7 +704,7 @@ struct ItemDetailView: View {
             }
 #else
             Button {
-                openDocument(at: documentURL, relativePath: item.documentRelativePath)
+                openDocument(at: documentURL, relativePath: item.documentRelativePath, item: item)
             } label: {
                 Label(isPreparingDocument ? "Preparing..." : "Open Document", systemImage: "doc.text")
             }
@@ -725,18 +725,63 @@ struct ItemDetailView: View {
         }
     }
 
-    private func openDocument(at url: URL, relativePath: String?) {
+    private func openDocument(at url: URL, relativePath: String?, item: Item?) {
 #if os(macOS)
-        NSWorkspace.shared.open(url)
+        Task {
+            await openDocumentOnMac(url, relativePath: relativePath, item: item)
+        }
 #else
         Task {
-            await openDocumentOnIOS(url, relativePath: relativePath)
+            await openDocumentOnIOS(url, relativePath: relativePath, item: item)
         }
 #endif
     }
 
+#if os(macOS)
+    private func openDocumentOnMac(_ url: URL, relativePath: String?, item: Item?) async {
+        // Run file resolution on background thread
+        let resolvedURL: URL = await Task.detached(priority: .userInitiated) {
+            // Try DocumentResolver if we have the item
+            if let item = item, let resolved = DocumentResolver.resolve(item: item) {
+                if resolved.isFromCache {
+                    return resolved.documentURL
+                }
+
+                if resolved.needsDownload {
+                    DocumentResolver.startDownloading(resolved.documentURL)
+                }
+
+                // Check if file is ready
+                if FileManager.default.fileExists(atPath: resolved.documentURL.path) && DocumentResolver.isFileReady(resolved.documentURL) {
+                    return resolved.documentURL
+                }
+
+                // Try bundle fallback
+                if let fallback = DocumentResolver.resolve(item: item, forceExtract: true), fallback.isFromCache {
+                    return fallback.documentURL
+                }
+            }
+            return url
+        }.value
+
+        await MainActor.run {
+            NSWorkspace.shared.open(resolvedURL)
+        }
+
+        // Trigger cleanup if iCloud is synced (fire and forget)
+        if let item = item {
+            let ctx = context
+            Task.detached(priority: .background) {
+                await ctx.perform {
+                    DocumentResolver.cleanupBundleIfSynced(item: item, context: ctx)
+                }
+            }
+        }
+    }
+#endif
+
 #if os(iOS)
-    private func openDocumentOnIOS(_ url: URL, relativePath: String?) async {
+    private func openDocumentOnIOS(_ url: URL, relativePath: String?, item: Item?) async {
         if isPreparingDocument {
             return
         }
@@ -749,75 +794,136 @@ struct ItemDetailView: View {
             }
         }
 
-        guard let previewURL = await prepareDocumentPreviewURL(url, relativePath: relativePath) else { return }
+        guard let previewURL = await prepareDocumentPreviewURL(url, relativePath: relativePath, item: item) else { return }
         await MainActor.run {
             quickLookURL = previewURL
         }
+
+        // Trigger cleanup if document is from cache but iCloud is now synced
+        if let item = item {
+            triggerDocumentCleanupIfNeeded(item: item)
+        }
     }
 
-    private func prepareDocumentPreviewURL(_ url: URL, relativePath: String?) async -> URL? {
-        let fileManager = FileManager.default
-
-        let isUbiquitous = fileManager.isUbiquitousItem(at: url)
-        if isUbiquitous {
-            try? fileManager.startDownloadingUbiquitousItem(at: url)
-        }
-
-        if !fileManager.fileExists(atPath: url.path) {
-            if let relativePath {
-                DocumentStorage.ensureICloudDownload(forRelativePath: relativePath)
-            }
-            let ready = await waitForFile(url, timeoutSeconds: 12)
-            if !ready {
-                await MainActor.run {
-                    documentError = DocumentError(
-                        message: "Document isn't available yet. Check iCloud Drive and try again."
-                    )
+    private func prepareDocumentPreviewURL(_ url: URL, relativePath: String?, item: Item?) async -> URL? {
+        // Run file checks on background thread to avoid blocking main thread
+        let resolvedURL: URL? = await Task.detached(priority: .userInitiated) {
+            // Try to use DocumentResolver if we have the item
+            if let item = item, let resolved = DocumentResolver.resolve(item: item) {
+                if resolved.isFromCache {
+                    // Bundle was extracted, return cached file
+                    return resolved.documentURL
                 }
-                return nil
+
+                if resolved.needsDownload {
+                    // Start download
+                    DocumentResolver.startDownloading(resolved.documentURL)
+                }
+
+                // Check if file is available
+                let fileManager = FileManager.default
+                if fileManager.fileExists(atPath: resolved.documentURL.path) && DocumentResolver.isFileReady(resolved.documentURL) {
+                    return resolved.documentURL
+                }
             }
-        }
 
-        return makePreviewCopy(of: url) ?? url
-    }
-
-    private func waitForFile(_ url: URL, timeoutSeconds: Double) async -> Bool {
-        let timeoutNanos = UInt64(timeoutSeconds * 1_000_000_000)
-        let step: UInt64 = 200_000_000
-        var waited: UInt64 = 0
-
-        while waited < timeoutNanos {
-            if Task.isCancelled { return false }
-            if ArchiveResolver.isFileReady(url) {
-                return true
+            // Fallback: try direct URL approach
+            let fileManager = FileManager.default
+            let isUbiquitous = fileManager.isUbiquitousItem(at: url)
+            if isUbiquitous {
+                try? fileManager.startDownloadingUbiquitousItem(at: url)
             }
-            try? await Task.sleep(nanoseconds: step)
-            waited += step
-        }
-        return ArchiveResolver.isFileReady(url)
-    }
 
-    private func makePreviewCopy(of url: URL) -> URL? {
-        let fileManager = FileManager.default
-        let previewRoot = fileManager.temporaryDirectory.appendingPathComponent(
-            "StuffBucketPreview",
-            isDirectory: true
-        )
-        try? fileManager.createDirectory(at: previewRoot, withIntermediateDirectories: true)
+            if !fileManager.fileExists(atPath: url.path) {
+                if let relativePath = relativePath {
+                    DocumentStorage.ensureICloudDownload(forRelativePath: relativePath)
+                }
+            }
 
-        let ext = url.pathExtension
-        let fileName = ext.isEmpty ? UUID().uuidString : "\(UUID().uuidString).\(ext)"
-        let destination = previewRoot.appendingPathComponent(fileName)
+            return url
+        }.value
 
-        if fileManager.fileExists(atPath: destination.path) {
-            try? fileManager.removeItem(at: destination)
-        }
-
-        do {
-            try fileManager.copyItem(at: url, to: destination)
-            return destination
-        } catch {
+        guard let targetURL = resolvedURL else {
+            await MainActor.run {
+                documentError = DocumentError(
+                    message: "Document isn't available yet. Check iCloud Drive and try again."
+                )
+            }
             return nil
+        }
+
+        // Wait for file to be ready (with timeout)
+        let ready = await waitForFileOnBackground(targetURL, timeoutSeconds: 12)
+        if !ready {
+            // Try fallback to bundle if available
+            if let item = item, let resolved = await Task.detached(priority: .userInitiated, operation: {
+                DocumentResolver.resolve(item: item, forceExtract: true)
+            }).value, resolved.isFromCache {
+                // Use cached version from bundle
+                let cacheReady = await waitForFileOnBackground(resolved.documentURL, timeoutSeconds: 2)
+                if cacheReady {
+                    return await makePreviewCopyOnBackground(of: resolved.documentURL)
+                }
+            }
+
+            await MainActor.run {
+                documentError = DocumentError(
+                    message: "Document isn't available yet. Check iCloud Drive and try again."
+                )
+            }
+            return nil
+        }
+
+        return await makePreviewCopyOnBackground(of: targetURL)
+    }
+
+    private func waitForFileOnBackground(_ url: URL, timeoutSeconds: Double) async -> Bool {
+        await Task.detached(priority: .userInitiated) {
+            let timeoutNanos = UInt64(timeoutSeconds * 1_000_000_000)
+            let step: UInt64 = 200_000_000
+            var waited: UInt64 = 0
+
+            while waited < timeoutNanos {
+                if Task.isCancelled { return false }
+                if DocumentResolver.isFileReady(url) {
+                    return true
+                }
+                try? await Task.sleep(nanoseconds: step)
+                waited += step
+            }
+            return DocumentResolver.isFileReady(url)
+        }.value
+    }
+
+    private func makePreviewCopyOnBackground(of url: URL) async -> URL? {
+        await Task.detached(priority: .userInitiated) {
+            let fileManager = FileManager.default
+            let previewRoot = fileManager.temporaryDirectory.appendingPathComponent(
+                "StuffBucketPreview",
+                isDirectory: true
+            )
+            try? fileManager.createDirectory(at: previewRoot, withIntermediateDirectories: true)
+
+            let ext = url.pathExtension
+            let fileName = ext.isEmpty ? UUID().uuidString : "\(UUID().uuidString).\(ext)"
+            let destination = previewRoot.appendingPathComponent(fileName)
+
+            if fileManager.fileExists(atPath: destination.path) {
+                try? fileManager.removeItem(at: destination)
+            }
+
+            do {
+                try fileManager.copyItem(at: url, to: destination)
+                return destination
+            } catch {
+                return url // Return original if copy fails
+            }
+        }.value
+    }
+
+    private func triggerDocumentCleanupIfNeeded(item: Item) {
+        context.perform {
+            DocumentResolver.cleanupBundleIfSynced(item: item, context: context)
         }
     }
 #endif
@@ -911,7 +1017,7 @@ struct ItemDetailView: View {
             return
         }
 
-        _ = await MainActor.run {
+        await MainActor.run {
             isPreparingArchive = true
         }
         defer {
@@ -920,34 +1026,47 @@ struct ItemDetailView: View {
             }
         }
 
-        // Build list of files to download from iCloud
-        let filesToDownload = buildFilesToDownload(url: url, assetManifestJSON: item.assetManifestJSON)
-        ArchiveResolver.startDownloading(filesToDownload)
+        // Build list of files to download from iCloud (run on background)
+        let filesToDownload = await Task.detached(priority: .userInitiated) {
+            self.buildFilesToDownload(url: url, assetManifestJSON: item.assetManifestJSON)
+        }.value
 
-        // Wait for iCloud files (with timeout)
-        let iCloudReady = await waitForFiles(filesToDownload, timeoutSeconds: 5)
+        // Start downloads on background thread
+        await Task.detached(priority: .userInitiated) {
+            ArchiveResolver.startDownloading(filesToDownload)
+        }.value
+
+        // Wait for iCloud files (with timeout) on background thread
+        let iCloudReady = await waitForFilesOnBackground(filesToDownload, timeoutSeconds: 5)
 
         if iCloudReady {
             // iCloud files ready, open them and trigger cleanup
-            _ = await MainActor.run {
+            await MainActor.run {
                 NSWorkspace.shared.open(url)
             }
-            triggerCleanupIfNeeded(item: item)
+            triggerArchiveCleanupIfNeeded(item: item)
             return
         }
 
-        // iCloud not ready, try bundle fallback
+        // iCloud not ready, try bundle fallback (run extraction on background thread)
         if let itemID = item.id, let bundleData = item.archiveZipData {
-            let cacheDir = LinkStorage.localCacheDirectoryURL(for: itemID)
-            let cachePageURL = LinkStorage.localCachePageURL(for: itemID)
+            let cachePageURL: URL? = await Task.detached(priority: .userInitiated) { () -> URL? in
+                let cacheDir = LinkStorage.localCacheDirectoryURL(for: itemID)
+                let cachePageURL = LinkStorage.localCachePageURL(for: itemID)
 
-            // Extract if not already cached
-            if !FileManager.default.fileExists(atPath: cachePageURL.path) {
-                _ = ArchiveBundle.extract(bundleData, to: cacheDir)
-            }
+                // Extract if not already cached
+                if !FileManager.default.fileExists(atPath: cachePageURL.path) {
+                    _ = ArchiveBundle.extract(bundleData, to: cacheDir)
+                }
 
-            if FileManager.default.fileExists(atPath: cachePageURL.path) {
-                _ = await MainActor.run {
+                if FileManager.default.fileExists(atPath: cachePageURL.path) {
+                    return cachePageURL
+                }
+                return nil
+            }.value
+
+            if let cachePageURL = cachePageURL {
+                await MainActor.run {
                     NSWorkspace.shared.open(cachePageURL)
                 }
                 return
@@ -955,7 +1074,7 @@ struct ItemDetailView: View {
         }
 
         // No bundle available and iCloud not ready
-        _ = await MainActor.run {
+        await MainActor.run {
             archiveError = ArchiveError(
                 message: "Archive is still syncing from iCloud. Try again in a moment."
             )
@@ -979,23 +1098,25 @@ struct ItemDetailView: View {
         return files
     }
 
-    private func waitForFiles(_ urls: [URL], timeoutSeconds: Double) async -> Bool {
-        let timeoutNanos = UInt64(timeoutSeconds * 1_000_000_000)
-        let step: UInt64 = 200_000_000
-        var waited: UInt64 = 0
+    private func waitForFilesOnBackground(_ urls: [URL], timeoutSeconds: Double) async -> Bool {
+        await Task.detached(priority: .userInitiated) {
+            let timeoutNanos = UInt64(timeoutSeconds * 1_000_000_000)
+            let step: UInt64 = 200_000_000
+            var waited: UInt64 = 0
 
-        while waited < timeoutNanos {
-            if Task.isCancelled { return false }
-            if urls.allSatisfy({ ArchiveResolver.isFileReady($0) }) {
-                return true
+            while waited < timeoutNanos {
+                if Task.isCancelled { return false }
+                if urls.allSatisfy({ ArchiveResolver.isFileReady($0) }) {
+                    return true
+                }
+                try? await Task.sleep(nanoseconds: step)
+                waited += step
             }
-            try? await Task.sleep(nanoseconds: step)
-            waited += step
-        }
-        return urls.allSatisfy({ ArchiveResolver.isFileReady($0) })
+            return urls.allSatisfy({ ArchiveResolver.isFileReady($0) })
+        }.value
     }
 
-    private func triggerCleanupIfNeeded(item: Item) {
+    private func triggerArchiveCleanupIfNeeded(item: Item) {
         context.perform {
             ArchiveResolver.cleanupBundleIfSynced(item: item, context: context)
         }
@@ -1182,12 +1303,17 @@ struct ArchivedLinkSheet: View {
 
     private func resolveArchive() {
         checkTask = Task {
-            // First, try to download from iCloud Drive
-            let filesToDownload = buildFilesToDownload()
-            ArchiveResolver.startDownloading(filesToDownload)
+            // First, try to download from iCloud Drive (run on background)
+            let filesToDownload = await Task.detached(priority: .userInitiated) {
+                self.buildFilesToDownload()
+            }.value
 
-            // Wait for iCloud files (with timeout)
-            let iCloudReady = await waitForFiles(filesToDownload, timeoutSeconds: 5)
+            await Task.detached(priority: .userInitiated) {
+                ArchiveResolver.startDownloading(filesToDownload)
+            }.value
+
+            // Wait for iCloud files (with timeout) on background thread
+            let iCloudReady = await waitForFilesOnBackground(filesToDownload, timeoutSeconds: 5)
 
             if iCloudReady {
                 // iCloud files are ready, use them
@@ -1199,19 +1325,26 @@ struct ArchivedLinkSheet: View {
                 return
             }
 
-            // iCloud not ready, try bundle fallback
+            // iCloud not ready, try bundle fallback (run extraction on background thread)
             if let bundleData = archiveZipData {
-                let cacheDir = LinkStorage.localCacheDirectoryURL(for: itemID)
-                let cachePageURL = LinkStorage.localCachePageURL(for: itemID)
+                let extractedURL: URL? = await Task.detached(priority: .userInitiated) {
+                    let cacheDir = LinkStorage.localCacheDirectoryURL(for: self.itemID)
+                    let cachePageURL = LinkStorage.localCachePageURL(for: self.itemID)
 
-                // Extract if not already cached
-                if !FileManager.default.fileExists(atPath: cachePageURL.path) {
-                    _ = ArchiveBundle.extract(bundleData, to: cacheDir)
-                }
+                    // Extract if not already cached
+                    if !FileManager.default.fileExists(atPath: cachePageURL.path) {
+                        _ = ArchiveBundle.extract(bundleData, to: cacheDir)
+                    }
 
-                if FileManager.default.fileExists(atPath: cachePageURL.path) {
+                    if FileManager.default.fileExists(atPath: cachePageURL.path) {
+                        return cachePageURL
+                    }
+                    return nil
+                }.value
+
+                if let extractedURL = extractedURL {
                     await MainActor.run {
-                        resolvedURL = cachePageURL
+                        resolvedURL = extractedURL
                     }
                     return
                 }
@@ -1241,30 +1374,32 @@ struct ArchivedLinkSheet: View {
         return files
     }
 
-    private func waitForFiles(_ urls: [URL], timeoutSeconds: Double) async -> Bool {
-        let timeoutNanos = UInt64(timeoutSeconds * 1_000_000_000)
-        let step: UInt64 = 200_000_000
-        var waited: UInt64 = 0
+    private func waitForFilesOnBackground(_ urls: [URL], timeoutSeconds: Double) async -> Bool {
+        await Task.detached(priority: .userInitiated) {
+            let timeoutNanos = UInt64(timeoutSeconds * 1_000_000_000)
+            let step: UInt64 = 200_000_000
+            var waited: UInt64 = 0
 
-        while waited < timeoutNanos {
-            if Task.isCancelled { return false }
-            if urls.allSatisfy({ ArchiveResolver.isFileReady($0) }) {
-                return true
+            while waited < timeoutNanos {
+                if Task.isCancelled { return false }
+                if urls.allSatisfy({ ArchiveResolver.isFileReady($0) }) {
+                    return true
+                }
+                try? await Task.sleep(nanoseconds: step)
+                waited += step
             }
-            try? await Task.sleep(nanoseconds: step)
-            waited += step
-        }
-        return urls.allSatisfy({ ArchiveResolver.isFileReady($0) })
+            return urls.allSatisfy({ ArchiveResolver.isFileReady($0) })
+        }.value
     }
 
     private func triggerCleanupIfNeeded() {
         // Clean up bundle data now that iCloud is synced
         context.perform {
             let request = NSFetchRequest<Item>(entityName: "Item")
-            request.predicate = NSPredicate(format: "id == %@", itemID as CVarArg)
+            request.predicate = NSPredicate(format: "id == %@", self.itemID as CVarArg)
             request.fetchLimit = 1
-            guard let item = try? context.fetch(request).first else { return }
-            ArchiveResolver.cleanupBundleIfSynced(item: item, context: context)
+            guard let item = try? self.context.fetch(request).first else { return }
+            ArchiveResolver.cleanupBundleIfSynced(item: item, context: self.context)
         }
     }
 }

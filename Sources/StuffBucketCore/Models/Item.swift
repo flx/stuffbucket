@@ -40,6 +40,11 @@ public extension Item {
         return DocumentStorage.url(forRelativePath: documentRelativePath)
     }
 
+    /// Resolves the document URL using fallback logic (iCloud Drive -> CloudKit bundle -> cache)
+    var resolvedDocumentURL: DocumentResolver.ResolvedDocument? {
+        DocumentResolver.resolve(item: self)
+    }
+
     var archivedPageURL: URL? {
         guard let htmlRelativePath, !htmlRelativePath.isEmpty else { return nil }
         return LinkStorage.url(forRelativePath: htmlRelativePath)
