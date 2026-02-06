@@ -25,18 +25,16 @@ public enum DocumentResolver {
         guard let relativePath = item.documentRelativePath, !relativePath.isEmpty else { return nil }
 
         let fileManager = FileManager.default
-        let iCloudURL = DocumentStorage.url(forRelativePath: relativePath)
+        let localURL = DocumentStorage.url(forRelativePath: relativePath)
 
-        // Check if iCloud Drive file is available locally
-        let iCloudAvailable = !forceExtract && fileManager.fileExists(atPath: iCloudURL.path)
+        // In CloudKit-only mode, check for an existing local file copy first.
+        let localAvailable = !forceExtract && fileManager.fileExists(atPath: localURL.path)
 
-        if iCloudAvailable {
-            // Check if file needs downloading
-            let needsDownload = !isFileReady(iCloudURL)
+        if localAvailable {
             return ResolvedDocument(
-                documentURL: iCloudURL,
+                documentURL: localURL,
                 isFromCache: false,
-                needsDownload: needsDownload
+                needsDownload: false
             )
         }
 
@@ -49,7 +47,13 @@ public enum DocumentResolver {
             // Extract if not already cached
             if !fileManager.fileExists(atPath: cacheFileURL.path) {
                 if !ArchiveBundle.extract(bundleData, to: cacheDir) {
-                    return nil
+                    do {
+                        // New CloudKit document payload format: raw file bytes.
+                        try fileManager.createDirectory(at: cacheDir, withIntermediateDirectories: true)
+                        try bundleData.write(to: cacheFileURL, options: .atomic)
+                    } catch {
+                        return nil
+                    }
                 }
             }
 
@@ -62,63 +66,43 @@ public enum DocumentResolver {
             }
         }
 
-        // No bundle available, return iCloud URL (may need download)
+        // No bundle available, return the local path (file may not exist yet on this device).
         return ResolvedDocument(
-            documentURL: iCloudURL,
+            documentURL: localURL,
             isFromCache: false,
-            needsDownload: true
+            needsDownload: false
         )
     }
 
-    /// Starts downloading an iCloud document if needed
+    /// No-op in CloudKit-only mode.
     public static func startDownloading(_ url: URL) {
-        let fileManager = FileManager.default
-        if fileManager.isUbiquitousItem(at: url) {
-            try? fileManager.startDownloadingUbiquitousItem(at: url)
-        }
+        _ = url
     }
 
-    /// Checks if a file is ready (downloaded from iCloud)
+    /// Checks if a file is ready locally.
     public static func isFileReady(_ url: URL) -> Bool {
-        let fileManager = FileManager.default
-        guard fileManager.fileExists(atPath: url.path) else { return false }
-
-        if fileManager.isUbiquitousItem(at: url) {
-            let keys: Set<URLResourceKey> = [.ubiquitousItemDownloadingStatusKey]
-            if let values = try? url.resourceValues(forKeys: keys),
-               let status = values.ubiquitousItemDownloadingStatus {
-                return status == .current || status == .downloaded
-            }
-        }
-        return true
+        FileManager.default.fileExists(atPath: url.path)
     }
 
-    /// Checks if the iCloud Drive document is fully synced
+    /// Checks if the local document exists on this device.
     public static func isICloudDocumentFullySynced(item: Item) -> Bool {
         guard let relativePath = item.documentRelativePath, !relativePath.isEmpty else { return false }
-        let iCloudURL = DocumentStorage.url(forRelativePath: relativePath)
-        return isFileReady(iCloudURL)
+        let localURL = DocumentStorage.url(forRelativePath: relativePath)
+        return isFileReady(localURL)
     }
 
-    /// Cleans up the bundle data from an item after iCloud Drive has fully synced.
+    /// Cleans up extracted cache files when a local primary copy exists.
+    /// Bundle data is intentionally retained for CloudKit-authoritative sync.
     /// Call this from a managed object context.
     public static func cleanupBundleIfSynced(item: Item, context: NSManagedObjectContext) {
-        guard item.documentZipData != nil else { return }
         guard isICloudDocumentFullySynced(item: item) else { return }
 
-        // iCloud Drive is fully synced, remove the bundle
-        item.documentZipData = nil
-        item.updatedAt = Date()
-
-        // Also clean up local cache if it exists
+        // Clean up local extraction cache when primary file is present.
         if let itemID = item.id {
             let cacheDir = localCacheDirectoryURL(for: itemID)
             try? FileManager.default.removeItem(at: cacheDir)
         }
-
-        if context.hasChanges {
-            try? context.save()
-        }
+        _ = context
     }
 
     // MARK: - Cache Paths

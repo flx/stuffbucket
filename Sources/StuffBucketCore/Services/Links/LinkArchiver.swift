@@ -204,7 +204,14 @@ public final class LinkArchiver {
         var bundleData: Data?
         if relativePath != nil {
             let archiveDir = LinkStorage.archiveDirectoryURL(for: itemID)
-            bundleData = ArchiveBundle.create(from: archiveDir)
+            if let candidate = ArchiveBundle.create(from: archiveDir) {
+                let maxBytes = SyncPolicy.maxFileSizeBytes
+                if Int64(candidate.count) <= maxBytes {
+                    bundleData = candidate
+                } else {
+                    NSLog("LinkArchiver: archive bundle exceeds sync limit for item \(itemID)")
+                }
+            }
         }
 
         return ArchiveOutcome(metadata: metadata, htmlRelativePath: relativePath, archiveStatus: archiveStatus, assetFileNames: assetFileNames, bundleData: bundleData)
@@ -224,7 +231,14 @@ public final class LinkArchiver {
             var bundleData: Data?
             if relativePath != nil {
                 let archiveDir = LinkStorage.archiveDirectoryURL(for: itemID)
-                bundleData = ArchiveBundle.create(from: archiveDir)
+                if let candidate = ArchiveBundle.create(from: archiveDir) {
+                    let maxBytes = SyncPolicy.maxFileSizeBytes
+                    if Int64(candidate.count) <= maxBytes {
+                        bundleData = candidate
+                    } else {
+                        NSLog("LinkArchiver: fallback archive bundle exceeds sync limit for item \(itemID)")
+                    }
+                }
             }
 
             let outcome = ArchiveOutcome(metadata: metadata, htmlRelativePath: relativePath, archiveStatus: archiveStatus, assetFileNames: [], bundleData: bundleData)

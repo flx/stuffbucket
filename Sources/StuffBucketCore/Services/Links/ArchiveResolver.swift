@@ -28,36 +28,23 @@ public enum ArchiveResolver {
         guard let itemID = item.id else { return nil }
         guard item.htmlRelativePath != nil else { return nil }
 
-        let iCloudPageURL = item.archivedPageURL
-        let iCloudReaderURL = item.archivedReaderURL
+        let localPageURL = item.archivedPageURL
+        let localReaderURL = item.archivedReaderURL
         let fileManager = FileManager.default
 
-        // Check if iCloud Drive files are available locally
-        let iCloudAvailable = !forceExtract && iCloudPageURL != nil && fileManager.fileExists(atPath: iCloudPageURL!.path)
+        // In CloudKit-only mode, prefer existing local archive files.
+        let localAvailable = !forceExtract && localPageURL != nil && fileManager.fileExists(atPath: localPageURL!.path)
 
-        if iCloudAvailable, let pageURL = iCloudPageURL {
-            // Use iCloud Drive files
+        if localAvailable, let pageURL = localPageURL {
             let archiveFolder = pageURL.deletingLastPathComponent()
             let assetsFolder = archiveFolder.appendingPathComponent("assets", isDirectory: true)
 
-            // Build list of files to download
-            var filesToDownload = buildFilesToDownload(
-                pageURL: pageURL,
-                assetsFolder: assetsFolder,
-                assetManifestJSON: item.assetManifestJSON
-            )
-
-            // Add reader if expected
-            if let readerURL = iCloudReaderURL {
-                filesToDownload.append(readerURL)
-            }
-
             return ResolvedArchive(
                 pageURL: pageURL,
-                readerURL: iCloudReaderURL,
+                readerURL: localReaderURL,
                 assetsFolder: assetsFolder,
                 isFromCache: false,
-                filesToDownload: filesToDownload
+                filesToDownload: []
             )
         }
 
@@ -90,32 +77,17 @@ public enum ArchiveResolver {
         return nil
     }
 
-    /// Starts downloading iCloud files if needed
+    /// No-op in CloudKit-only mode.
     public static func startDownloading(_ urls: [URL]) {
-        let fileManager = FileManager.default
-        for url in urls {
-            if fileManager.isUbiquitousItem(at: url) {
-                try? fileManager.startDownloadingUbiquitousItem(at: url)
-            }
-        }
+        _ = urls
     }
 
-    /// Checks if a file is ready (downloaded from iCloud)
+    /// Checks if a file exists locally.
     public static func isFileReady(_ url: URL) -> Bool {
-        let fileManager = FileManager.default
-        guard fileManager.fileExists(atPath: url.path) else { return false }
-
-        if fileManager.isUbiquitousItem(at: url) {
-            let keys: Set<URLResourceKey> = [.ubiquitousItemDownloadingStatusKey]
-            if let values = try? url.resourceValues(forKeys: keys),
-               let status = values.ubiquitousItemDownloadingStatus {
-                return status == .current || status == .downloaded
-            }
-        }
-        return true
+        FileManager.default.fileExists(atPath: url.path)
     }
 
-    /// Checks if all iCloud Drive files for an archive are fully synced
+    /// Checks if all expected local archive files exist for an item.
     public static func isICloudArchiveFullySynced(item: Item) -> Bool {
         guard let pageURL = item.archivedPageURL else { return false }
 
@@ -134,22 +106,14 @@ public enum ArchiveResolver {
     /// Cleans up the bundle data from an item after iCloud Drive has fully synced.
     /// Call this from a managed object context.
     public static func cleanupBundleIfSynced(item: Item, context: NSManagedObjectContext) {
-        guard item.archiveZipData != nil else { return }
         guard isICloudArchiveFullySynced(item: item) else { return }
-
-        // iCloud Drive is fully synced, remove the bundle
-        item.archiveZipData = nil
-        item.updatedAt = Date()
 
         // Also clean up local cache if it exists
         if let itemID = item.id {
             let cacheDir = LinkStorage.localCacheDirectoryURL(for: itemID)
             try? FileManager.default.removeItem(at: cacheDir)
         }
-
-        if context.hasChanges {
-            try? context.save()
-        }
+        _ = context
     }
 
     // MARK: - Private Helpers
@@ -157,15 +121,6 @@ public enum ArchiveResolver {
     private static func buildFilesToDownload(pageURL: URL, assetsFolder: URL, assetManifestJSON: String?) -> [URL] {
         var files: [URL] = [pageURL]
         let fileManager = FileManager.default
-
-        // Start folder downloads
-        let archiveFolder = pageURL.deletingLastPathComponent()
-        if fileManager.isUbiquitousItem(at: archiveFolder) {
-            try? fileManager.startDownloadingUbiquitousItem(at: archiveFolder)
-        }
-        if fileManager.isUbiquitousItem(at: assetsFolder) {
-            try? fileManager.startDownloadingUbiquitousItem(at: assetsFolder)
-        }
 
         // Use manifest if available
         if let manifestJSON = assetManifestJSON,

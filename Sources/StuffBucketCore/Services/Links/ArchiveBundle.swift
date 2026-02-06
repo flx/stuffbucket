@@ -92,44 +92,60 @@ public enum ArchiveBundle {
         let sourceSize = data.count
         guard sourceSize > 0 else { return nil }
 
-        // Allocate destination buffer (may be larger than source for small data)
-        let destinationBufferSize = max(sourceSize, 64 * 1024)
-        let destinationBuffer = UnsafeMutablePointer<UInt8>.allocate(capacity: destinationBufferSize)
-        defer { destinationBuffer.deallocate() }
+        // LZFSE can produce slightly larger output for incompressible data.
+        // Retry with a larger destination buffer instead of failing silently.
+        var destinationBufferSize = max(sourceSize + 256, 64 * 1024)
+        var compressedPayload: Data?
 
-        let compressedSize = data.withUnsafeBytes { sourceBuffer -> Int in
-            guard let sourcePointer = sourceBuffer.bindMemory(to: UInt8.self).baseAddress else { return 0 }
-            return compression_encode_buffer(
-                destinationBuffer,
-                destinationBufferSize,
-                sourcePointer,
-                sourceSize,
-                nil,
-                COMPRESSION_LZFSE
-            )
+        for _ in 0..<6 {
+            let destinationBuffer = UnsafeMutablePointer<UInt8>.allocate(capacity: destinationBufferSize)
+            defer { destinationBuffer.deallocate() }
+
+            let compressedSize = data.withUnsafeBytes { sourceBuffer -> Int in
+                guard let sourcePointer = sourceBuffer.bindMemory(to: UInt8.self).baseAddress else { return 0 }
+                return compression_encode_buffer(
+                    destinationBuffer,
+                    destinationBufferSize,
+                    sourcePointer,
+                    sourceSize,
+                    nil,
+                    COMPRESSION_LZFSE
+                )
+            }
+
+            if compressedSize > 0 {
+                compressedPayload = Data(bytes: destinationBuffer, count: compressedSize)
+                break
+            }
+
+            destinationBufferSize *= 2
         }
 
-        guard compressedSize > 0 else { return nil }
+        guard let compressedPayload else { return nil }
 
-        // Prepend original size for decompression
+        // Store original size as little-endian for stable decoding across architectures.
+        var originalSizeLE = UInt64(sourceSize).littleEndian
         var result = Data()
-        var size = UInt64(sourceSize)
-        result.append(Data(bytes: &size, count: MemoryLayout<UInt64>.size))
-        result.append(Data(bytes: destinationBuffer, count: compressedSize))
-
+        result.append(Data(bytes: &originalSizeLE, count: MemoryLayout<UInt64>.size))
+        result.append(compressedPayload)
         return result
     }
 
     private static func decompress(_ data: Data) -> Data? {
         guard data.count > MemoryLayout<UInt64>.size else { return nil }
 
-        // Read original size
-        let originalSize = data.withUnsafeBytes { buffer -> Int in
-            let size = buffer.load(as: UInt64.self)
-            return Int(size)
+        // Read original size without assuming pointer alignment.
+        let header = data.prefix(MemoryLayout<UInt64>.size)
+        var sizeLE: UInt64 = 0
+        _ = withUnsafeMutableBytes(of: &sizeLE) { dst in
+            header.copyBytes(to: dst)
         }
-
-        guard originalSize > 0, originalSize < 500_000_000 else { return nil } // Sanity check: max 500MB
+        let originalSizeUInt64 = UInt64(littleEndian: sizeLE)
+        let maxAllowedBytes = UInt64(SyncPolicy.maximumMaxFileSizeMB) * 1_048_576
+        guard originalSizeUInt64 > 0,
+              originalSizeUInt64 <= maxAllowedBytes,
+              originalSizeUInt64 <= UInt64(Int.max) else { return nil }
+        let originalSize = Int(originalSizeUInt64)
 
         let compressedData = data.dropFirst(MemoryLayout<UInt64>.size)
 

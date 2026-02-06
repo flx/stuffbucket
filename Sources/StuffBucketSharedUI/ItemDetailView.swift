@@ -17,7 +17,7 @@ public final class PlatformActions {
     private init() {}
 
     /// Set by macOS app to enable "Show in Finder" functionality
-    public var showInFinder: ((URL) -> Void)?
+    public var showInFinder: ((Item) throws -> Void)?
 }
 
 struct ArchivePresentation: Identifiable {
@@ -696,7 +696,15 @@ struct ItemDetailView: View {
                 }
                 if let showInFinder = PlatformActions.shared.showInFinder {
                     Button {
-                        showInFinder(documentURL)
+                        do {
+                            try showInFinder(item)
+                        } catch {
+                            documentError = DocumentError(
+                                message: error.localizedDescription.isEmpty
+                                    ? "Unable to reveal this file in Finder."
+                                    : error.localizedDescription
+                            )
+                        }
                     } label: {
                         Label("Show in Finder", systemImage: "folder")
                     }
@@ -728,17 +736,18 @@ struct ItemDetailView: View {
     private func openDocument(at url: URL, relativePath: String?, item: Item?) {
 #if os(macOS)
         Task {
-            await openDocumentOnMac(url, relativePath: relativePath, item: item)
+            await openDocumentOnMac(url, item: item)
         }
 #else
         Task {
-            await openDocumentOnIOS(url, relativePath: relativePath, item: item)
+            await openDocumentOnIOS(url, item: item)
         }
 #endif
+        _ = relativePath
     }
 
 #if os(macOS)
-    private func openDocumentOnMac(_ url: URL, relativePath: String?, item: Item?) async {
+    private func openDocumentOnMac(_ url: URL, item: Item?) async {
         // Run file resolution on background thread
         let resolvedURL: URL = await Task.detached(priority: .userInitiated) {
             // Try DocumentResolver if we have the item
@@ -785,7 +794,7 @@ struct ItemDetailView: View {
 #endif
 
 #if os(iOS)
-    private func openDocumentOnIOS(_ url: URL, relativePath: String?, item: Item?) async {
+    private func openDocumentOnIOS(_ url: URL, item: Item?) async {
         if isPreparingDocument {
             return
         }
@@ -798,7 +807,7 @@ struct ItemDetailView: View {
             }
         }
 
-        guard let previewURL = await prepareDocumentPreviewURL(url, relativePath: relativePath, item: item) else { return }
+        guard let previewURL = await prepareDocumentPreviewURL(url, item: item) else { return }
         await MainActor.run {
             quickLookURL = previewURL
         }
@@ -809,7 +818,7 @@ struct ItemDetailView: View {
         }
     }
 
-    private func prepareDocumentPreviewURL(_ url: URL, relativePath: String?, item: Item?) async -> URL? {
+    private func prepareDocumentPreviewURL(_ url: URL, item: Item?) async -> URL? {
         // Run file checks on background thread to avoid blocking main thread
         let resolvedURL: URL? = await Task.detached(priority: .userInitiated) {
             // Try to use DocumentResolver if we have the item
@@ -831,26 +840,17 @@ struct ItemDetailView: View {
                 }
             }
 
-            // Fallback: try direct URL approach
-            let fileManager = FileManager.default
-            let isUbiquitous = fileManager.isUbiquitousItem(at: url)
-            if isUbiquitous {
-                try? fileManager.startDownloadingUbiquitousItem(at: url)
+            // Fallback: use the provided path only if it already exists locally.
+            if FileManager.default.fileExists(atPath: url.path) {
+                return url
             }
-
-            if !fileManager.fileExists(atPath: url.path) {
-                if let relativePath = relativePath {
-                    DocumentStorage.ensureICloudDownload(forRelativePath: relativePath)
-                }
-            }
-
-            return url
+            return nil
         }.value
 
         guard let targetURL = resolvedURL else {
             await MainActor.run {
                 documentError = DocumentError(
-                    message: "Document isn't available yet. Check iCloud Drive and try again."
+                    message: "Document isn't available on this device yet."
                 )
             }
             return nil
@@ -872,7 +872,7 @@ struct ItemDetailView: View {
 
             await MainActor.run {
                 documentError = DocumentError(
-                    message: "Document isn't available yet. Check iCloud Drive and try again."
+                    message: "Document isn't available on this device yet."
                 )
             }
             return nil
@@ -944,6 +944,11 @@ struct ItemDetailView: View {
             try context.save()
         } catch {
             context.rollback()
+            documentError = DocumentError(
+                message: error.localizedDescription.isEmpty
+                    ? "Failed to attach document."
+                    : error.localizedDescription
+            )
         }
     }
 
@@ -1030,58 +1035,26 @@ struct ItemDetailView: View {
             }
         }
 
-        // Capture values on main actor before background work
-        let assetManifest = item.assetManifestJSON
-        let filesToDownload = buildFilesToDownload(url: url, assetManifestJSON: assetManifest)
-
-        // Start downloads on background thread
-        await Task.detached(priority: .userInitiated) {
-            ArchiveResolver.startDownloading(filesToDownload)
+        let resolved = await Task.detached(priority: .userInitiated) {
+            ArchiveResolver.resolve(item: item)
         }.value
 
-        // Wait for iCloud files (with timeout) on background thread
-        let iCloudReady = await waitForFilesOnBackground(filesToDownload, timeoutSeconds: 5)
-
-        if iCloudReady {
-            // iCloud files ready, open them and trigger cleanup
-            _ = await MainActor.run {
-                NSWorkspace.shared.open(url)
+        guard let resolved else {
+            await MainActor.run {
+                archiveError = ArchiveError(
+                    message: "Archive is not available on this device yet."
+                )
             }
-            triggerArchiveCleanupIfNeeded(item: item)
             return
         }
 
-        // iCloud not ready, try bundle fallback (run extraction on background thread)
-        if let itemID = item.id, let bundleData = item.archiveZipData {
-            let cachePageURL: URL? = await Task.detached(priority: .userInitiated) { () -> URL? in
-                let cacheDir = LinkStorage.localCacheDirectoryURL(for: itemID)
-                let cachePageURL = LinkStorage.localCachePageURL(for: itemID)
+        let requestedReader = title == "Reader Archive" || url.lastPathComponent == "reader.html"
+        let targetURL = requestedReader ? (resolved.readerURL ?? resolved.pageURL) : resolved.pageURL
 
-                // Extract if not already cached
-                if !FileManager.default.fileExists(atPath: cachePageURL.path) {
-                    _ = ArchiveBundle.extract(bundleData, to: cacheDir)
-                }
-
-                if FileManager.default.fileExists(atPath: cachePageURL.path) {
-                    return cachePageURL
-                }
-                return nil
-            }.value
-
-            if let cachePageURL = cachePageURL {
-                _ = await MainActor.run {
-                    NSWorkspace.shared.open(cachePageURL)
-                }
-                return
-            }
+        _ = await MainActor.run {
+            NSWorkspace.shared.open(targetURL)
         }
-
-        // No bundle available and iCloud not ready
-        await MainActor.run {
-            archiveError = ArchiveError(
-                message: "Archive is still syncing from iCloud. Try again in a moment."
-            )
-        }
+        triggerArchiveCleanupIfNeeded(item: item)
     }
 
     private func buildFilesToDownload(url: URL, assetManifestJSON: String?) -> [URL] {
@@ -1305,29 +1278,18 @@ struct ArchivedLinkSheet: View {
     }
 
     private func resolveArchive() {
-        // Capture values on main actor before entering async context
-        let filesToDownload = buildFilesToDownload()
-
         checkTask = Task {
-            // Start downloads on background thread
-            await Task.detached(priority: .userInitiated) {
-                ArchiveResolver.startDownloading(filesToDownload)
-            }.value
-
-            // Wait for iCloud files (with timeout) on background thread
-            let iCloudReady = await waitForFilesOnBackground(filesToDownload, timeoutSeconds: 5)
-
-            if iCloudReady {
-                // iCloud files are ready, use them
+            if let resolved = await resolveArchiveForItem() {
+                let requestedReader = title == "Reader Archive" || url.lastPathComponent == "reader.html"
+                let targetURL = requestedReader ? (resolved.readerURL ?? resolved.pageURL) : resolved.pageURL
                 await MainActor.run {
-                    resolvedURL = url
+                    resolvedURL = targetURL
                 }
-                // Trigger cleanup of bundle since iCloud is synced
                 triggerCleanupIfNeeded()
                 return
             }
 
-            // iCloud not ready, try bundle fallback (run extraction on background thread)
+            // Fallback extraction path if the item fetch fails but bundle data is available.
             if let bundleData = archiveZipData {
                 let extractedURL: URL? = await Task.detached(priority: .userInitiated) {
                     let cacheDir = LinkStorage.localCacheDirectoryURL(for: self.itemID)
@@ -1352,9 +1314,24 @@ struct ArchivedLinkSheet: View {
                 }
             }
 
-            // Last resort: show iCloud URL anyway (may be incomplete)
+            // Last resort: keep direct URL (may still be unavailable).
             await MainActor.run {
                 resolvedURL = url
+            }
+        }
+    }
+
+    private func resolveArchiveForItem() async -> ArchiveResolver.ResolvedArchive? {
+        await withCheckedContinuation { continuation in
+            context.perform {
+                let request = NSFetchRequest<Item>(entityName: "Item")
+                request.predicate = NSPredicate(format: "id == %@", self.itemID as CVarArg)
+                request.fetchLimit = 1
+                guard let item = try? self.context.fetch(request).first else {
+                    continuation.resume(returning: nil)
+                    return
+                }
+                continuation.resume(returning: ArchiveResolver.resolve(item: item))
             }
         }
     }

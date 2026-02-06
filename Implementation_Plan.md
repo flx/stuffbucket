@@ -48,19 +48,19 @@
 - Capture rendered HTML via WKWebView, download assets, and rewrite HTML/CSS for offline link archives (fallback to raw HTML). completed [x]
 - Generate a reader-mode HTML snapshot (reader.html) alongside the full archive (page.html). completed [x]
 - Persist a link archive asset manifest (list of asset filenames) for deterministic iCloud download on macOS. completed [x]
-- Add CloudKit bundle sync fallback (archiveZipData) for reliable archive sync when iCloud Drive is slow. completed [x]
+- Make CloudKit archive bundles (`archiveZipData`) the primary archive sync channel. completed [x]
 - Add ArchiveBundle helper for LZFSE compression/extraction. completed [x]
-- Add ArchiveResolver helper for fallback logic (iCloud Drive → CloudKit bundle → local cache). completed [x]
-- Add smart cleanup to delete CloudKit bundle once iCloud Drive sync completes. completed [x]
+- Add ArchiveResolver helper for CloudKit-first resolution (local files → CloudKit bundle → local cache). completed [x]
+- Keep CloudKit archive bundles as source-of-truth payloads (no automatic bundle cleanup). completed [x]
 - Add `documentZipData` field to Core Data model for document CloudKit sync fallback. completed [x]
-- Add DocumentResolver helper for document fallback logic (iCloud Drive → CloudKit bundle → local cache). completed [x]
+- Add DocumentResolver helper for CloudKit-first document resolution (local files → CloudKit bundle → local cache). completed [x]
 - Update DocumentStorage to create compressed bundles when saving documents. completed [x]
 - Update ItemImportService to save document bundles for CloudKit sync. completed [x]
-- Add smart cleanup to delete document CloudKit bundle once iCloud Drive sync completes. completed [x]
+- Keep document CloudKit bundles as source-of-truth payloads (no automatic bundle cleanup). completed [x]
 - Decode common HTML entities in link metadata parsing without AppKit dependencies. completed [x]
-- Add document storage helper for iCloud Drive file copies. completed [x]
-- Resolve document URLs by checking iCloud storage and local fallback paths. completed [x]
-- Trigger iCloud document downloads when a document path is missing on iOS. completed [x]
+- Add local document storage helper for CloudKit-authoritative file sync. completed [x]
+- Resolve document URLs by checking local storage and CloudKit bundle extraction paths. completed [x]
+- Remove iCloud download dependence for document open flows. completed [x]
 - Add import helper for links, snippets, and documents. completed [x]
 - Unify item attachments so link/text/document can co-exist on any item. completed [x]
   - Add attachment flags on Item (hasLink/hasText/hasDocument). completed [x]
@@ -244,6 +244,7 @@
 - Allow drag-and-drop document import anywhere in the window. completed [x]
 - Add user-selected file read entitlement for macOS document import. completed [x]
 - Add “Show in Finder” for document items. completed [x]
+- Materialize documents into a user-selected folder before “Show in Finder”. completed [x]
 - Show an empty-state Import Document button. completed [x]
 - Add list row context menu to reveal document items. completed [x]
 - Open the app and notify running instances after share sheet capture to surface new items. completed [x]
@@ -252,9 +253,9 @@
 - Accept image shares in the macOS share extension and import them as Document items. completed [x]
 - Treat file:// shares as Document items (prefer images over file URLs, avoid file-path links). completed [x]
 - Add link archive viewer actions (open archived HTML in default browser). completed [x]
-- Enable page archive open while syncing from iCloud; show sync-pending status and alert when not yet local. completed [x]
-- Trigger iCloud download before opening archived HTML. completed [x]
-- Download archive assets from iCloud before opening on macOS; show a brief syncing state and an unavailable alert when assets are not yet local. completed [x]
+- Enable page archive open from local files or CloudKit bundle extraction when needed. completed [x]
+- Remove iCloud download dependency before opening archived HTML. completed [x]
+- Use CloudKit bundle extraction instead of iCloud asset download gating on macOS. completed [x]
 - Run archive bundle extraction on background threads to prevent UI hangs. completed [x]
 - Run archive file waiting/polling on background threads. completed [x]
 - Remove the temporary Delete All Data toolbar button before release. completed [x]
@@ -264,6 +265,8 @@
 - Add Move to Trash / Restore / Delete Permanently actions in item detail view. completed [x]
 - Filter trashed items from main list (show only when searching for trashcan). completed [x]
 - Add automatic cleanup of items trashed for more than 10 days on app launch. completed [x]
+- Add configurable max synced file size and user-visible oversized-file errors. completed [x]
+- Add reset actions for local data and CloudKit private zones. completed [x]
 - AI actions integrated into item detail and toolbar.
 - AI settings screen (API key management + model picker). completed [x]
 - Show a pricing disclosure line with per-token rates sourced from the OpenAI pricing page.
@@ -296,13 +299,13 @@
   - Import 500+ bookmarks and validate sync updates
   - Search performance on large datasets
 - Manual QA:
-  - iOS-created link archives render with assets on macOS after iCloud sync. completed [x]
+  - iOS-created link archives render with assets on macOS after CloudKit sync. completed [x]
   - Protected item search behavior
   - AI API key entry and consent prompts
 
 ## 8. Release checklist
 - Verify CloudKit schema migration.
-- Verify iCloud Drive file layout remains intact.
+- Verify CloudKit-only file sync and macOS materialization layout.
 - Confirm macOS Safari import permissions and file watch stability.
 - Confirm BYOK handling and that no hardcoded API keys ship in the client.
 - Confirm AI features are opt-in and clearly disclosed.

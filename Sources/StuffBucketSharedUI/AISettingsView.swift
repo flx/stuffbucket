@@ -1,5 +1,8 @@
 import SwiftUI
 import StuffBucketCore
+#if os(macOS)
+import AppKit
+#endif
 
 public struct AISettingsView: View {
     @ObservedObject private var keyStorage = AIKeyStorage.shared
@@ -13,6 +16,10 @@ public struct AISettingsView: View {
     @State private var openAIModels: [String] = OpenAIModelDefaults.availableModels
     @State private var validationError: String?
     @State private var showDeleteConfirmation = false
+    @State private var maxSyncFileSizeMB = SyncPolicy.maxFileSizeMB
+    @State private var materializedRootPath: String?
+    @State private var showSyncResetConfirmation = false
+    @State private var isResettingSyncData = false
 
     public init() {}
 
@@ -22,6 +29,8 @@ public struct AISettingsView: View {
                 providerSection
                 apiKeySection
                 modelSection
+                syncSection
+                resetSyncSection
                 deleteSection
             }
             .navigationTitle("AI Settings")
@@ -39,11 +48,13 @@ public struct AISettingsView: View {
                     Button("Done") { dismiss() }
                 }
             }
-            .frame(width: 450, height: 280)
+            .frame(width: 520, height: 520)
             #endif
             .onAppear {
                 claudeKey = keyStorage.claudeAPIKey ?? ""
                 openAIKey = keyStorage.openAIAPIKey ?? ""
+                maxSyncFileSizeMB = SyncPolicy.maxFileSizeMB
+                materializedRootPath = MaterializedDocumentStore.selectedRootPath()
             }
             .alert("Validation Error", isPresented: .constant(validationError != nil)) {
                 Button("OK") { validationError = nil }
@@ -59,6 +70,17 @@ public struct AISettingsView: View {
                 Button("Cancel", role: .cancel) {}
             } message: {
                 Text("This will remove all stored API keys. You'll need to re-enter them to use AI features.")
+            }
+            .confirmationDialog("Reset Sync Data", isPresented: $showSyncResetConfirmation) {
+                Button("Reset Local Data", role: .destructive) {
+                    resetSyncData(includeCloudKit: false)
+                }
+                Button("Reset Local + CloudKit Data", role: .destructive) {
+                    resetSyncData(includeCloudKit: true)
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("This permanently deletes all synced items and files. Use this only when starting from a clean state.")
             }
         }
     }
@@ -174,6 +196,71 @@ public struct AISettingsView: View {
         }
     }
 
+    private var syncSection: some View {
+        Section {
+            Stepper(value: $maxSyncFileSizeMB, in: SyncPolicy.minimumMaxFileSizeMB...SyncPolicy.maximumMaxFileSizeMB, step: 50) {
+                Text("Max synced file size: \(maxSyncFileSizeMB) MB")
+            }
+            .onChange(of: maxSyncFileSizeMB) { _, newValue in
+                SyncPolicy.maxFileSizeMB = newValue
+                maxSyncFileSizeMB = SyncPolicy.maxFileSizeMB
+            }
+
+#if os(macOS)
+            HStack {
+                Text("Finder Folder")
+                Spacer()
+                Text(materializedRootPath ?? "Not selected")
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+            }
+
+            HStack {
+                Button("Choose Folder...") {
+                    chooseMaterializationFolder()
+                }
+                if let path = materializedRootPath {
+                    Button("Open Folder") {
+                        NSWorkspace.shared.open(URL(fileURLWithPath: path, isDirectory: true))
+                    }
+                    Button("Clear Folder", role: .destructive) {
+                        MaterializedDocumentStore.clearRootFolderSelection()
+                        materializedRootPath = nil
+                    }
+                }
+            }
+#endif
+        } header: {
+            Text("Sync")
+        } footer: {
+            Text("Files larger than this limit won't be imported for sync.")
+        }
+    }
+
+    private var resetSyncSection: some View {
+        Section {
+            Button(role: .destructive) {
+                showSyncResetConfirmation = true
+            } label: {
+                if isResettingSyncData {
+                    HStack(spacing: 8) {
+                        ProgressView()
+                            .controlSize(.small)
+                        Text("Resetting sync data...")
+                    }
+                } else {
+                    Text("Reset Sync Data")
+                }
+            }
+            .disabled(isResettingSyncData)
+        } header: {
+            Text("Reset")
+        } footer: {
+            Text("Use reset only for development/test environments. It permanently removes local records and optionally CloudKit records.")
+        }
+    }
+
     private var defaultModelID: String {
         switch keyStorage.selectedProvider {
         case .anthropic:
@@ -237,6 +324,40 @@ public struct AISettingsView: View {
                     validationError = "Invalid API key: \(error.localizedDescription)"
                     isValidatingOpenAI = false
                 }
+            }
+        }
+    }
+
+#if os(macOS)
+    private func chooseMaterializationFolder() {
+        do {
+            let url = try MaterializedDocumentStore.chooseRootFolder()
+            materializedRootPath = url.path
+        } catch {
+            if case SyncError.materializationCancelled = error {
+                return
+            }
+            validationError = error.localizedDescription
+        }
+    }
+#endif
+
+    private func resetSyncData(includeCloudKit: Bool) {
+        isResettingSyncData = true
+        Task {
+            do {
+                if includeCloudKit {
+                    try await SyncResetService.resetLocalAndCloudKitData()
+                } else {
+                    try await SyncResetService.resetLocalData()
+                }
+            } catch {
+                await MainActor.run {
+                    validationError = error.localizedDescription
+                }
+            }
+            await MainActor.run {
+                isResettingSyncData = false
             }
         }
     }

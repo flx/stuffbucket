@@ -1,5 +1,6 @@
 import AppKit
 import SwiftUI
+import StuffBucketCore
 
 /// macOS-specific document actions
 enum DocumentActions {
@@ -7,7 +8,8 @@ enum DocumentActions {
         NSWorkspace.shared.open(url)
     }
 
-    static func showInFinder(url: URL) {
-        NSWorkspace.shared.activateFileViewerSelecting([url])
+    static func showInFinder(item: Item) throws {
+        let materializedURL = try MaterializedDocumentStore.materializeDocument(for: item)
+        NSWorkspace.shared.activateFileViewerSelecting([materializedURL])
     }
 }

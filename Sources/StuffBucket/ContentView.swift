@@ -18,6 +18,7 @@ struct ContentView: View {
     @State private var selectedTags: Set<String> = []
     @State private var selectedCollections: Set<String> = []
     @State private var isShowingAISettings = false
+    @State private var importErrorMessage: String?
     private let searchService = SearchService()
     private let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -423,6 +424,20 @@ struct ContentView: View {
                     break
                 }
             }
+            .alert("Document Import Error", isPresented: Binding(
+                get: { importErrorMessage != nil },
+                set: { isPresented in
+                    if !isPresented {
+                        importErrorMessage = nil
+                    }
+                }
+            )) {
+                Button("OK") {
+                    importErrorMessage = nil
+                }
+            } message: {
+                Text(importErrorMessage ?? "")
+            }
 #if os(iOS)
             .alert("Add Link", isPresented: $isShowingAddLinkAlert) {
                 TextField("https://example.com", text: $addLinkText)
@@ -588,6 +603,7 @@ struct ContentView: View {
 #endif
 
     private func importDocuments(_ urls: [URL]) {
+        var firstErrorMessage: String?
         for url in urls {
             let accessGranted = url.startAccessingSecurityScopedResource()
             defer {
@@ -598,6 +614,9 @@ struct ContentView: View {
             do {
                 _ = try ItemImportService.importDocument(fileURL: url, in: context)
             } catch {
+                if firstErrorMessage == nil {
+                    firstErrorMessage = error.localizedDescription
+                }
                 continue
             }
         }
@@ -606,7 +625,13 @@ struct ContentView: View {
                 try context.save()
             } catch {
                 context.rollback()
+                if firstErrorMessage == nil {
+                    firstErrorMessage = "Failed to save imported documents."
+                }
             }
+        }
+        if let firstErrorMessage {
+            importErrorMessage = firstErrorMessage
         }
     }
 }

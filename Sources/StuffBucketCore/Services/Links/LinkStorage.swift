@@ -16,32 +16,9 @@ enum StoragePaths {
 }
 
 public enum StorageMigration {
-    private static let migrationQueue = DispatchQueue(label: "com.digitalhandstand.stuffbucket.storage.migration", qos: .utility)
-
     public static func migrateLocalStorageIfNeeded() {
-        migrationQueue.async {
-            let fileManager = FileManager.default
-            guard let iCloudRoot = StoragePaths.iCloudRootURL(fileManager: fileManager) else { return }
-            let localRoot = StoragePaths.localRootURL(fileManager: fileManager)
-            guard fileManager.fileExists(atPath: localRoot.path) else { return }
-
-            do {
-                try fileManager.createDirectory(at: iCloudRoot, withIntermediateDirectories: true)
-            } catch {
-                NSLog("Storage migration: failed to create iCloud root: \(error)")
-                return
-            }
-
-            let folders = ["Links", "Documents", "Protected"]
-            for folder in folders {
-                let localFolder = localRoot.appendingPathComponent(folder, isDirectory: true)
-                guard fileManager.fileExists(atPath: localFolder.path) else { continue }
-                let iCloudFolder = iCloudRoot.appendingPathComponent(folder, isDirectory: true)
-                try? fileManager.createDirectory(at: iCloudFolder, withIntermediateDirectories: true)
-                migrateContents(from: localFolder, to: iCloudFolder, fileManager: fileManager)
-                pruneEmptyDirectories(root: localFolder, fileManager: fileManager)
-            }
-        }
+        // CloudKit-only file sync mode: files stay local and are mirrored via Core Data binary fields.
+        // Intentionally no-op to avoid iCloud Drive migration behavior.
     }
 
     private static func migrateContents(from localRoot: URL, to iCloudRoot: URL, fileManager: FileManager) {
@@ -134,19 +111,7 @@ public enum StorageMigration {
 
 public enum LinkStorage {
     public static func url(forRelativePath relativePath: String) -> URL {
-        let fileManager = FileManager.default
-        if let iCloudRoot = StoragePaths.iCloudRootURL(fileManager: fileManager) {
-            let iCloudURL = iCloudRoot.appendingPathComponent(relativePath)
-            if fileManager.fileExists(atPath: iCloudURL.path) {
-                return iCloudURL
-            }
-            let localURL = StoragePaths.localRootURL(fileManager: fileManager).appendingPathComponent(relativePath)
-            if fileManager.fileExists(atPath: localURL.path) {
-                return localURL
-            }
-            return iCloudURL
-        }
-        return StoragePaths.localRootURL(fileManager: fileManager).appendingPathComponent(relativePath)
+        StoragePaths.localRootURL().appendingPathComponent(relativePath)
     }
 
     static func writeHTML(data: Data, itemID: UUID) throws -> String {
@@ -236,20 +201,14 @@ public enum LinkStorage {
     }
 
     private static func rootDirectory() -> URL {
-        if let iCloudRoot = StoragePaths.iCloudRootURL() {
-            return iCloudRoot
-        }
         return StoragePaths.localRootURL()
     }
 }
 
 public enum DocumentStorage {
     public static func ensureICloudDownload(forRelativePath relativePath: String) {
-        let fileManager = FileManager.default
-        guard let iCloudRoot = StoragePaths.iCloudRootURL(fileManager: fileManager) else { return }
-        let destinationURL = iCloudRoot.appendingPathComponent(relativePath)
-        try? fileManager.createDirectory(at: destinationURL.deletingLastPathComponent(), withIntermediateDirectories: true)
-        try? fileManager.startDownloadingUbiquitousItem(at: destinationURL)
+        // CloudKit-only sync mode keeps files local; no iCloud download needed.
+        _ = relativePath
     }
 
     /// Result of copying a document, includes optional bundle data for CloudKit sync
@@ -260,6 +219,11 @@ public enum DocumentStorage {
 
     static func copyDocument(from sourceURL: URL, itemID: UUID, fileName: String) throws -> String {
         let name = fileName.isEmpty ? "Document" : fileName
+        let fileSize = try documentFileSize(at: sourceURL)
+        let maxBytes = SyncPolicy.maxFileSizeBytes
+        if fileSize > maxBytes {
+            throw SyncError.fileTooLarge(fileName: name, actualBytes: fileSize, limitBytes: maxBytes)
+        }
         let destinationURL = documentURL(for: itemID, fileName: name)
         let directoryURL = destinationURL.deletingLastPathComponent()
         try FileManager.default.createDirectory(at: directoryURL, withIntermediateDirectories: true)
@@ -272,11 +236,14 @@ public enum DocumentStorage {
 
     /// Copies a document and creates a CloudKit sync bundle
     static func copyDocumentWithBundle(from sourceURL: URL, itemID: UUID, fileName: String) throws -> CopyResult {
-        let path = try copyDocument(from: sourceURL, itemID: itemID, fileName: fileName)
+        let storedName = fileName.isEmpty ? "Document" : fileName
+        let path = try copyDocument(from: sourceURL, itemID: itemID, fileName: storedName)
 
-        // Create bundle for CloudKit sync
-        let directoryURL = documentDirectoryURL(for: itemID)
-        let bundleData = ArchiveBundle.create(from: directoryURL)
+        // Store a direct document payload for CloudKit sync to avoid large in-memory archive creation.
+        let destinationURL = documentURL(for: itemID, fileName: storedName)
+        guard let bundleData = try? Data(contentsOf: destinationURL, options: [.mappedIfSafe]) else {
+            throw SyncError.syncBundleCreationFailed(fileName: storedName)
+        }
 
         return CopyResult(relativePath: path, bundleData: bundleData)
     }
@@ -305,9 +272,31 @@ public enum DocumentStorage {
     }
 
     private static func rootDirectory() -> URL {
-        if let iCloudRoot = StoragePaths.iCloudRootURL() {
-            return iCloudRoot
-        }
         return StoragePaths.localRootURL()
+    }
+
+    private static func documentFileSize(at url: URL) throws -> Int64 {
+        let keys: Set<URLResourceKey> = [
+            .totalFileAllocatedSizeKey,
+            .fileAllocatedSizeKey,
+            .fileSizeKey
+        ]
+        if let values = try? url.resourceValues(forKeys: keys) {
+            if let size = values.totalFileAllocatedSize {
+                return Int64(size)
+            }
+            if let size = values.fileAllocatedSize {
+                return Int64(size)
+            }
+            if let size = values.fileSize {
+                return Int64(size)
+            }
+        }
+
+        let attrs = try FileManager.default.attributesOfItem(atPath: url.path)
+        if let fileSize = attrs[.size] as? NSNumber {
+            return fileSize.int64Value
+        }
+        return 0
     }
 }

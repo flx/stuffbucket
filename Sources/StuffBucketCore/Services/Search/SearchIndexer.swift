@@ -119,6 +119,11 @@ public final class SearchIndexer {
         return SearchDatabase.shared.search(query: query)
     }
 
+    public func resetIndex() {
+        SearchDatabase.shared.reset()
+        didSeedIndex = false
+    }
+
     private func rebuildIndex(context: NSManagedObjectContext) {
         context.perform {
             let request = NSFetchRequest<Item>(entityName: "Item")

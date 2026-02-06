@@ -18,6 +18,7 @@ struct ContentView: View {
     @State private var selectedItems: Set<UUID> = []
     @State private var selectedTags: Set<String> = []
     @State private var selectedCollections: Set<String> = []
+    @State private var importErrorMessage: String?
     private let searchService = SearchService()
     private let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -442,6 +443,20 @@ struct ContentView: View {
         } message: {
             Text("Paste a URL to save it in StuffBucket.")
         }
+        .alert("Document Import Error", isPresented: Binding(
+            get: { importErrorMessage != nil },
+            set: { isPresented in
+                if !isPresented {
+                    importErrorMessage = nil
+                }
+            }
+        )) {
+            Button("OK") {
+                importErrorMessage = nil
+            }
+        } message: {
+            Text(importErrorMessage ?? "")
+        }
         .contentShape(Rectangle())
         .onDrop(of: [UTType.fileURL.identifier, UTType.url.identifier, UTType.plainText.identifier], isTargeted: $isDropTargeted) { providers in
             guard canHandleProviders(providers) else { return false }
@@ -607,15 +622,20 @@ struct ContentView: View {
 
     @ViewBuilder
     private func documentRevealMenu(for item: Item) -> some View {
-        if item.itemType == .document, let url = item.documentURL {
+        if item.itemType == .document {
             Button("Show in Finder") {
-                NSWorkspace.shared.activateFileViewerSelecting([url])
+                do {
+                    try DocumentActions.showInFinder(item: item)
+                } catch {
+                    NSLog("Show in Finder failed: \(error)")
+                }
             }
         }
     }
 
     private func importDocuments(_ urls: [URL]) {
         context.perform {
+            var firstErrorMessage: String?
             for url in urls {
                 let accessGranted = url.startAccessingSecurityScopedResource()
                 defer {
@@ -626,6 +646,9 @@ struct ContentView: View {
                 do {
                     _ = try ItemImportService.importDocument(fileURL: url, in: context)
                 } catch {
+                    if firstErrorMessage == nil {
+                        firstErrorMessage = error.localizedDescription
+                    }
                     continue
                 }
             }
@@ -634,6 +657,14 @@ struct ContentView: View {
                     try context.save()
                 } catch {
                     context.rollback()
+                    if firstErrorMessage == nil {
+                        firstErrorMessage = "Failed to save imported documents."
+                    }
+                }
+            }
+            if let firstErrorMessage {
+                DispatchQueue.main.async {
+                    importErrorMessage = firstErrorMessage
                 }
             }
         }
