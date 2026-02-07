@@ -184,9 +184,11 @@ public final class LinkArchiver {
         let htmlData = Data(rewrittenHTML.utf8)
         let relativePath = try? LinkStorage.writeHTML(data: htmlData, itemID: itemID)
         let readerHTML = capture.readerHTML.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !readerHTML.isEmpty {
-            let rewrittenReader = HTMLAssetRewriter.rewrite(html: readerHTML, baseURL: baseURL, assetMap: assetMap)
-            let readerData = Data(rewrittenReader.utf8)
+        let readerSource = readerHTML.isEmpty
+            ? rewrittenHTML
+            : HTMLAssetRewriter.rewrite(html: readerHTML, baseURL: baseURL, assetMap: assetMap)
+        if !readerSource.isEmpty {
+            let readerData = Data(readerSource.utf8)
             _ = try? LinkStorage.writeReaderHTML(data: readerData, itemID: itemID)
         }
         let metadata = LinkMetadataParser.parse(html: rewrittenHTML, fallbackURL: originalURL)
@@ -198,23 +200,14 @@ public final class LinkArchiver {
         } else {
             archiveStatus = .full
         }
-        let assetFileNames = assetMap.values.map { $0.fileName }
 
         // Create bundle for CloudKit sync (only if archive succeeded)
         var bundleData: Data?
         if relativePath != nil {
-            let archiveDir = LinkStorage.archiveDirectoryURL(for: itemID)
-            if let candidate = ArchiveBundle.create(from: archiveDir) {
-                let maxBytes = SyncPolicy.maxFileSizeBytes
-                if Int64(candidate.count) <= maxBytes {
-                    bundleData = candidate
-                } else {
-                    NSLog("LinkArchiver: archive bundle exceeds sync limit for item \(itemID)")
-                }
-            }
+            bundleData = archiveBundleDataForCloudKit(itemID: itemID, logPrefix: "archive")
         }
 
-        return ArchiveOutcome(metadata: metadata, htmlRelativePath: relativePath, archiveStatus: archiveStatus, assetFileNames: assetFileNames, bundleData: bundleData)
+        return ArchiveOutcome(metadata: metadata, htmlRelativePath: relativePath, archiveStatus: archiveStatus, bundleData: bundleData)
     }
 
     private func archiveFallback(url: URL, itemID: UUID, context: NSManagedObjectContext) async {
@@ -225,23 +218,16 @@ public final class LinkArchiver {
             let htmlString = String(decoding: data, as: UTF8.self)
             let metadata = LinkMetadataParser.parse(html: htmlString, fallbackURL: url)
             let relativePath = try? LinkStorage.writeHTML(data: data, itemID: itemID)
+            _ = try? LinkStorage.writeReaderHTML(data: data, itemID: itemID)
             let archiveStatus: ArchiveStatus = relativePath == nil ? .failed : .partial
 
             // Create bundle for CloudKit sync (even for fallback)
             var bundleData: Data?
             if relativePath != nil {
-                let archiveDir = LinkStorage.archiveDirectoryURL(for: itemID)
-                if let candidate = ArchiveBundle.create(from: archiveDir) {
-                    let maxBytes = SyncPolicy.maxFileSizeBytes
-                    if Int64(candidate.count) <= maxBytes {
-                        bundleData = candidate
-                    } else {
-                        NSLog("LinkArchiver: fallback archive bundle exceeds sync limit for item \(itemID)")
-                    }
-                }
+                bundleData = archiveBundleDataForCloudKit(itemID: itemID, logPrefix: "fallback archive")
             }
 
-            let outcome = ArchiveOutcome(metadata: metadata, htmlRelativePath: relativePath, archiveStatus: archiveStatus, assetFileNames: [], bundleData: bundleData)
+            let outcome = ArchiveOutcome(metadata: metadata, htmlRelativePath: relativePath, archiveStatus: archiveStatus, bundleData: bundleData)
             await updateItem(itemID: itemID, outcome: outcome, context: context)
         } catch {
             await markFailed(itemID: itemID, context: context)
@@ -250,10 +236,7 @@ public final class LinkArchiver {
 
     private func updateItem(itemID: UUID, outcome: ArchiveOutcome, context: NSManagedObjectContext) async {
         await performContextUpdate(in: context) {
-            let request = NSFetchRequest<Item>(entityName: "Item")
-            request.fetchLimit = 1
-            request.predicate = NSPredicate(format: "id == %@", itemID as CVarArg)
-            guard let item = try? context.fetch(request).first else { return }
+            guard let item = self.fetchItem(itemID, in: context) else { return }
             if let title = outcome.metadata.title {
                 item.linkTitle = title
                 item.title = title
@@ -262,10 +245,7 @@ public final class LinkArchiver {
             item.linkPublishedDate = outcome.metadata.publishedDate
             item.htmlRelativePath = outcome.htmlRelativePath
             item.archiveStatus = outcome.archiveStatus.rawValue
-            if !outcome.assetFileNames.isEmpty,
-               let jsonData = try? JSONEncoder().encode(outcome.assetFileNames) {
-                item.assetManifestJSON = String(data: jsonData, encoding: .utf8)
-            }
+            item.assetManifestJSON = nil
             // Save bundle for CloudKit sync
             item.archiveZipData = outcome.bundleData
             item.updatedAt = Date()
@@ -277,16 +257,20 @@ public final class LinkArchiver {
 
     private func markFailed(itemID: UUID, context: NSManagedObjectContext) async {
         await performContextUpdate(in: context) {
-            let request = NSFetchRequest<Item>(entityName: "Item")
-            request.fetchLimit = 1
-            request.predicate = NSPredicate(format: "id == %@", itemID as CVarArg)
-            guard let item = try? context.fetch(request).first else { return }
+            guard let item = self.fetchItem(itemID, in: context) else { return }
             item.archiveStatus = ArchiveStatus.failed.rawValue
             item.updatedAt = Date()
             if context.hasChanges {
                 try? context.save()
             }
         }
+    }
+
+    private func fetchItem(_ itemID: UUID, in context: NSManagedObjectContext) -> Item? {
+        let request = NSFetchRequest<Item>(entityName: "Item")
+        request.fetchLimit = 1
+        request.predicate = NSPredicate(format: "id == %@", itemID as CVarArg)
+        return try? context.fetch(request).first
     }
 
     private func performContextUpdate(in context: NSManagedObjectContext, updates: @escaping () -> Void) async {
@@ -296,6 +280,17 @@ public final class LinkArchiver {
                 continuation.resume()
             }
         }
+    }
+
+    private func archiveBundleDataForCloudKit(itemID: UUID, logPrefix: String) -> Data? {
+        let archiveDir = LinkStorage.archiveDirectoryURL(for: itemID)
+        guard let candidate = ArchiveBundle.create(from: archiveDir) else { return nil }
+        let maxBytes = SyncPolicy.maxFileSizeBytes
+        guard Int64(candidate.count) <= maxBytes else {
+            NSLog("LinkArchiver: \(logPrefix) bundle exceeds sync limit for item \(itemID)")
+            return nil
+        }
+        return candidate
     }
 
     private func sessionForCookies(_ cookies: [HTTPCookie], originalURL: URL) -> URLSession? {
@@ -338,7 +333,6 @@ private struct ArchiveOutcome {
     let metadata: LinkMetadata
     let htmlRelativePath: String?
     let archiveStatus: ArchiveStatus
-    let assetFileNames: [String]
     let bundleData: Data?
 }
 

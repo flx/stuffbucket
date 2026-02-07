@@ -1,24 +1,21 @@
 import Foundation
-import CoreData
 
-/// Resolves document file locations, falling back to CloudKit bundle extraction when iCloud Drive files aren't available.
+/// Resolves document file locations, falling back to CloudKit bundle extraction when local files are unavailable.
 public enum DocumentResolver {
 
     /// Result of resolving a document location
     public struct ResolvedDocument {
-        /// URL to the document file (either iCloud Drive or local cache)
+        /// URL to the document file (either local storage or local cache)
         public let documentURL: URL
         /// Whether the file came from the local cache (extracted from bundle)
         public let isFromCache: Bool
-        /// Whether the file needs to be downloaded from iCloud
-        public let needsDownload: Bool
     }
 
     /// Resolves the best available document location for an item.
-    /// If iCloud Drive file isn't available but a bundle exists, extracts to local cache.
+    /// If the local file isn't available but a bundle exists, extracts to local cache.
     /// - Parameters:
     ///   - item: The Item with document data
-    ///   - forceExtract: If true, always extract from bundle even if iCloud file exists
+    ///   - forceExtract: If true, always extract from bundle even if local file exists
     /// - Returns: ResolvedDocument with file location, or nil if no document available
     public static func resolve(item: Item, forceExtract: Bool = false) -> ResolvedDocument? {
         guard let itemID = item.id else { return nil }
@@ -33,8 +30,7 @@ public enum DocumentResolver {
         if localAvailable {
             return ResolvedDocument(
                 documentURL: localURL,
-                isFromCache: false,
-                needsDownload: false
+                isFromCache: false
             )
         }
 
@@ -60,8 +56,7 @@ public enum DocumentResolver {
             if fileManager.fileExists(atPath: cacheFileURL.path) {
                 return ResolvedDocument(
                     documentURL: cacheFileURL,
-                    isFromCache: true,
-                    needsDownload: false
+                    isFromCache: true
                 )
             }
         }
@@ -69,14 +64,8 @@ public enum DocumentResolver {
         // No bundle available, return the local path (file may not exist yet on this device).
         return ResolvedDocument(
             documentURL: localURL,
-            isFromCache: false,
-            needsDownload: false
+            isFromCache: false
         )
-    }
-
-    /// No-op in CloudKit-only mode.
-    public static func startDownloading(_ url: URL) {
-        _ = url
     }
 
     /// Checks if a file is ready locally.
@@ -84,8 +73,8 @@ public enum DocumentResolver {
         FileManager.default.fileExists(atPath: url.path)
     }
 
-    /// Checks if the local document exists on this device.
-    public static func isICloudDocumentFullySynced(item: Item) -> Bool {
+    /// Checks if the primary local document copy exists on this device.
+    public static func hasLocalDocumentCopy(item: Item) -> Bool {
         guard let relativePath = item.documentRelativePath, !relativePath.isEmpty else { return false }
         let localURL = DocumentStorage.url(forRelativePath: relativePath)
         return isFileReady(localURL)
@@ -93,16 +82,14 @@ public enum DocumentResolver {
 
     /// Cleans up extracted cache files when a local primary copy exists.
     /// Bundle data is intentionally retained for CloudKit-authoritative sync.
-    /// Call this from a managed object context.
-    public static func cleanupBundleIfSynced(item: Item, context: NSManagedObjectContext) {
-        guard isICloudDocumentFullySynced(item: item) else { return }
+    public static func cleanupCacheIfLocalCopyExists(item: Item) {
+        guard hasLocalDocumentCopy(item: item) else { return }
 
         // Clean up local extraction cache when primary file is present.
         if let itemID = item.id {
             let cacheDir = localCacheDirectoryURL(for: itemID)
             try? FileManager.default.removeItem(at: cacheDir)
         }
-        _ = context
     }
 
     // MARK: - Cache Paths

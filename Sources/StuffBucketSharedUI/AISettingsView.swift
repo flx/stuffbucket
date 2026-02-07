@@ -20,6 +20,7 @@ public struct AISettingsView: View {
     @State private var materializedRootPath: String?
     @State private var showSyncResetConfirmation = false
     @State private var isResettingSyncData = false
+    @State private var modelRefreshTask: Task<Void, Never>?
 
     public init() {}
 
@@ -55,6 +56,13 @@ public struct AISettingsView: View {
                 openAIKey = keyStorage.openAIAPIKey ?? ""
                 maxSyncFileSizeMB = SyncPolicy.maxFileSizeMB
                 materializedRootPath = MaterializedDocumentStore.selectedRootPath()
+                refreshModelsForCurrentProvider()
+            }
+            .onChange(of: keyStorage.selectedProvider) { _, _ in
+                refreshModelsForCurrentProvider()
+            }
+            .onDisappear {
+                modelRefreshTask?.cancel()
             }
             .alert("Validation Error", isPresented: .constant(validationError != nil)) {
                 Button("OK") { validationError = nil }
@@ -262,30 +270,20 @@ public struct AISettingsView: View {
     }
 
     private var defaultModelID: String {
-        switch keyStorage.selectedProvider {
-        case .anthropic:
-            return AnthropicModelDefaults.defaultModelID
-        case .openAI:
-            return OpenAIModelDefaults.defaultModelID
-        }
+        defaultModelID(for: keyStorage.selectedProvider)
     }
 
     private func saveClaudeKey() {
         guard !claudeKey.isEmpty else { return }
         isValidatingClaude = true
+        modelRefreshTask?.cancel()
 
         Task {
             do {
-                let client = AnthropicClient(apiKey: claudeKey)
-                let models = try await client.validateAPIKey()
+                let models = try await fetchModels(for: .anthropic, apiKey: claudeKey)
                 await MainActor.run {
                     keyStorage.setClaudeAPIKey(claudeKey)
-                    if !models.isEmpty {
-                        claudeModels = models
-                    }
-                    if keyStorage.selectedModelID == nil {
-                        keyStorage.setSelectedModelID(AnthropicModelDefaults.defaultModelID)
-                    }
+                    applyModels(models, for: .anthropic)
                     isValidatingClaude = false
                 }
             } catch {
@@ -300,23 +298,14 @@ public struct AISettingsView: View {
     private func saveOpenAIKey() {
         guard !openAIKey.isEmpty else { return }
         isValidatingOpenAI = true
+        modelRefreshTask?.cancel()
 
         Task {
             do {
-                let client = OpenAIClient(apiKey: openAIKey)
-                let allModels = try await client.validateAPIKey()
+                let models = try await fetchModels(for: .openAI, apiKey: openAIKey)
                 await MainActor.run {
                     keyStorage.setOpenAIAPIKey(openAIKey)
-                    // Filter to chat models only
-                    let chatModels = allModels.filter { model in
-                        model.hasPrefix("gpt-4") || model.hasPrefix("gpt-3.5")
-                    }
-                    if !chatModels.isEmpty {
-                        openAIModels = chatModels
-                    }
-                    if keyStorage.selectedModelID == nil {
-                        keyStorage.setSelectedModelID(OpenAIModelDefaults.defaultModelID)
-                    }
+                    applyModels(models, for: .openAI)
                     isValidatingOpenAI = false
                 }
             } catch {
@@ -325,6 +314,103 @@ public struct AISettingsView: View {
                     isValidatingOpenAI = false
                 }
             }
+        }
+    }
+
+    private func refreshModelsForCurrentProvider() {
+        modelRefreshTask?.cancel()
+
+        let provider = keyStorage.selectedProvider
+        let key: String?
+        switch provider {
+        case .anthropic:
+            key = keyStorage.claudeAPIKey
+        case .openAI:
+            key = keyStorage.openAIAPIKey
+        }
+
+        guard let key, !key.isEmpty else {
+            applyModels([], for: provider)
+            return
+        }
+
+        modelRefreshTask = Task {
+            do {
+                let models = try await fetchModels(for: provider, apiKey: key)
+                try Task.checkCancellation()
+                await MainActor.run {
+                    guard keyStorage.selectedProvider == provider else { return }
+                    applyModels(models, for: provider)
+                }
+            } catch is CancellationError {
+                return
+            } catch {
+                await MainActor.run {
+                    guard keyStorage.selectedProvider == provider else { return }
+                    applyModels([], for: provider)
+                }
+            }
+        }
+    }
+
+    private func fetchModels(for provider: AIProvider, apiKey: String) async throws -> [String] {
+        switch provider {
+        case .anthropic:
+            let client = AnthropicClient(apiKey: apiKey)
+            return try await client.validateAPIKey()
+        case .openAI:
+            let client = OpenAIClient(apiKey: apiKey)
+            let allModels = try await client.validateAPIKey()
+            return OpenAIClient.chatModelIDs(from: allModels)
+        }
+    }
+
+    private func applyModels(_ models: [String], for provider: AIProvider) {
+        let effectiveModels = models.isEmpty ? fallbackModels(for: provider) : models
+        switch provider {
+        case .anthropic:
+            claudeModels = effectiveModels
+        case .openAI:
+            openAIModels = effectiveModels
+        }
+
+        guard keyStorage.selectedProvider == provider else { return }
+        ensureValidSelectedModel(for: provider, availableModels: effectiveModels)
+    }
+
+    private func ensureValidSelectedModel(for provider: AIProvider, availableModels: [String]) {
+        guard !availableModels.isEmpty else {
+            keyStorage.setSelectedModelID(nil)
+            return
+        }
+
+        if let selectedModel = keyStorage.selectedModelID, availableModels.contains(selectedModel) {
+            return
+        }
+
+        let preferredModel = defaultModelID(for: provider)
+        if availableModels.contains(preferredModel) {
+            keyStorage.setSelectedModelID(preferredModel)
+        } else {
+            keyStorage.setSelectedModelID(availableModels[0])
+        }
+    }
+
+    private func defaultModelID(for provider: AIProvider) -> String {
+        switch provider {
+        case .anthropic:
+            return AnthropicModelDefaults.defaultModelID
+        case .openAI:
+            return OpenAIModelDefaults.defaultModelID
+        }
+    }
+
+    private func fallbackModels(for provider: AIProvider) -> [String] {
+        switch provider {
+        case .anthropic:
+            return AnthropicModelDefaults.availableModels
+        case .openAI:
+            return OpenAIModelDefaults.availableModels
         }
     }
 

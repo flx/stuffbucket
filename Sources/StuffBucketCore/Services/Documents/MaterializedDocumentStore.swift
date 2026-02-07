@@ -7,6 +7,7 @@ import AppKit
 public enum MaterializedDocumentStore {
 #if os(macOS)
     private static let bookmarkKey = "com.digitalhandstand.stuffbucket.materializedDocumentFolderBookmark"
+    private static let pathKey = "com.digitalhandstand.stuffbucket.materializedDocumentFolderPath"
     private static let materializedSubfolder = "StuffBucket"
 
     public static func selectedRootPath() -> String? {
@@ -28,12 +29,13 @@ public enum MaterializedDocumentStore {
         guard response == .OK, let url = panel.url else {
             throw SyncError.materializationCancelled
         }
-        try storeRootURL(url)
+        storeRootURL(url)
         return url
     }
 
     public static func clearRootFolderSelection() {
         UserDefaults.standard.removeObject(forKey: bookmarkKey)
+        UserDefaults.standard.removeObject(forKey: pathKey)
     }
 
     public static func materializeDocument(for item: Item) throws -> URL {
@@ -84,27 +86,45 @@ public enum MaterializedDocumentStore {
         try? FileManager.default.removeItem(at: folder)
     }
 
-    private static func storeRootURL(_ url: URL) throws {
-        let bookmark = try url.bookmarkData(options: [.withSecurityScope], includingResourceValuesForKeys: nil, relativeTo: nil)
-        UserDefaults.standard.set(bookmark, forKey: bookmarkKey)
+    private static func storeRootURL(_ url: URL) {
+        let normalizedURL = url.standardizedFileURL
+        UserDefaults.standard.set(normalizedURL.path, forKey: pathKey)
+
+        do {
+            let bookmark = try normalizedURL.bookmarkData(
+                options: [.withSecurityScope],
+                includingResourceValuesForKeys: nil,
+                relativeTo: nil
+            )
+            UserDefaults.standard.set(bookmark, forKey: bookmarkKey)
+        } catch {
+            // Some folders/providers fail bookmark creation; keep path fallback so the app remains usable.
+            UserDefaults.standard.removeObject(forKey: bookmarkKey)
+            NSLog("MaterializedDocumentStore: failed to create security-scoped bookmark: \(error)")
+        }
     }
 
     private static func resolveRootURL() -> URL? {
-        guard let data = UserDefaults.standard.data(forKey: bookmarkKey) else { return nil }
-        var isStale = false
-        guard let url = try? URL(
-            resolvingBookmarkData: data,
-            options: [.withSecurityScope],
-            relativeTo: nil,
-            bookmarkDataIsStale: &isStale
-        ) else {
-            return nil
+        if let data = UserDefaults.standard.data(forKey: bookmarkKey) {
+            var isStale = false
+            if let url = try? URL(
+                resolvingBookmarkData: data,
+                options: [.withSecurityScope],
+                relativeTo: nil,
+                bookmarkDataIsStale: &isStale
+            ) {
+                if isStale {
+                    storeRootURL(url)
+                }
+                return url
+            }
         }
 
-        if isStale {
-            try? storeRootURL(url)
+        if let path = UserDefaults.standard.string(forKey: pathKey), !path.isEmpty {
+            return URL(fileURLWithPath: path, isDirectory: true)
         }
-        return url
+
+        return nil
     }
 #else
     public static func selectedRootPath() -> String? { nil }

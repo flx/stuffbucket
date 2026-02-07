@@ -124,17 +124,8 @@ struct ContentView: View {
                     if searchText.isEmpty {
                         Section("Stuff") {
                             if recentItems.isEmpty {
-                                VStack(alignment: .leading, spacing: 12) {
-                                    Text("No items yet")
-                                        .foregroundStyle(.secondary)
-                                    Button("Add Link...") {
-                                        addLinkText = ""
-                                        isShowingAddLinkAlert = true
-                                    }
-                                    Button("Import Document...") {
-                                        isImportingDocument = true
-                                    }
-                                }
+                                Text("No items yet")
+                                    .foregroundStyle(.secondary)
                             } else {
                                 ForEach(recentItems, id: \.objectID) { item in
                                     if let itemID = item.id {

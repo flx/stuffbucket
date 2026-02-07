@@ -4,15 +4,18 @@ import CloudKit
 
 public enum SyncResetService {
     public static func resetLocalData(persistence: PersistenceController = .shared) async throws {
-        try await deleteAllManagedObjects(persistence: persistence)
-        deleteLocalStorageFiles()
-        MaterializedDocumentStore.resetMaterializedCopies()
-        SearchIndexer.shared.resetIndex()
+        try await resetData(persistence: persistence, includeCloudKit: false)
     }
 
     public static func resetLocalAndCloudKitData(persistence: PersistenceController = .shared) async throws {
+        try await resetData(persistence: persistence, includeCloudKit: true)
+    }
+
+    private static func resetData(persistence: PersistenceController, includeCloudKit: Bool) async throws {
         try await deleteAllManagedObjects(persistence: persistence)
-        try await purgeCloudKitPrivateZones()
+        if includeCloudKit {
+            try await purgeCloudKitPrivateZones()
+        }
         deleteLocalStorageFiles()
         MaterializedDocumentStore.resetMaterializedCopies()
         SearchIndexer.shared.resetIndex()
@@ -41,16 +44,11 @@ public enum SyncResetService {
         let root = StoragePaths.localRootURL(fileManager: fm)
         try? fm.removeItem(at: root)
 
-        let archiveCache = fm.urls(for: .cachesDirectory, in: .userDomainMask).first?
-            .appendingPathComponent("ExtractedArchives", isDirectory: true)
-        if let archiveCache {
-            try? fm.removeItem(at: archiveCache)
-        }
-
-        let documentCache = fm.urls(for: .cachesDirectory, in: .userDomainMask).first?
-            .appendingPathComponent("ExtractedDocuments", isDirectory: true)
-        if let documentCache {
-            try? fm.removeItem(at: documentCache)
+        if let cacheRoot = fm.urls(for: .cachesDirectory, in: .userDomainMask).first {
+            for folder in ["ExtractedArchives", "ExtractedDocuments"] {
+                let directory = cacheRoot.appendingPathComponent(folder, isDirectory: true)
+                try? fm.removeItem(at: directory)
+            }
         }
     }
 
@@ -81,11 +79,12 @@ public enum SyncResetService {
     private static func deleteZones(_ zoneIDs: [CKRecordZone.ID], database: CKDatabase) async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             let operation = CKModifyRecordZonesOperation(recordZonesToSave: nil, recordZoneIDsToDelete: zoneIDs)
-            operation.modifyRecordZonesCompletionBlock = { _, _, error in
-                if let error {
-                    continuation.resume(throwing: error)
-                } else {
+            operation.modifyRecordZonesResultBlock = { result in
+                switch result {
+                case .success:
                     continuation.resume(returning: ())
+                case .failure(let error):
+                    continuation.resume(throwing: error)
                 }
             }
             database.add(operation)

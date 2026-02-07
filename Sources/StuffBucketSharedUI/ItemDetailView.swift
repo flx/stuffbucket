@@ -25,7 +25,6 @@ struct ArchivePresentation: Identifiable {
     let itemID: UUID
     let url: URL
     let title: String
-    let assetManifestJSON: String?
     let archiveZipData: Data?
 }
 
@@ -44,6 +43,7 @@ private struct LeftAlignedTextField: NSViewRepresentable {
     @Binding var text: String
     var placeholder: String? = nil
     var font: NSFont? = nil
+    var onSubmit: (() -> Void)? = nil
 
     func makeNSView(context: Context) -> NSTextField {
         let field = NSTextField(string: text)
@@ -90,6 +90,23 @@ private struct LeftAlignedTextField: NSViewRepresentable {
         func controlTextDidChange(_ notification: Notification) {
             guard let field = notification.object as? NSTextField else { return }
             parent.text = field.stringValue
+        }
+
+        func controlTextDidEndEditing(_ notification: Notification) {
+            guard let field = notification.object as? NSTextField else { return }
+            parent.text = field.stringValue
+            parent.onSubmit?()
+        }
+
+        func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
+            guard commandSelector == #selector(NSResponder.insertNewline(_:)),
+                  let field = control as? NSTextField else {
+                return false
+            }
+            parent.text = field.stringValue
+            parent.onSubmit?()
+            field.window?.makeFirstResponder(nil)
+            return true
         }
     }
 }
@@ -189,7 +206,6 @@ struct ItemDetailView: View {
                     itemID: presentation.itemID,
                     url: presentation.url,
                     title: presentation.title,
-                    assetManifestJSON: presentation.assetManifestJSON,
                     archiveZipData: presentation.archiveZipData
                 )
                 .environment(\.managedObjectContext, context)
@@ -214,54 +230,68 @@ struct ItemDetailView: View {
     }
 
     private func baseDetailView(for item: Item) -> some View {
-        var base = AnyView(detailForm(for: item))
-        base = AnyView(base.navigationTitle(displayTitle(for: item)))
-        base = AnyView(base.onAppear { syncFromItem(item) })
-        base = AnyView(base.onChange(of: item.title ?? "") { _, _ in syncFromItem(item) })
-        base = AnyView(base.onChange(of: item.tags ?? "") { _, _ in syncFromItem(item) })
-        base = AnyView(base.onChange(of: item.textContent ?? "") { _, _ in syncFromItem(item) })
-        base = AnyView(base.onChange(of: item.linkURL ?? "") { _, _ in syncFromItem(item) })
-        base = AnyView(base.onChange(of: linkText) { _, newValue in
-            // Only auto-apply link changes when NOT in edit mode
-            // In edit mode, changes are applied when user taps Done
-            guard !isEditingLink else { return }
-            linkUpdateTask?.cancel()
-            linkUpdateTask = Task {
-                try? await Task.sleep(nanoseconds: 500_000_000)
-                _ = await MainActor.run {
-                    applyLink(newValue, to: item)
+        let base = detailForm(for: item)
+        let withItemSync = applyingItemSyncHandlers(to: base, item: item)
+        let withEditHandlers = applyingEditHandlers(to: withItemSync, item: item)
+        return applyingDocumentImporter(to: withEditHandlers, item: item)
+    }
+
+    private func applyingItemSyncHandlers<V: View>(to view: V, item: Item) -> some View {
+        view
+            .navigationTitle(displayTitle(for: item))
+            .onAppear { syncFromItem(item) }
+            .onChange(of: item.title ?? "") { _, _ in syncFromItem(item) }
+            .onChange(of: item.tags ?? "") { _, _ in syncFromItem(item) }
+            .onChange(of: item.textContent ?? "") { _, _ in syncFromItem(item) }
+            .onChange(of: item.linkURL ?? "") { _, _ in syncFromItem(item) }
+    }
+
+    private func applyingEditHandlers<V: View>(to view: V, item: Item) -> some View {
+        view
+            .onChange(of: linkText) { _, newValue in
+                // Only auto-apply link changes when NOT in edit mode
+                // In edit mode, changes are applied when user taps Done
+                guard !isEditingLink else { return }
+                linkUpdateTask?.cancel()
+                linkUpdateTask = Task {
+                    try? await Task.sleep(nanoseconds: 500_000_000)
+                    _ = await MainActor.run {
+                        applyLink(newValue, to: item)
+                    }
                 }
             }
-        })
-        base = AnyView(base.onChange(of: titleText) { _, newValue in
-            applyTitle(newValue, to: item)
-        })
-        base = AnyView(base.onChange(of: isEditingLink) { _, isEditing in
-            // When exiting edit mode, apply the link
-            if !isEditing {
-                linkUpdateTask?.cancel()
-                applyLink(linkText, to: item)
+            .onChange(of: titleText) { _, newValue in
+                applyTitle(newValue, to: item)
             }
-        })
-        base = AnyView(base.onChange(of: tagsText) { _, newValue in
-            applyTags(newValue, to: item)
-        })
-        base = AnyView(base.onChange(of: collectionsText) { _, newValue in
-            applyCollections(newValue, to: item)
-        })
-        base = AnyView(base.onChange(of: contentText) { _, newValue in
-            // Only auto-apply content changes when NOT in edit mode
-            // In edit mode, changes are applied when user taps Done
-            guard !isEditingSnippet else { return }
-            applyContent(newValue, to: item)
-        })
-        base = AnyView(base.onChange(of: isEditingSnippet) { _, isEditing in
-            // When exiting snippet edit mode, apply the content
-            if !isEditing {
-                applyContent(contentText, to: item)
+            .onChange(of: isEditingLink) { _, isEditing in
+                // When exiting edit mode, apply the link
+                if !isEditing {
+                    linkUpdateTask?.cancel()
+                    applyLink(linkText, to: item)
+                }
             }
-        })
-        base = AnyView(base.fileImporter(
+            .onChange(of: tagsText) { _, newValue in
+                applyTags(newValue, to: item)
+            }
+            .onChange(of: collectionsText) { _, newValue in
+                applyCollections(newValue, to: item)
+            }
+            .onChange(of: contentText) { _, newValue in
+                // Only auto-apply content changes when NOT in edit mode
+                // In edit mode, changes are applied when user taps Done
+                guard !isEditingSnippet else { return }
+                applyContent(newValue, to: item)
+            }
+            .onChange(of: isEditingSnippet) { _, isEditing in
+                // When exiting snippet edit mode, apply the content
+                if !isEditing {
+                    applyContent(contentText, to: item)
+                }
+            }
+    }
+
+    private func applyingDocumentImporter<V: View>(to view: V, item: Item) -> some View {
+        view.fileImporter(
             isPresented: $isImportingDocument,
             allowedContentTypes: [.item],
             allowsMultipleSelection: false
@@ -274,8 +304,7 @@ struct ItemDetailView: View {
             case .failure:
                 break
             }
-        })
-        return base
+        }
     }
 
     private func detailForm(for item: Item) -> some View {
@@ -382,7 +411,10 @@ struct ItemDetailView: View {
         LeftAlignedTextField(
             text: $titleText,
             placeholder: displayTitle(for: item),
-            font: NSFont.preferredFont(forTextStyle: .headline)
+            font: NSFont.preferredFont(forTextStyle: .headline),
+            onSubmit: {
+                NSApp.keyWindow?.makeFirstResponder(nil)
+            }
         )
         .frame(maxWidth: .infinity, alignment: .leading)
 #endif
@@ -565,16 +597,24 @@ struct ItemDetailView: View {
         }
     }
 
+    @discardableResult
+    private func saveContextIfNeeded() -> Bool {
+        guard context.hasChanges else { return true }
+        do {
+            try context.save()
+            return true
+        } catch {
+            context.rollback()
+            return false
+        }
+    }
+
     private func applyTags(_ text: String, to item: Item) {
         let parsed = parseTags(text)
         guard parsed != item.displayTagList else { return }
         item.setDisplayTagList(parsed)
         item.updatedAt = Date()
-        do {
-            try context.save()
-        } catch {
-            context.rollback()
-        }
+        _ = saveContextIfNeeded()
     }
 
     private func applyCollections(_ text: String, to item: Item) {
@@ -582,11 +622,7 @@ struct ItemDetailView: View {
         guard parsed != item.collectionList else { return }
         item.setCollectionList(parsed)
         item.updatedAt = Date()
-        do {
-            try context.save()
-        } catch {
-            context.rollback()
-        }
+        _ = saveContextIfNeeded()
     }
 
     private func applyContent(_ text: String, to item: Item) {
@@ -594,11 +630,7 @@ struct ItemDetailView: View {
         guard text != current else { return }
         item.textContent = text
         item.updatedAt = Date()
-        do {
-            try context.save()
-        } catch {
-            context.rollback()
-        }
+        _ = saveContextIfNeeded()
     }
 
     private func applyTitle(_ text: String, to item: Item) {
@@ -609,29 +641,30 @@ struct ItemDetailView: View {
         guard newValue != currentValue else { return }
         item.title = newValue
         item.updatedAt = Date()
-        do {
-            try context.save()
-        } catch {
-            context.rollback()
-        }
+        _ = saveContextIfNeeded()
     }
 
     private func applyLink(_ text: String, to item: Item) {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         if trimmed.isEmpty {
-            guard item.linkURL != nil || item.linkTitle != nil || item.archiveStatus != nil else { return }
+            guard item.linkURL != nil ||
+                    item.linkTitle != nil ||
+                    item.linkAuthor != nil ||
+                    item.linkPublishedDate != nil ||
+                    item.htmlRelativePath != nil ||
+                    item.archiveStatus != nil ||
+                    item.archiveZipData != nil ||
+                    item.assetManifestJSON != nil else { return }
             item.linkURL = nil
             item.linkTitle = nil
             item.linkAuthor = nil
             item.linkPublishedDate = nil
             item.htmlRelativePath = nil
             item.archiveStatus = nil
+            item.archiveZipData = nil
+            item.assetManifestJSON = nil
             item.updatedAt = Date()
-            do {
-                try context.save()
-            } catch {
-                context.rollback()
-            }
+            _ = saveContextIfNeeded()
             return
         }
 
@@ -650,11 +683,10 @@ struct ItemDetailView: View {
         item.linkPublishedDate = nil
         item.htmlRelativePath = nil
         item.archiveStatus = nil
+        item.archiveZipData = nil
+        item.assetManifestJSON = nil
         item.updatedAt = Date()
-        do {
-            try context.save()
-        } catch {
-            context.rollback()
+        guard saveContextIfNeeded() else {
             return
         }
         triggerArchive(for: item)
@@ -690,7 +722,7 @@ struct ItemDetailView: View {
 #if os(macOS)
             HStack(spacing: 12) {
                 Button {
-                    openDocument(at: documentURL, relativePath: item.documentRelativePath, item: item)
+                    openDocument(at: documentURL, item: item)
                 } label: {
                     Label("Open", systemImage: "arrow.up.forward.app")
                 }
@@ -712,7 +744,7 @@ struct ItemDetailView: View {
             }
 #else
             Button {
-                openDocument(at: documentURL, relativePath: item.documentRelativePath, item: item)
+                openDocument(at: documentURL, item: item)
             } label: {
                 Label(isPreparingDocument ? "Preparing..." : "Open Document", systemImage: "doc.text")
             }
@@ -733,7 +765,7 @@ struct ItemDetailView: View {
         }
     }
 
-    private func openDocument(at url: URL, relativePath: String?, item: Item?) {
+    private func openDocument(at url: URL, item: Item?) {
 #if os(macOS)
         Task {
             await openDocumentOnMac(url, item: item)
@@ -743,7 +775,6 @@ struct ItemDetailView: View {
             await openDocumentOnIOS(url, item: item)
         }
 #endif
-        _ = relativePath
     }
 
 #if os(macOS)
@@ -754,10 +785,6 @@ struct ItemDetailView: View {
             if let item = item, let resolved = DocumentResolver.resolve(item: item) {
                 if resolved.isFromCache {
                     return resolved.documentURL
-                }
-
-                if resolved.needsDownload {
-                    DocumentResolver.startDownloading(resolved.documentURL)
                 }
 
                 // Check if file is ready
@@ -777,7 +804,7 @@ struct ItemDetailView: View {
             NSWorkspace.shared.open(resolvedURL)
         }
 
-        // Trigger cleanup if iCloud is synced (fire and forget)
+        // Trigger cache cleanup when the primary local file exists (fire and forget).
         if let item = item, let itemID = item.id {
             let ctx = context
             Task.detached(priority: .background) {
@@ -786,7 +813,7 @@ struct ItemDetailView: View {
                     request.predicate = NSPredicate(format: "id == %@", itemID as CVarArg)
                     request.fetchLimit = 1
                     guard let fetchedItem = try? ctx.fetch(request).first else { return }
-                    DocumentResolver.cleanupBundleIfSynced(item: fetchedItem, context: ctx)
+                    DocumentResolver.cleanupCacheIfLocalCopyExists(item: fetchedItem)
                 }
             }
         }
@@ -812,7 +839,7 @@ struct ItemDetailView: View {
             quickLookURL = previewURL
         }
 
-        // Trigger cleanup if document is from cache but iCloud is now synced
+        // Trigger cache cleanup if a primary local copy is now available.
         if let item = item {
             triggerDocumentCleanupIfNeeded(item: item)
         }
@@ -826,11 +853,6 @@ struct ItemDetailView: View {
                 if resolved.isFromCache {
                     // Bundle was extracted, return cached file
                     return resolved.documentURL
-                }
-
-                if resolved.needsDownload {
-                    // Start download
-                    DocumentResolver.startDownloading(resolved.documentURL)
                 }
 
                 // Check if file is available
@@ -927,7 +949,7 @@ struct ItemDetailView: View {
 
     private func triggerDocumentCleanupIfNeeded(item: Item) {
         context.perform {
-            DocumentResolver.cleanupBundleIfSynced(item: item, context: context)
+            DocumentResolver.cleanupCacheIfLocalCopyExists(item: item)
         }
     }
 #endif
@@ -957,25 +979,35 @@ struct ItemDetailView: View {
         let pageURL = item.archivedPageURL
         let readerURL = item.archivedReaderURL
         let pageExpected = (item.htmlRelativePath?.isEmpty == false)
-        let readerAvailable = archiveFileExists(readerURL)
+        let readerAvailable = archiveReaderAvailable(for: item)
 
-        Toggle("Reader Mode", isOn: $useReaderMode)
-            .disabled(!readerAvailable)
-
-        Button("View Archive") {
-            let url: URL?
-            let title: String
-            if useReaderMode, let reader = readerURL, readerAvailable {
-                url = reader
-                title = "Reader Archive"
-            } else {
-                url = pageURL
-                title = "Page Archive"
+        HStack(spacing: 8) {
+            Button("View Archive") {
+                let url: URL?
+                let title: String
+                if useReaderMode, let reader = readerURL, readerAvailable {
+                    url = reader
+                    title = "Reader Archive"
+                } else {
+                    url = pageURL
+                    title = "Page Archive"
+                }
+                guard let archiveURL = url else { return }
+                openArchive(item: item, url: archiveURL, title: title)
             }
-            guard let archiveURL = url else { return }
-            openArchive(item: item, url: archiveURL, title: title)
+            .disabled(!pageExpected)
+
+            Spacer(minLength: 12)
+
+            Text("Reader Mode")
+
+            Toggle("", isOn: $useReaderMode)
+                .labelsHidden()
+                .toggleStyle(.switch)
+                .controlSize(.small)
+                .accessibilityLabel("Reader Mode")
+                .disabled(!pageExpected || !readerAvailable)
         }
-        .disabled(!pageExpected)
 
 #if os(macOS)
         if isPreparingArchive {
@@ -1004,13 +1036,28 @@ struct ItemDetailView: View {
         return FileManager.default.fileExists(atPath: url.path)
     }
 
+    private func archiveReaderAvailable(for item: Item) -> Bool {
+        if archiveFileExists(item.archivedReaderURL) {
+            return true
+        }
+
+        if let itemID = item.id {
+            let cacheReaderURL = LinkStorage.localCacheReaderURL(for: itemID)
+            if FileManager.default.fileExists(atPath: cacheReaderURL.path) {
+                return true
+            }
+        }
+
+        // If a CloudKit archive bundle is present, reader.html can be resolved from it for new archives.
+        return item.archiveZipData != nil
+    }
+
     private func openArchive(item: Item, url: URL, title: String) {
 #if os(iOS)
         archivePresentation = ArchivePresentation(
             itemID: item.id ?? UUID(),
             url: url,
             title: title,
-            assetManifestJSON: item.assetManifestJSON,
             archiveZipData: item.archiveZipData
         )
 #elseif os(macOS)
@@ -1057,44 +1104,9 @@ struct ItemDetailView: View {
         triggerArchiveCleanupIfNeeded(item: item)
     }
 
-    private func buildFilesToDownload(url: URL, assetManifestJSON: String?) -> [URL] {
-        var files: [URL] = [url]
-        let archiveFolder = url.deletingLastPathComponent()
-        let assetsFolder = archiveFolder.appendingPathComponent("assets", isDirectory: true)
-
-        // Use manifest if available
-        if let manifestJSON = assetManifestJSON,
-           let manifestData = manifestJSON.data(using: .utf8),
-           let assetFileNames = try? JSONDecoder().decode([String].self, from: manifestData) {
-            for fileName in assetFileNames {
-                files.append(assetsFolder.appendingPathComponent(fileName))
-            }
-        }
-
-        return files
-    }
-
-    private func waitForFilesOnBackground(_ urls: [URL], timeoutSeconds: Double) async -> Bool {
-        await Task.detached(priority: .userInitiated) {
-            let timeoutNanos = UInt64(timeoutSeconds * 1_000_000_000)
-            let step: UInt64 = 200_000_000
-            var waited: UInt64 = 0
-
-            while waited < timeoutNanos {
-                if Task.isCancelled { return false }
-                if urls.allSatisfy({ ArchiveResolver.isFileReady($0) }) {
-                    return true
-                }
-                try? await Task.sleep(nanoseconds: step)
-                waited += step
-            }
-            return urls.allSatisfy({ ArchiveResolver.isFileReady($0) })
-        }.value
-    }
-
     private func triggerArchiveCleanupIfNeeded(item: Item) {
         context.perform {
-            ArchiveResolver.cleanupBundleIfSynced(item: item, context: context)
+            ArchiveResolver.cleanupCacheIfLocalCopyExists(item: item)
         }
     }
 #endif
@@ -1125,9 +1137,7 @@ struct ItemDetailView: View {
         }
         item.setDisplayTagList(currentTags)
         item.updatedAt = Date()
-        if context.hasChanges {
-            try? context.save()
-        }
+        _ = saveContextIfNeeded()
         syncFromItem(item)
     }
 
@@ -1142,16 +1152,12 @@ struct ItemDetailView: View {
 
     private func trashItem(_ item: Item) {
         item.moveToTrash()
-        if context.hasChanges {
-            try? context.save()
-        }
+        _ = saveContextIfNeeded()
     }
 
     private func restoreItem(_ item: Item) {
         item.restoreFromTrash()
-        if context.hasChanges {
-            try? context.save()
-        }
+        _ = saveContextIfNeeded()
     }
 
     private func permanentlyDeleteItem(_ item: Item) {
@@ -1163,6 +1169,9 @@ struct ItemDetailView: View {
             let cacheDir = LinkStorage.localCacheDirectoryURL(for: itemID)
             try? FileManager.default.removeItem(at: cacheDir)
 
+            let documentCacheDir = DocumentResolver.localCacheDirectoryURL(for: itemID)
+            try? FileManager.default.removeItem(at: documentCacheDir)
+
             if let docPath = item.documentRelativePath {
                 let docURL = DocumentStorage.url(forRelativePath: docPath)
                 try? FileManager.default.removeItem(at: docURL.deletingLastPathComponent())
@@ -1170,9 +1179,7 @@ struct ItemDetailView: View {
         }
 
         context.delete(item)
-        if context.hasChanges {
-            try? context.save()
-        }
+        _ = saveContextIfNeeded()
     }
 
     private func deletionDateText(from trashedAt: Date) -> String {
@@ -1237,7 +1244,6 @@ struct ArchivedLinkSheet: View {
     let itemID: UUID
     let url: URL
     let title: String
-    let assetManifestJSON: String?
     let archiveZipData: Data?
 
     @Environment(\.managedObjectContext) private var context
@@ -1336,49 +1342,14 @@ struct ArchivedLinkSheet: View {
         }
     }
 
-    private func buildFilesToDownload() -> [URL] {
-        var files: [URL] = [url]
-        let archiveFolder = url.deletingLastPathComponent()
-        let assetsFolder = archiveFolder.appendingPathComponent("assets", isDirectory: true)
-
-        // Use manifest if available
-        if let manifestJSON = assetManifestJSON,
-           let manifestData = manifestJSON.data(using: .utf8),
-           let assetFileNames = try? JSONDecoder().decode([String].self, from: manifestData) {
-            for fileName in assetFileNames {
-                files.append(assetsFolder.appendingPathComponent(fileName))
-            }
-        }
-
-        return files
-    }
-
-    private func waitForFilesOnBackground(_ urls: [URL], timeoutSeconds: Double) async -> Bool {
-        await Task.detached(priority: .userInitiated) {
-            let timeoutNanos = UInt64(timeoutSeconds * 1_000_000_000)
-            let step: UInt64 = 200_000_000
-            var waited: UInt64 = 0
-
-            while waited < timeoutNanos {
-                if Task.isCancelled { return false }
-                if urls.allSatisfy({ ArchiveResolver.isFileReady($0) }) {
-                    return true
-                }
-                try? await Task.sleep(nanoseconds: step)
-                waited += step
-            }
-            return urls.allSatisfy({ ArchiveResolver.isFileReady($0) })
-        }.value
-    }
-
     private func triggerCleanupIfNeeded() {
-        // Clean up bundle data now that iCloud is synced
+        // Clean up extracted cache once the primary local archive exists.
         context.perform {
             let request = NSFetchRequest<Item>(entityName: "Item")
             request.predicate = NSPredicate(format: "id == %@", self.itemID as CVarArg)
             request.fetchLimit = 1
             guard let item = try? self.context.fetch(request).first else { return }
-            ArchiveResolver.cleanupBundleIfSynced(item: item, context: self.context)
+            ArchiveResolver.cleanupCacheIfLocalCopyExists(item: item)
         }
     }
 }

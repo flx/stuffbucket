@@ -33,21 +33,34 @@ public struct AnthropicClient {
     }
 
     public func validateAPIKey() async throws -> [String] {
-        // Anthropic doesn't have a models list endpoint like OpenAI
-        // We'll return the known models and validate by making a minimal request
-        let models = AnthropicModelDefaults.availableModels
+        do {
+            let request = makeRequest(path: "/v1/models", method: "GET")
+            let (data, response) = try await session.data(for: request)
+            try validate(response: response, data: data)
 
-        // Validate by checking if the key works with a minimal message
+            let decoded = try JSONDecoder().decode(ModelsResponse.self, from: data)
+            let modelIDs = decoded.data.map(\.id).sorted()
+            if !modelIDs.isEmpty {
+                return modelIDs
+            }
+        } catch is DecodingError {
+            // Fallback below.
+        } catch AnthropicClientError.httpStatus {
+            // Fallback below for older API behavior.
+        } catch AnthropicClientError.invalidResponse {
+            // Fallback below.
+        }
+
+        // Fallback for environments where the models endpoint is unavailable.
         let request = makeMessagesRequest(
             model: AnthropicModelDefaults.defaultModelID,
             messages: [["role": "user", "content": "Hi"]],
             maxTokens: 1
         )
 
-        let (_, response) = try await session.data(for: request)
-        try validate(response: response)
-
-        return models
+        let (data, response) = try await session.data(for: request)
+        try validate(response: response, data: data)
+        return AnthropicModelDefaults.availableModels
     }
 
     public func suggestTags(
@@ -64,7 +77,7 @@ public struct AnthropicClient {
         )
 
         let (data, response) = try await session.data(for: request)
-        try validate(response: response)
+        try validate(response: response, data: data)
 
         let decoded = try JSONDecoder().decode(MessagesResponse.self, from: data)
         guard let textContent = decoded.content.first(where: { $0.type == "text" }),
@@ -111,7 +124,7 @@ public struct AnthropicClient {
         )
 
         let (data, response) = try await session.data(for: request)
-        try validate(response: response)
+        try validate(response: response, data: data)
 
         let decoded = try JSONDecoder().decode(MessagesResponse.self, from: data)
         guard let textContent = decoded.content.first(where: { $0.type == "text" }),
@@ -128,12 +141,7 @@ public struct AnthropicClient {
         maxTokens: Int,
         system: String? = nil
     ) -> URLRequest {
-        let url = URL(string: "https://api.anthropic.com/v1/messages")!
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
-        request.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        var request = makeRequest(path: "/v1/messages", method: "POST")
 
         var body: [String: Any] = [
             "model": model,
@@ -155,12 +163,7 @@ public struct AnthropicClient {
         maxTokens: Int,
         system: String? = nil
     ) -> URLRequest {
-        let url = URL(string: "https://api.anthropic.com/v1/messages")!
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
-        request.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        var request = makeRequest(path: "/v1/messages", method: "POST")
 
         let messages: [[String: Any]] = [
             ["role": "user", "content": content]
@@ -180,12 +183,26 @@ public struct AnthropicClient {
         return request
     }
 
-    private func validate(response: URLResponse) throws {
+    private func makeRequest(path: String, method: String) -> URLRequest {
+        let url = URL(string: "https://api.anthropic.com\(path)")!
+        var request = URLRequest(url: url)
+        request.httpMethod = method
+        request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
+        request.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        return request
+    }
+
+    private func validate(response: URLResponse, data: Data? = nil) throws {
         guard let httpResponse = response as? HTTPURLResponse else {
             throw AnthropicClientError.invalidResponse
         }
         guard (200...299).contains(httpResponse.statusCode) else {
-            throw AnthropicClientError.httpStatus(httpResponse.statusCode, nil)
+            var errorMessage: String?
+            if let data {
+                errorMessage = String(data: data, encoding: .utf8)
+            }
+            throw AnthropicClientError.httpStatus(httpResponse.statusCode, errorMessage)
         }
     }
 }
@@ -197,6 +214,14 @@ private struct MessagesResponse: Decodable {
 private struct ContentBlock: Decodable {
     let type: String
     let text: String
+}
+
+private struct ModelsResponse: Decodable {
+    let data: [ModelInfo]
+}
+
+private struct ModelInfo: Decodable {
+    let id: String
 }
 
 public enum AnthropicModelDefaults {
