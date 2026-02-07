@@ -1,5 +1,8 @@
 import Foundation
 import CoreData
+import CoreGraphics
+import ImageIO
+import UniformTypeIdentifiers
 
 public enum TagSuggestionError: Error {
     case noAPIKey
@@ -22,6 +25,7 @@ public struct TagSuggestion: Identifiable, Hashable {
 
 public final class TagSuggestionService {
     private let keyStorage: AIKeyStorage
+    private static let anthropicMaxImageBytes = 5 * 1_024 * 1_024
 
     public init(keyStorage: AIKeyStorage = .shared) {
         self.keyStorage = keyStorage
@@ -43,16 +47,17 @@ public final class TagSuggestionService {
 
         // Check if item has a document attachment
         if let docInfo = extractDocumentData(from: item) {
-            switch docInfo.type {
+            let preparedDocInfo = try prepareDocumentForProvider(docInfo)
+            switch preparedDocInfo.type {
             case .image, .pdf:
                 // Send images and PDFs to vision/document API
-                let userPrompt = buildDocumentUserPrompt(item: item, documentType: docInfo.type)
+                let userPrompt = buildDocumentUserPrompt(item: item, documentType: preparedDocInfo.type)
                 response = try await suggestTagsWithDocument(
                     apiKey: apiKey,
                     systemPrompt: systemPrompt,
                     userPrompt: userPrompt,
-                    documentData: docInfo.data,
-                    mediaType: docInfo.mediaType,
+                    documentData: preparedDocInfo.data,
+                    mediaType: preparedDocInfo.mediaType,
                     model: modelID
                 )
             case .text:
@@ -88,7 +93,7 @@ public final class TagSuggestionService {
             )
         }
 
-        let tags = parseTagResponse(response)
+        let tags = Array(parseTagResponse(response).prefix(maxSuggestions))
         let existingTagsLower = Set(existingLibraryTags.map { $0.lowercased() })
 
         return tags.map { tag in
@@ -222,6 +227,9 @@ public final class TagSuggestionService {
             case "webp":
                 mediaType = "image/webp"
             case "heic", "heif":
+                if let converted = convertImageDataToJPEG(data) {
+                    return DocumentInfo(data: converted, mediaType: "image/jpeg", type: .image)
+                }
                 mediaType = "image/heic"
             default:
                 mediaType = "image/jpeg"
@@ -247,6 +255,83 @@ public final class TagSuggestionService {
 
     private func extractTextFromDocument(_ data: Data) -> String? {
         return String(data: data, encoding: .utf8)
+    }
+
+    private func prepareDocumentForProvider(_ docInfo: DocumentInfo) throws -> DocumentInfo {
+        guard keyStorage.selectedProvider == .anthropic, docInfo.type == .image else {
+            return docInfo
+        }
+
+        if docInfo.data.count <= Self.anthropicMaxImageBytes {
+            return docInfo
+        }
+
+        guard let compressed = compressImageForAnthropic(docInfo.data),
+              compressed.count <= Self.anthropicMaxImageBytes else {
+            throw TagSuggestionError.apiError(
+                "Image is too large for Claude. Please use a smaller image (max 5 MB)."
+            )
+        }
+
+        return DocumentInfo(data: compressed, mediaType: "image/jpeg", type: .image)
+    }
+
+    private func compressImageForAnthropic(_ data: Data) -> Data? {
+        guard let source = CGImageSourceCreateWithData(data as CFData, nil) else { return nil }
+
+        var bestCandidate: Data?
+        let maxPixelSteps: [Int] = [3072, 2560, 2048, 1600, 1280, 1024, 768]
+        let qualitySteps: [CGFloat] = [0.88, 0.78, 0.68, 0.58, 0.48, 0.38, 0.30]
+
+        for maxPixel in maxPixelSteps {
+            guard let image = makeThumbnail(from: source, maxPixelSize: maxPixel) else { continue }
+            for quality in qualitySteps {
+                guard let encoded = encodeJPEG(image: image, quality: quality) else { continue }
+                if bestCandidate == nil || encoded.count < bestCandidate!.count {
+                    bestCandidate = encoded
+                }
+                if encoded.count <= Self.anthropicMaxImageBytes {
+                    return encoded
+                }
+            }
+        }
+
+        return bestCandidate
+    }
+
+    private func makeThumbnail(from source: CGImageSource, maxPixelSize: Int) -> CGImage? {
+        let options: [CFString: Any] = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceThumbnailMaxPixelSize: maxPixelSize,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceShouldCache: false
+        ]
+        return CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary)
+    }
+
+    private func encodeJPEG(image: CGImage, quality: CGFloat) -> Data? {
+        let destinationData = NSMutableData()
+        guard let destination = CGImageDestinationCreateWithData(
+            destinationData,
+            UTType.jpeg.identifier as CFString,
+            1,
+            nil
+        ) else {
+            return nil
+        }
+        let options: [CFString: Any] = [kCGImageDestinationLossyCompressionQuality: quality]
+        CGImageDestinationAddImage(destination, image, options as CFDictionary)
+        guard CGImageDestinationFinalize(destination) else { return nil }
+        return destinationData as Data
+    }
+
+    private func convertImageDataToJPEG(_ data: Data) -> Data? {
+        guard let source = CGImageSourceCreateWithData(data as CFData, nil),
+              let image = CGImageSourceCreateImageAtIndex(source, 0, nil) else {
+            return nil
+        }
+
+        return encodeJPEG(image: image, quality: 0.9)
     }
 
     private func buildDocumentUserPrompt(item: Item, documentType: DocumentType) -> String {

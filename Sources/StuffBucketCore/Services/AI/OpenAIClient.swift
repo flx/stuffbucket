@@ -4,7 +4,7 @@ public enum OpenAIClientError: Error, LocalizedError {
     case invalidResponse
     case httpStatus(Int, String?)
     case decodingFailed
-    case emptyResponse
+    case emptyResponse(String?)
 
     public var errorDescription: String? {
         switch self {
@@ -17,7 +17,10 @@ public enum OpenAIClientError: Error, LocalizedError {
             return "OpenAI error: HTTP \(code)"
         case .decodingFailed:
             return "Failed to decode OpenAI response"
-        case .emptyResponse:
+        case .emptyResponse(let details):
+            if let details, !details.isEmpty {
+                return "OpenAI returned no text: \(details)"
+            }
             return "OpenAI returned an empty response"
         }
     }
@@ -41,6 +44,31 @@ public struct OpenAIClient {
         return decoded.data.map { $0.id }.sorted()
     }
 
+    public static func chatModelIDs(from modelIDs: [String]) -> [String] {
+        modelIDs.filter(isLikelyChatModel).sorted()
+    }
+
+    private static func isLikelyChatModel(_ modelID: String) -> Bool {
+        let normalized = modelID.lowercased()
+
+        if normalized.hasPrefix("ft:") { return false }
+        if normalized.contains("embedding") { return false }
+        if normalized.contains("moderation") { return false }
+        if normalized.contains("image") { return false }
+        if normalized.contains("audio") { return false }
+        if normalized.contains("realtime") { return false }
+        if normalized.contains("transcribe") { return false }
+        if normalized.contains("tts") { return false }
+        if normalized.hasPrefix("whisper") { return false }
+
+        return normalized.hasPrefix("gpt-")
+            || normalized.hasPrefix("chatgpt-")
+            || normalized.hasPrefix("o1")
+            || normalized.hasPrefix("o3")
+            || normalized.hasPrefix("o4")
+            || normalized.hasPrefix("o5")
+    }
+
     public func suggestTags(
         systemPrompt: String,
         userPrompt: String,
@@ -58,14 +86,7 @@ public struct OpenAIClient {
 
         let (data, response) = try await session.data(for: request)
         try validate(response: response, data: data)
-
-        let decoded = try JSONDecoder().decode(ChatCompletionResponse.self, from: data)
-        guard let content = decoded.choices.first?.message.content,
-              !content.isEmpty else {
-            throw OpenAIClientError.emptyResponse
-        }
-
-        return content
+        return try extractAssistantText(from: data)
     }
 
     public func suggestTagsWithDocument(
@@ -113,14 +134,7 @@ public struct OpenAIClient {
 
         let (data, response) = try await session.data(for: request)
         try validate(response: response, data: data)
-
-        let decoded = try JSONDecoder().decode(ChatCompletionResponse.self, from: data)
-        guard let content = decoded.choices.first?.message.content,
-              !content.isEmpty else {
-            throw OpenAIClientError.emptyResponse
-        }
-
-        return content
+        return try extractAssistantText(from: data)
     }
 
     private func makeRequest(path: String, method: String) -> URLRequest {
@@ -139,11 +153,14 @@ public struct OpenAIClient {
     ) -> URLRequest {
         var request = makeRequest(path: "/v1/chat/completions", method: "POST")
 
-        let body: [String: Any] = [
+        var body: [String: Any] = [
             "model": model,
-            "max_tokens": maxTokens,
             "messages": messages
         ]
+        body[tokenLimitParameterName(for: model)] = tokenLimitValue(for: model, maxTokens: maxTokens)
+        if let reasoningEffort = reasoningEffort(for: model) {
+            body["reasoning_effort"] = reasoningEffort
+        }
 
         request.httpBody = try? JSONSerialization.data(withJSONObject: body)
         return request
@@ -162,14 +179,110 @@ public struct OpenAIClient {
             ["role": "user", "content": userContent]
         ]
 
-        let body: [String: Any] = [
+        var body: [String: Any] = [
             "model": model,
-            "max_tokens": maxTokens,
             "messages": messages
         ]
+        body[tokenLimitParameterName(for: model)] = tokenLimitValue(for: model, maxTokens: maxTokens)
+        if let reasoningEffort = reasoningEffort(for: model) {
+            body["reasoning_effort"] = reasoningEffort
+        }
 
         request.httpBody = try? JSONSerialization.data(withJSONObject: body)
         return request
+    }
+
+    private func tokenLimitParameterName(for model: String) -> String {
+        let normalized = model.lowercased()
+        if normalized.hasPrefix("gpt-5")
+            || normalized.hasPrefix("o1")
+            || normalized.hasPrefix("o3")
+            || normalized.hasPrefix("o4")
+            || normalized.hasPrefix("o5") {
+            return "max_completion_tokens"
+        }
+        return "max_tokens"
+    }
+
+    private func tokenLimitValue(for model: String, maxTokens: Int) -> Int {
+        guard tokenLimitParameterName(for: model) == "max_completion_tokens" else {
+            return maxTokens
+        }
+        // Reasoning models can consume completion budget on internal reasoning.
+        // Keep a higher floor so we still get visible tag output.
+        return max(maxTokens, 1200)
+    }
+
+    private func reasoningEffort(for model: String) -> String? {
+        let normalized = model.lowercased()
+        guard tokenLimitParameterName(for: model) == "max_completion_tokens" else {
+            return nil
+        }
+        if normalized.hasPrefix("gpt-5-pro") {
+            return "high"
+        }
+        return "low"
+    }
+
+    private func extractAssistantText(from data: Data) throws -> String {
+        guard let root = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let choices = root["choices"] as? [[String: Any]],
+              let firstChoice = choices.first else {
+            throw OpenAIClientError.decodingFailed
+        }
+
+        let finishReason = firstChoice["finish_reason"] as? String
+        let message = firstChoice["message"] as? [String: Any]
+
+        if let content = message?["content"] as? String {
+            let trimmed = content.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !trimmed.isEmpty {
+                return trimmed
+            }
+        }
+
+        if let parts = message?["content"] as? [[String: Any]] {
+            let text = parts.compactMap { part -> String? in
+                guard let type = part["type"] as? String, type == "text" else { return nil }
+                return part["text"] as? String
+            }
+            .joined(separator: "\n")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+
+            if !text.isEmpty {
+                return text
+            }
+
+            if let refusal = parts.compactMap({ part -> String? in
+                guard let type = part["type"] as? String, type == "refusal" else { return nil }
+                return part["refusal"] as? String
+            }).first,
+               !refusal.isEmpty {
+                throw OpenAIClientError.emptyResponse(refusal)
+            }
+        }
+
+        if let refusal = message?["refusal"] as? String, !refusal.isEmpty {
+            throw OpenAIClientError.emptyResponse(refusal)
+        }
+
+        if finishReason == "length" {
+            throw OpenAIClientError.emptyResponse(
+                "Token limit reached before a visible answer was produced."
+            )
+        }
+        if finishReason == "content_filter" {
+            throw OpenAIClientError.emptyResponse(
+                "Content was filtered by the model safety system."
+            )
+        }
+        if finishReason == "tool_calls" {
+            throw OpenAIClientError.emptyResponse(
+                "Model returned tool calls instead of text."
+            )
+        }
+
+        throw OpenAIClientError.emptyResponse(nil)
     }
 
     private func validate(response: URLResponse, data: Data? = nil) throws {
@@ -206,16 +319,4 @@ private struct ModelsResponse: Decodable {
 
 private struct ModelInfo: Decodable {
     let id: String
-}
-
-private struct ChatCompletionResponse: Decodable {
-    let choices: [Choice]
-}
-
-private struct Choice: Decodable {
-    let message: Message
-}
-
-private struct Message: Decodable {
-    let content: String
 }
