@@ -5,6 +5,7 @@ import StuffBucketCore
 @main
 struct StuffBucketMacApp: App {
     @StateObject private var persistenceController = PersistenceController.shared
+    @State private var didRunInitialMaterializationPrompt = false
     @Environment(\.scenePhase) private var scenePhase
     private let captureObserver = SharedCaptureObserver {
         NSApp.activate(ignoringOtherApps: true)
@@ -23,6 +24,7 @@ struct StuffBucketMacApp: App {
                 .environment(\.managedObjectContext, persistenceController.viewContext)
                 .onAppear {
                     refreshPendingData(using: persistenceController)
+                    runInitialMaterializationPromptIfNeeded()
                 }
                 .onChange(of: scenePhase) { _, newPhase in
                     if newPhase == .active {
@@ -37,6 +39,14 @@ struct StuffBucketMacApp: App {
 
         Settings {
             AISettingsView()
+        }
+    }
+
+    private func runInitialMaterializationPromptIfNeeded() {
+        guard didRunInitialMaterializationPrompt == false else { return }
+        didRunInitialMaterializationPrompt = true
+        DispatchQueue.main.async {
+            MaterializedDocumentStore.promptForRootFolderIfNeededOnFirstLaunch()
         }
     }
 }

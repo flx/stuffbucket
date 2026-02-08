@@ -25,6 +25,7 @@
 		23AAA931C77F030BB05A7A1C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F116073320FB06FC953E4566 /* Assets.xcassets */; };
 		23CB31D0AFC51333762153AF /* LinkArchiver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AF01B94C0FF40F312225194 /* LinkArchiver.swift */; };
 		253EC276859FA1F651EE58E0 /* StuffBucketMacShareExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 93E12DDBAC061C565DA3D21B /* StuffBucketMacShareExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		2BEB44A3E68A4D7182D49659 /* StuffBucketShareExtensionIcon.icns in Resources */ = {isa = PBXBuildFile; fileRef = 2C67A7B9E9404D9E9F0A8D31 /* StuffBucketShareExtensionIcon.icns */; };
 		2EF760054F3B6D1BDC9442D5 /* ItemDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59DCBC7B3D1435C4D3287924 /* ItemDetailView.swift */; };
 		339AECEA3768EBF2A66C4034 /* DocumentResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 374C72029F837563A2BD3F63 /* DocumentResolver.swift */; };
 		34961F9179850DA307BE167C /* StuffBucketCore.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 5AE0A3DE6401EC33AC94C171 /* StuffBucketCore.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -207,6 +208,7 @@
 		17A07BF1D67735F33F4F6C02 /* ArchiveResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchiveResolver.swift; sourceTree = "<group>"; };
 		25A4DA1230BA55D528E93587 /* StuffBucketMac.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = StuffBucketMac.entitlements; sourceTree = "<group>"; };
 		2AF01B94C0FF40F312225194 /* LinkArchiver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinkArchiver.swift; sourceTree = "<group>"; };
+		2C67A7B9E9404D9E9F0A8D31 /* StuffBucketShareExtensionIcon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = StuffBucketShareExtensionIcon.icns; sourceTree = "<group>"; };
 		2F4C286550AA4838919B3DF4 /* project.yml */ = {isa = PBXFileReference; lastKnownFileType = text.yaml; path = project.yml; sourceTree = "<group>"; };
 		3229BC032C43225982B053D2 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		3519E626243FD84BBF5EDA7F /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceController.swift; sourceTree = "<group>"; };
@@ -335,6 +337,7 @@
 			children = (
 				4D938428DC51F63A22016D37 /* Info.plist */,
 				7DF1288BED3A4351F145A788 /* ShareViewController.swift */,
+				2C67A7B9E9404D9E9F0A8D31 /* StuffBucketShareExtensionIcon.icns */,
 				362CA95B53A55DBC2BE406C0 /* StuffBucketMacShareExtension.entitlements */,
 			);
 			path = StuffBucketMacShareExtension;
@@ -696,6 +699,7 @@
 			buildConfigurationList = E7FBF7DD3742969009C14542 /* Build configuration list for PBXNativeTarget "StuffBucketMacShareExtension" */;
 			buildPhases = (
 				0C2B310EC923B2B92A7EEF8D /* Sources */,
+				5FC1379E3C4D4EA5B54D860D /* Resources */,
 			);
 			buildRules = (
 			);
@@ -793,6 +797,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				23AAA931C77F030BB05A7A1C /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		5FC1379E3C4D4EA5B54D860D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2BEB44A3E68A4D7182D49659 /* StuffBucketShareExtensionIcon.icns in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

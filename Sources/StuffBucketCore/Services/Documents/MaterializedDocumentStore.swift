@@ -8,6 +8,7 @@ public enum MaterializedDocumentStore {
 #if os(macOS)
     private static let bookmarkKey = "com.digitalhandstand.stuffbucket.materializedDocumentFolderBookmark"
     private static let pathKey = "com.digitalhandstand.stuffbucket.materializedDocumentFolderPath"
+    private static let initialPromptedKey = "com.digitalhandstand.stuffbucket.materializedDocumentFolderInitialPrompted"
     private static let materializedSubfolder = "StuffBucket"
 
     public static func selectedRootPath() -> String? {
@@ -22,8 +23,8 @@ public enum MaterializedDocumentStore {
         panel.canChooseDirectories = true
         panel.canCreateDirectories = true
         panel.allowsMultipleSelection = false
-        panel.prompt = "Choose Folder"
-        panel.message = "Choose where StuffBucket should materialize synced files for Finder."
+        panel.prompt = "Use Folder"
+        panel.message = "This folder is used to show you documents in Finder."
 
         let response = panel.runModal()
         guard response == .OK, let url = panel.url else {
@@ -31,6 +32,34 @@ public enum MaterializedDocumentStore {
         }
         storeRootURL(url)
         return url
+    }
+
+    @MainActor
+    public static func promptForRootFolderIfNeededOnFirstLaunch() {
+        guard selectedRootPath() == nil else { return }
+
+        let defaults = UserDefaults.standard
+        guard defaults.bool(forKey: initialPromptedKey) == false else { return }
+        defaults.set(true, forKey: initialPromptedKey)
+
+        let alert = NSAlert()
+        alert.messageText = "Choose a Folder for Show in Finder"
+        alert.informativeText = "This folder is used to show you documents in Finder."
+        alert.alertStyle = .informational
+        alert.addButton(withTitle: "Choose Folder")
+        alert.addButton(withTitle: "Not Now")
+
+        let response = alert.runModal()
+        guard response == .alertFirstButtonReturn else { return }
+
+        do {
+            _ = try chooseRootFolder()
+        } catch {
+            if case SyncError.materializationCancelled = error {
+                return
+            }
+            NSLog("MaterializedDocumentStore: failed initial folder prompt: \(error)")
+        }
     }
 
     public static func clearRootFolderSelection() {
@@ -130,6 +159,7 @@ public enum MaterializedDocumentStore {
     public static func selectedRootPath() -> String? { nil }
     @discardableResult
     public static func chooseRootFolder() throws -> URL { throw SyncError.materializationFolderNotSelected }
+    public static func promptForRootFolderIfNeededOnFirstLaunch() {}
     public static func clearRootFolderSelection() {}
     public static func materializeDocument(for item: Item) throws -> URL { throw SyncError.documentUnavailable }
     public static func resetMaterializedCopies() {}

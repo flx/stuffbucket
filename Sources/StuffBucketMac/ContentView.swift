@@ -377,6 +377,14 @@ struct ContentView: View {
                 }
             }
             ToolbarItem(placement: .automatic) {
+                Button {
+                    toggleTrashFilter()
+                } label: {
+                    Image(systemName: isTrashFilterActive ? "trash.circle.fill" : "trash.circle")
+                }
+                .accessibilityLabel(isTrashFilterActive ? "Hide Trash" : "Show Trash")
+            }
+            ToolbarItem(placement: .automatic) {
                 Button(isSelectMode ? "Done" : "Select") {
                     withAnimation {
                         isSelectMode.toggle()
@@ -526,6 +534,20 @@ struct ContentView: View {
 
         let separator = trimmedSearch.hasSuffix(" ") ? "" : " "
         searchText = trimmedSearch + separator + token
+    }
+
+    private var isTrashFilterActive: Bool {
+        SearchQueryParser().parse(searchText).filters.contains {
+            $0.key == .tag && $0.value.caseInsensitiveCompare(Item.trashTag) == .orderedSame
+        }
+    }
+
+    private func toggleTrashFilter() {
+        if isTrashFilterActive {
+            searchText = ""
+        } else {
+            searchText = "tag:\(Item.trashTag)"
+        }
     }
 
     @ViewBuilder

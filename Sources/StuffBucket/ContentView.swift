@@ -344,6 +344,14 @@ struct ContentView: View {
             }
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
+                    Button {
+                        toggleTrashFilter()
+                    } label: {
+                        Image(systemName: isTrashFilterActive ? "trash.circle.fill" : "trash.circle")
+                    }
+                    .accessibilityLabel(isTrashFilterActive ? "Hide Trash" : "Show Trash")
+                }
+                ToolbarItem(placement: .navigationBarLeading) {
                     if isSelectMode && (!selectedItems.isEmpty || !selectedTags.isEmpty || !selectedCollections.isEmpty) {
                         Button(role: .destructive) {
                             deleteSelected()
@@ -558,6 +566,20 @@ struct ContentView: View {
             selectedCollections.remove(collection)
         } else {
             selectedCollections.insert(collection)
+        }
+    }
+
+    private var isTrashFilterActive: Bool {
+        SearchQueryParser().parse(searchText).filters.contains {
+            $0.key == .tag && $0.value.caseInsensitiveCompare(Item.trashTag) == .orderedSame
+        }
+    }
+
+    private func toggleTrashFilter() {
+        if isTrashFilterActive {
+            searchText = ""
+        } else {
+            searchText = "tag:\(Item.trashTag)"
         }
     }
 
