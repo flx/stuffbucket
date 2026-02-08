@@ -33,7 +33,7 @@ Every captured object is an **Item**:
 
 - **Snippet** – short plain text
 - **Link** – URL + metadata + **persisted HTML snapshot**
-- **Document** – user-visible file in iCloud Drive
+- **Document** – local file stored in the app container and synced via CloudKit payloads
 
 All item types support:
 - Tags
@@ -55,27 +55,46 @@ Collections are implemented as special tags with a `collection:` prefix:
 
 ## 3. Storage architecture
 
-### 3.1 macOS materialized folder layout (user-visible)
+### 3.1 Primary local storage (all platforms)
+
+StuffBucket keeps working files in app-local storage:
+
+```
+<App Container>/Library/Application Support/StuffBucket/
+├── Links/
+│   └── <uuid>/
+│       ├── page.html
+│       ├── reader.html
+│       └── assets/
+└── Documents/
+    └── <uuid>/
+        └── <original filename>
+```
+
+Extracted fallback caches are stored separately:
+
+```
+<App Container>/Library/Caches/
+├── ExtractedArchives/<uuid>/...
+└── ExtractedDocuments/<uuid>/...
+```
+
+### 3.2 macOS Finder materialization (user-visible copy)
+
+On macOS, "Show in Finder" copies documents into a user-selected folder:
 
 ```
 <User Selected Folder>/
 └── StuffBucket/
-    ├── Documents/
-    │   └── <uuid>/
-    │       └── <original filename>
-    ├── Links/
-    │   └── <uuid>/
-    │       ├── page.html
-    │       ├── reader.html
-    │       ├── assets/        (images, css, js if needed)
-    │       └── metadata.json  (optional, diagnostic)
-    └── Inbox/
+    └── Documents/
+        └── <uuid>/
+            └── <original filename>
 ```
 
-Principles:
-- **CloudKit payloads are authoritative for sync**.
-- On macOS, files are materialized into normal files for Finder visibility.
-- iCloud container ID: `iCloud.com.digitalhandstand.stuffbucketapp` (CloudKit).
+Notes:
+- This Finder path is a materialized copy for user visibility, not the sync source of truth.
+- Link archives are not materialized to the user folder; they remain in app-local storage/caches.
+- CloudKit container ID: `iCloud.com.digitalhandstand.stuffbucketapp`.
 
 ---
 
@@ -108,12 +127,6 @@ For each Link item:
   StuffBucket/Links/<uuid>/page.html
   ```
 
-Optional enhancements:
-- Reader-mode extraction (`WKWebView` reader API or Readability-style parsing).
-- Dual storage:
-  - `original.html` (raw page)
-  - `reader.html` (cleaned article)
-
 ### 4.3 Fallback modes
 If full HTML capture fails:
 - Store a raw HTML snapshot (without asset rewriting) when available.
@@ -124,9 +137,10 @@ If both rendered and raw capture fail:
 ### 4.4 Archive sync strategy (CloudKit-only)
 Archives are synced via CloudKit bundle payloads:
 
-1. **Primary: CloudKit bundle** – A compressed archive bundle (`archiveZipData`) is the sync source of truth.
-2. **Local cache/materialization** – Archives are expanded locally for rendering/opening.
-3. **Asset manifest** – A JSON list of asset filenames (`assetManifestJSON`) remains available for deterministic local checks.
+1. Local archive files (`page.html`, `reader.html`, `assets`) are written to app-local storage.
+2. The archive folder is compressed into `archiveZipData` via `ArchiveBundle` (LZFSE) for CloudKit replication.
+3. On another device, `ArchiveResolver` loads local files first; if missing, it extracts `archiveZipData` into `ExtractedArchives/<uuid>/`.
+4. `archiveZipData` is omitted when bundle creation fails or exceeds the configured sync size limit.
 
 When opening an archive:
 - Load from local archive files when available.
@@ -150,14 +164,21 @@ When opening an archive:
 ### 4.7 Document sync strategy (CloudKit-only)
 Documents are synced via CloudKit bundle payloads:
 
-1. **Primary: CloudKit bundle** – A compressed document bundle (`documentZipData`) is the sync source of truth.
-2. **Local cache/materialization** – Documents are expanded locally when needed.
-3. **macOS Finder support** – Documents are materialized to a user-selected folder for "Show in Finder."
+1. Imported/attached documents are copied to app-local storage (`Documents/<uuid>/<filename>`).
+2. `documentZipData` currently stores a direct document payload (raw file bytes) for CloudKit replication.
+3. `DocumentResolver` supports both formats when resolving on another device:
+   - legacy compressed bundle (extract)
+   - current raw payload (write directly to extracted cache)
+4. macOS "Show in Finder" materializes a copy to the user-selected folder.
 
 When opening a document:
 - First attempt to load from local file storage.
 - If unavailable, extract from CloudKit bundle to local cache.
 - All file I/O operations run on background threads to prevent UI hangs.
+
+Size policy:
+- Sync/import limit is configurable via `SyncPolicy.maxFileSizeMB` (default 512 MB, min 50, max 4096).
+- Document imports/attachments above the limit are rejected with a user-visible error.
 
 ---
 
@@ -178,16 +199,16 @@ When opening a document:
 - `sourceExternalID: String?`   // stable ID for external sync (e.g. Safari)
 - `sourceFolderPath: String?`   // external folder path (e.g. Safari bookmark folder)
 - `documentRelativePath: String?` // local path hint: Documents/<uuid>/<filename> (optional on any item)
-- `documentZipData: Binary?`      // compressed document bundle (CloudKit source of truth)
+- `documentZipData: Binary?`      // document sync payload for CloudKit (currently raw file bytes)
 
 #### Link-specific
 - `linkURL: String?`           // optional on any item
 - `linkTitle: String?`
 - `linkAuthor: String?`
 - `linkPublishedDate: Date?`
-- `htmlRelativePath: String`   // Links/<uuid>/page.html
+- `htmlRelativePath: String?`  // Links/<uuid>/page.html
 - `archiveStatus: enum { full, partial, failed }`
-- `assetManifestJSON: String?` // JSON array of asset filenames for iCloud download
+- `assetManifestJSON: String?` // legacy field; currently cleared/unused in archive flow
 - `archiveZipData: Binary?`    // compressed archive bundle (CloudKit source of truth)
 
 ### 5.2 Derived / AI metadata (new)
@@ -203,20 +224,29 @@ When opening a document:
 ### Metadata
 - Core Data + `NSPersistentCloudKitContainer`
 - CloudKit container: `iCloud.com.digitalhandstand.stuffbucketapp`
-- Core Data schema remains CloudKit-compatible (non-optional attributes have defaults or are optional).
-- Conflict resolution:
-  - last-writer-wins for scalars
-  - set merge for tags
+- Core Data schema is CloudKit-compatible (optional fields or defaults for non-optional fields).
+- View context uses `NSMergeByPropertyObjectTrumpMergePolicy` and `automaticallyMergesChangesFromParent = true`.
+- Tag normalization/deduplication is handled in app logic (case-insensitive, with explicit `collection:` and `trashcan` handling).
 
 ### Files
-- CloudKit binary payloads (`archiveZipData`, `documentZipData`) handle sync.
-- Local files are treated as cache/materialization copies derived from CloudKit data.
-- App watches for:
-  - missing HTML files
-  - externally modified files
-- If HTML snapshot deleted externally:
-  - show warning
-  - allow re-fetch from original URL
+- CloudKit file sync is implemented through Core Data binary payloads:
+  - `archiveZipData` for link archives
+  - `documentZipData` for documents
+- Primary working files are local (`Application Support/StuffBucket/...`).
+- Resolver behavior is local-first:
+  - If primary local files exist, use them.
+  - If not, extract/write from CloudKit payload into local cache (`ExtractedArchives`, `ExtractedDocuments`).
+- Cache cleanup removes extracted cache copies once a primary local copy exists.
+- `StorageMigration.migrateLocalStorageIfNeeded()` is intentionally no-op in current CloudKit-only mode.
+
+### Reset / cleanup
+- Reset controls are available in Settings (development/test use).
+- **Reset Local Data**:
+  - deletes `Item` + `SearchIndexMetadata`
+  - deletes local storage root + extracted caches
+  - clears materialized Finder copies
+  - resets local search index
+- **Reset Local + CloudKit Data** additionally purges non-default private CloudKit zones in `iCloud.com.digitalhandstand.stuffbucketapp`.
 
 ---
 
@@ -233,11 +263,10 @@ When opening a document:
 ### Permanent deletion
 - Permanent deletion removes:
   - The Core Data record (synced via CloudKit)
-  - iCloud Drive archive files (Links/<uuid>/)
-  - iCloud Drive document files (Documents/<uuid>/)
+  - Local archive files (Links/<uuid>/)
+  - Local document files (Documents/<uuid>/)
   - Local cache files
   - Search index entries
-- Deletion propagates across devices via iCloud sync.
 - Deletion propagates across devices via CloudKit sync.
 
 ---
@@ -448,7 +477,7 @@ When opening a document:
 ## 16. Acceptance criteria
 
 - Saved NYTimes article remains readable offline after original URL changes.
-- HTML file visible in iCloud Drive.
+- Archive opens from local files when present, or from extracted CloudKit payload on devices missing local files.
 - Search finds words inside archived articles.
 - Safari import can ingest 500+ bookmarks on macOS.
 - User can generate AI tag suggestions using their API key and apply them to items.
@@ -458,7 +487,7 @@ When opening a document:
 ## 17. Versioning
 - v0.2: HTML-backed link persistence
 - v0.3: Full-text search, Safari bookmarks import, AI tag suggestions (Claude & OpenAI)
-- v0.4: CloudKit fallback sync for documents, background thread file operations
+- v0.4: CloudKit file payload sync, local-first resolvers, macOS Finder materialization, configurable sync size limits
 
 ---
 
