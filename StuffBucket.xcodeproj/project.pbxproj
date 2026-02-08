@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 63;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -244,14 +244,14 @@
 		84AFF605547F5932FC2491C8 /* LibrarySummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibrarySummary.swift; sourceTree = "<group>"; };
 		866E858862E2D5D0B3FF2A10 /* AI_Copy.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = AI_Copy.md; sourceTree = "<group>"; };
 		86E5197CB5D2359A06DD74C3 /* MaterializedDocumentStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaterializedDocumentStore.swift; sourceTree = "<group>"; };
-		87ECF4AE6D652BBD6E10682D /* StuffBucket.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = StuffBucket.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		87ECF4AE6D652BBD6E10682D /* StuffBucket.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = StuffBucket.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8B67CD12B29FD60DF409D87B /* StuffBucketApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StuffBucketApp.swift; sourceTree = "<group>"; };
 		8CE026328EAC215EAEB06286 /* SearchBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchBarView.swift; sourceTree = "<group>"; };
 		8D54DC33A26DE3AF8C8BA87D /* StuffBucket.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = StuffBucket.entitlements; sourceTree = "<group>"; };
 		8F52BD4FC676A4538452BFDB /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		905F62C8A186C9FB500CDA04 /* SearchDatabase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchDatabase.swift; sourceTree = "<group>"; };
 		93E12DDBAC061C565DA3D21B /* StuffBucketMacShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = StuffBucketMacShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
-		971ED3B90D0BC6EA793D9090 /* StuffBucketShareExtension.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = StuffBucketShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		971ED3B90D0BC6EA793D9090 /* StuffBucketShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = StuffBucketShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		98FEBE9AF2D9ED305F35501F /* StuffBucketModel.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = StuffBucketModel.xcdatamodel; sourceTree = "<group>"; };
 		9B0D9ADADAD06E535CBC42CB /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
 		A5DF574B999553E0B86F1550 /* TagSuggestionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TagSuggestionView.swift; sourceTree = "<group>"; };
@@ -767,7 +767,6 @@
 			);
 			mainGroup = E4DE441F8F6C82B7E781114E;
 			minimizedProjectReferenceProxies = 1;
-			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -1064,6 +1063,7 @@
 				CODE_SIGN_ENTITLEMENTS = Sources/StuffBucketMacShareExtension/StuffBucketMacShareExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = V37U525228;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
@@ -1073,7 +1073,9 @@
 					"@executable_path/../Frameworks",
 					"@executable_path/../../../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.digitalhandstand.stuffbucket.app.mac.share;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.digitalhandstand.stuffbucket.app.sharemac;
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = macosx;
 				SUPPORTED_PLATFORMS = macosx;
@@ -1090,16 +1092,21 @@
 				CODE_SIGN_ENTITLEMENTS = Sources/StuffBucketMac/StuffBucketMac.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 2;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = V37U525228;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
 				INFOPLIST_FILE = Sources/StuffBucketMac/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = StuffBucket;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-					PRODUCT_BUNDLE_IDENTIFIER = com.digitalhandstand.stuffbucket.app;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.digitalhandstand.stuffbucket.app;
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = macosx;
@@ -1116,13 +1123,18 @@
 				CODE_SIGN_ENTITLEMENTS = Sources/StuffBucket/StuffBucket.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 2;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = V37U525228;
 				INFOPLIST_FILE = Sources/StuffBucket/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = StuffBucket;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.digitalhandstand.stuffbucket.app;
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -1140,13 +1152,18 @@
 				CODE_SIGN_ENTITLEMENTS = Sources/StuffBucket/StuffBucket.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 2;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = V37U525228;
 				INFOPLIST_FILE = Sources/StuffBucket/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = StuffBucket;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.digitalhandstand.stuffbucket.app;
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -1191,16 +1208,21 @@
 				CODE_SIGN_ENTITLEMENTS = Sources/StuffBucketMac/StuffBucketMac.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 2;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = V37U525228;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
 				INFOPLIST_FILE = Sources/StuffBucketMac/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = StuffBucket;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-					PRODUCT_BUNDLE_IDENTIFIER = com.digitalhandstand.stuffbucket.app;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.digitalhandstand.stuffbucket.app;
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = macosx;
@@ -1238,6 +1260,7 @@
 				CODE_SIGN_ENTITLEMENTS = Sources/StuffBucketMacShareExtension/StuffBucketMacShareExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = V37U525228;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
@@ -1247,7 +1270,9 @@
 					"@executable_path/../Frameworks",
 					"@executable_path/../../../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.digitalhandstand.stuffbucket.app.mac.share;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.digitalhandstand.stuffbucket.app.sharemacdebug;
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = macosx;
 				SUPPORTED_PLATFORMS = macosx;
@@ -1378,13 +1403,16 @@
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CODE_SIGN_ENTITLEMENTS = Sources/StuffBucketShareExtension/StuffBucketShareExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = V37U525228;
 				INFOPLIST_FILE = Sources/StuffBucketShareExtension/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
+				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.digitalhandstand.stuffbucket.app.share;
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -1401,13 +1429,16 @@
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CODE_SIGN_ENTITLEMENTS = Sources/StuffBucketShareExtension/StuffBucketShareExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = V37U525228;
 				INFOPLIST_FILE = Sources/StuffBucketShareExtension/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
+				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.digitalhandstand.stuffbucket.app.share;
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";

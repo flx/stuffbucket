@@ -444,7 +444,7 @@ final class ShareViewController: NSViewController, NSTextViewDelegate {
             completion()
             return
         }
-        let bundleIdentifier = "com.digitalhandstand.stuffbucket.app.mac"
+        let bundleIdentifier = resolvedHostBundleIdentifier()
         if let appURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleIdentifier) {
             let configuration = NSWorkspace.OpenConfiguration()
             configuration.activates = true
@@ -453,8 +453,31 @@ final class ShareViewController: NSViewController, NSTextViewDelegate {
             }
             return
         }
-        context.open(url) { _ in
-            completion()
+        context.open(url) { success in
+            if success {
+                completion()
+                return
+            }
+            let configuration = NSWorkspace.OpenConfiguration()
+            configuration.activates = true
+            NSWorkspace.shared.open(url, configuration: configuration) { _, _ in
+                completion()
+            }
         }
+    }
+
+    private static func resolvedHostBundleIdentifier() -> String {
+        let fallback = "com.digitalhandstand.stuffbucket.app"
+        guard let extensionBundleIdentifier = Bundle.main.bundleIdentifier else {
+            return fallback
+        }
+        let suffixes = [".sharemacdebug", ".sharemac", ".mac.share", ".share"]
+        for suffix in suffixes where extensionBundleIdentifier.hasSuffix(suffix) {
+            let candidate = String(extensionBundleIdentifier.dropLast(suffix.count))
+            if !candidate.isEmpty {
+                return candidate
+            }
+        }
+        return fallback
     }
 }
